@@ -77,7 +77,7 @@ def update():
     drawShip(player)
     updateShip(enemy)
     drawShip(enemy)
-   # drawShip(enemy)
+    print(gameSpeed.get())
     root.after(10, update)
     globalVar.mouseButton1 = False
 
@@ -198,7 +198,7 @@ def motion(event):
         globalVar.canvasX-7
     globalVar.pointerY = root.winfo_pointery() - root.winfo_y() - \
         globalVar.canvasY - 31
-    print(str(globalVar.pointerX) + " " + str(globalVar.pointerY))
+  #  print(str(globalVar.pointerX) + " " + str(globalVar.pointerY))
 
 
 def mouseButton1(event):  # get left mouse button and set it in globalvar
@@ -221,12 +221,12 @@ enemy = ship(xPos=43, outlineColor="red", owner="ai1")
 
 # canvas
 # choose image
-img = Image.open('map.png')
+img = Image.open('map.jpg')
 # resize image
 img = img.resize(
     (globalVar.canvasWidth, globalVar.canvasHeight), Image.ANTIALIAS)
 # save image
-img.save('resized_image.png')
+img.save('resized_image.jpg')
 
 canvas = Canvas(root, width=globalVar.canvasWidth,
                 height=globalVar.canvasHeight)
@@ -238,18 +238,22 @@ canvas.imageList = []
 canvas.imageList.append(img)
 
 ammunitionChoice = tkinter.Scale(
-    root, orient=HORIZONTAL, length=100, label="Number of shots to take", to=len(player.typesOfAmmunition))
+    root, orient=HORIZONTAL, length=100, label="Number of shots to take", to=len(player.typesOfAmmunition), relief=RIDGE)
 
 accuracyChoice = tkinter.Scale(
-    root, orient=HORIZONTAL, length=100, label="Time to aim", to=4)
+    root, orient=HORIZONTAL, length=100, label="Time to aim", to=4, relief=RIDGE)
+
+gameSpeed = tkinter.Scale(
+    root, orient=HORIZONTAL, length=100, label="Playback speed", from_=1, to=4, tickinterval=1, resolution=-20,  showvalue=0, variable=2, relief=RIDGE)
 
 typeOfRounds = tkinter.Button()
 pixel = tkinter.PhotoImage(width=1, height=1)
-
-
 img = tkinter.PhotoImage(file=r'resized_image.png')
+
+
 ammunitionChoice.place(x=20, y=20)
 accuracyChoice.place(x=20, y=100)
+gameSpeed.place(x=globalVar.canvasX, y=globalVar.canvasY - 80)
 canvas.place(x=globalVar.canvasX, y=globalVar.canvasY)
 """
 label1.grid(row=4, column=0, rowspan=2)
