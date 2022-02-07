@@ -14,7 +14,7 @@ from PIL import Image, ImageTk
 #
 #   Used libraries: Pillow, Pil
 
-#sciezkaPython = os.getcwd()
+# sciezkaPython = os.getcwd()
 
 
 root = tkinter.Tk()
@@ -28,19 +28,22 @@ root.geometry(str(rootX*UIScale) + "x" + str(rootY*UIScale))
 
 
 class ship():
-    def __init__(self):
-        self.direction = [0, 0]
-        self.xPos = 300
-        self.yPos = 300
-        self.health = {'section1': 100, 'section2': 100,
-                       'section3': 100, 'section4': 100}
-        self.typesOfAmmunition = {"type1:": 0,
-                                  "type2": 0,
-                                  "type3": 0,
-                                  "type4": 0}
-        self.detectionRange = 100
-        self.moveOrder = [0, 0]
-        self.speed = 100
+    def __init__(self, owner="ai`", xPos=300, yPos=300, health={'section1': 100, 'section2': 100, 'section3': 100, 'section4': 100}, typesOfAmmunition={"type1:": 0, "type2": 0, "type3": 0, "type4": 0}, detectionRange=200, moveOrderX=None, moveOrderY=None, xDir=0.0, yDir=1.0, turnRate=2, speed=160, outlineColor="red", visible=FALSE):
+
+        self.owner = owner
+        self.xPos = xPos
+        self.yPos = yPos
+        self.health = health
+        self.typesOfAmmunition = typesOfAmmunition
+        self.detectionRange = detectionRange
+        self.moveOrderX = moveOrderX
+        self.moveOrderY = moveOrderY
+        self.xDir = xDir
+        self.yDir = yDir
+        self.turnRate = turnRate
+        self.speed = speed
+        self.outlineColor = outlineColor
+        self.visible = visible
 
 
 class playerController():
@@ -62,16 +65,18 @@ class global_var():
     canvasHeight = 600
     mouseButton1 = False
     toDeleteNextFrame = []
-    timeFrame = 0
+    ## GAME OPTIONS ##
+    fogOfWar = TRUE
 
 
 def update():
-    globalVar.timeFrame += 1
     canvas.delete('all')
     canvas.create_image(0, 0, image=img, anchor='nw')
-    updateRectangle()
+    detectionCheck()
     updateShip(player)
     drawShip(player)
+    updateShip(enemy)
+    drawShip(enemy)
    # drawShip(enemy)
     root.after(10, update)
     globalVar.mouseButton1 = False
@@ -82,15 +87,15 @@ def deleteNextFrame():
         thing.destroy()
 
 
-def updateRectangle():
-    """
+"""
+def updateRectangle(): ######## testing purpose function to delete later
+
     b = (abs(math.sin(globalVar.a/100))) * 120
     canvas.create_oval(b+5, b+5, 205-b, 205-b, outline='white')
     canvas.create_oval(globalVar.a+5, globalVar.a+5, 205 -
                        globalVar.a, 205-globalVar.a, outline='green')
-    canvas.create_text(100, 10, text=globalVar.a, font="arial 54")
-    canvas.create_text(55, 55, font="arial 54", text=round(b))
-    """
+    # canvas.create_text(100, 10, text=globalVar.a, font="arial 54")
+    # canvas.create_text(55, 55, font="arial 54", text=round(b))
 
     if(globalVar.a > 99):
         globalVar.flag = False
@@ -100,59 +105,92 @@ def updateRectangle():
     if(globalVar.flag):
         globalVar.a += 1
     else:
-        globalVar.a -= 1
+        globalVar.a -= 1"""
 
 
-def updateShip(ship):
-    """
-    canvas.create_text(1000, 200, text=tempX, font="arial 54")
-    canvas.create_text(1000, 100, text=tempY, font="arial 54")
-    canvas.create_line(ship.xPos, ship.yPos, ship.xPos+tempX*200,
-                       ship.yPos+tempY*200,   fill='white')
-                       """
-    ship.xPos += ship.direction[0]*ship.speed/360
-    ship.yPos += ship.direction[1]*ship.speed/360
+def updateShip(ship):  # rotate and move the chosen ship
+
+    if(ship.owner == "player1"):
+        if(globalVar.mouseButton1 and globalVar.pointerX > 0 and globalVar.pointerX < (globalVar.canvasWidth) and globalVar.pointerY > 0 and globalVar.pointerY < (globalVar.canvasHeight)):
+            ship.moveOrderX = globalVar.pointerX
+            ship.moveOrderY = globalVar.pointerY
+    elif(ship.owner == "ai1"):
+        ship.moveOrderX = 400  # insert ai contrller decision
+        ship.moveOrderY = 400
+
+    if(ship.moveOrderX):
+        if(ship.owner == "player1" or (not globalVar.fogOfWar or enemy.visible)):
+            canvas.create_line(ship.xPos, ship.yPos, ship.moveOrderX,
+                               ship.moveOrderY,   fill='white')
+        # vector normalisation
+        scale = math.sqrt((ship.moveOrderX-ship.xPos)*(ship.moveOrderX-ship.xPos) +
+                          (ship.moveOrderY-ship.yPos)*(ship.moveOrderY-ship.yPos))
+
+        # move order into normalised vector
+        moveDirX = -(ship.xPos-ship.moveOrderX) / scale
+        moveDirY = -(ship.yPos-ship.moveOrderY) / scale
+
+        if(ship.owner == "player1" or (not globalVar.fogOfWar or enemy.visible)):
+            canvas.create_line(ship.xPos, ship.yPos,   ship.xPos +
+                               (moveDirX*120), ship.yPos + (moveDirY*120),   fill='green')
+
+        # x is same quadrant y same
+        degree = ship.turnRate
+        if((ship.xDir > moveDirX and ship.yDir > -moveDirY) or ship.xDir < moveDirX and ship.yDir < -moveDirY):
+
+            degree = ship.turnRate
+            ship.xDir = math.cos((degree/360)*math.pi)*ship.xDir - \
+                math.sin((degree/360)*math.pi)*ship.yDir
+            ship.yDir = math.sin((degree/360)*math.pi)*ship.xDir + \
+                math.cos((degree/360)*math.pi)*ship.yDir
+        else:
+            degree = -ship.turnRate  # change direction
+            ship.xDir = math.cos((degree/360)*math.pi)*ship.xDir -  \
+                math.sin((degree/360)*math.pi)*ship.yDir
+            ship.yDir = math.sin((degree/360)*math.pi)*ship.xDir + \
+                math.cos((degree/360)*math.pi)*ship.yDir
+
+        scale = math.sqrt(abs(ship.xDir*ship.xDir+ship.yDir*ship.yDir))
+
+        # move direviton into normalised vector
+        if(scale != 0):
+            ship.xDir = ship.xDir / scale
+            ship.yDir = ship.yDir / scale
+
+            if(ship.owner == "player1" or (not globalVar.fogOfWar or enemy.visible)):
+                canvas.create_line(ship.xPos, ship.yPos,   ship.xPos+(ship.xDir*200),
+                                   ship.yPos+(ship.yDir*200), fill="black")
+
+    ship.xPos += ship.xDir*ship.speed/360
+    ship.yPos += ship.yDir*ship.speed/360
 
 
-def drawShip(ship):
-    canvas.create_oval(ship.xPos-ship.detectionRange, ship.yPos - ship.detectionRange,
-                       ship.xPos + ship.detectionRange, ship.yPos+ship.detectionRange, outline='white')
-    canvas.create_line(ship.xPos-5, ship.yPos-5, ship.xPos +
-                       5, ship.yPos+5,   fill='white')
+def drawShip(ship):  # draw ship on the map with all of its accesories
+    if(ship.owner == "ai1"):
+        if(not globalVar.fogOfWar or enemy.visible):
+            canvas.create_oval(ship.xPos-ship.detectionRange, ship.yPos - ship.detectionRange,
+                               ship.xPos + ship.detectionRange, ship.yPos+ship.detectionRange, outline=ship.outlineColor)
+            canvas.create_line(ship.xPos-5, ship.yPos-5, ship.xPos +
+                               5, ship.yPos+5,   fill='white')
+    else:
+        canvas.create_oval(ship.xPos-ship.detectionRange, ship.yPos - ship.detectionRange, ship.xPos +
+                           ship.detectionRange, ship.yPos+ship.detectionRange, outline=ship.outlineColor)
+        canvas.create_line(ship.xPos-5, ship.yPos-5,
+                           ship.xPos + 5, ship.yPos+5,   fill='white')
 
-    # movementOrder
-    if(globalVar.mouseButton1 and globalVar.pointerX > 0 and globalVar.pointerX < (globalVar.canvasWidth) and globalVar.pointerY > 0 and globalVar.pointerY < (globalVar.canvasHeight)):
-        ship.moveOrderX = globalVar.pointerX
-        ship.moveOrderY = globalVar.pointerY
-        """
-    if(ship.direction > ship.orderDirection):  # do zmiany
-        ship.direction -= 1
-    if(ship.direction < ship.orderDirection):
-        ship.direction += 1
-        """
 
-    if(ship.moveOrder[0] > 0):
-        # direction testing
-        moveDir = [ship.xPos - ship.moveOrderX, ship.yPos - ship.moveOrderY]
+def detectionCheck():
+    globalVar.distance = math.sqrt(
+        abs(pow(player.xPos-enemy.xPos, 2)+pow(player.yPos-enemy.yPos, 2)))
 
-        # normalise the vector
-        scale = math.sqrt(moveDir[0]*moveDir[0] + moveDir[1]*moveDir[1])
-
-        moveDir = -[ship.xPos - ship.moveOrder[0],
-                    ship.yPos - ship.moveOrder[1]] / scale  # ok
-
-        if(globalVar.timeFrame % 2000):
-            print(moveDir[0], " ", moveDir[1])
-
-        canvas.create_line(ship.xPos, ship.yPos,
-                           ship.xPos+moveDir[0]*100, ship.yPos+moveDir[1]*100,   fill='green')
-        #canvas.create_text(155, 55, font="arial 54", text=ship.direction)
-        canvas.create_text(155, 155, font="arial 54",
-                           text=round(ship.orderDirection, 0))
-        canvas.create_line(ship.xPos, ship.yPos, ship.moveOrder[0],
-                           ship.moveOrder[1],   fill='white')
-
-    # change for click
+    if(globalVar.distance < player.detectionRange):
+        enemy.visible = TRUE
+    else:
+        enemy.visible = FALSE
+    if(globalVar.distance < enemy.detectionRange):
+        player.visible = TRUE
+    else:
+        player.visible = FALSE
 
 
 def motion(event):
@@ -160,42 +198,35 @@ def motion(event):
         globalVar.canvasX-7
     globalVar.pointerY = root.winfo_pointery() - root.winfo_y() - \
         globalVar.canvasY - 31
-   # print('{}, {}'.format(globalVar.pointerX, globalVar.pointerY))
+    print(str(globalVar.pointerX) + " " + str(globalVar.pointerY))
 
 
-def mouseButton1(event):
+def mouseButton1(event):  # get left mouse button and set it in globalvar
     if event:
         globalVar.mouseButton1 = True
     else:
         globalVar.mouseButton1 = False
 
 
+# main
 root.bind('<Motion>', motion)
 root.bind('<Button-1>', mouseButton1)
 
 root.title("USS Artemis")
 globalVar = global_var()
-player = ship()
-enemy = ship()
 
+player = ship(outlineColor="white", owner="player1")
+enemy = ship(xPos=43, outlineColor="red", owner="ai1")
 
-titleScreen1 = tkinter.LabelFrame(root, text="Ścieżka")  # not working
-ammunitionChoice = tkinter.Scale(
-    root, orient=HORIZONTAL, length=100, label="Number of shots to take", to=len(player.typesOfAmmunition))
-typeOfRounds = tkinter.Button()
-pixel = tkinter.PhotoImage(width=1, height=1)
-labelFrame1 = tkinter.LabelFrame(root, width=10, text='Witaj')
-label1 = tkinter.Label(
-    labelFrame1, image=pixel, width=100, height=200, compound=tkinter.CENTER, text="Przykładowy tekst tskjldefgnbdke\njbngkjdfnbgkjsdrbntgkjdrk\ngjdf nbdfkj gbdfk\nj gbdkfjbn gkdf ")
 
 # canvas
 # choose image
-img = Image.open('map.jpg')
+img = Image.open('map.png')
 # resize image
 img = img.resize(
     (globalVar.canvasWidth, globalVar.canvasHeight), Image.ANTIALIAS)
 # save image
-img.save('resized_image.jpg')
+img.save('resized_image.png')
 
 canvas = Canvas(root, width=globalVar.canvasWidth,
                 height=globalVar.canvasHeight)
@@ -203,21 +234,23 @@ canvas = Canvas(root, width=globalVar.canvasWidth,
 img = PhotoImage("resized_image.png")
 canvas.imageList = []
 
+# item with background to avoid python bug people were mentioning about disappearing non-anchored images
 canvas.imageList.append(img)
-# item with background
-# cosmetics
 
+ammunitionChoice = tkinter.Scale(
+    root, orient=HORIZONTAL, length=100, label="Number of shots to take", to=len(player.typesOfAmmunition))
 
-# grid
+accuracyChoice = tkinter.Scale(
+    root, orient=HORIZONTAL, length=100, label="Time to aim", to=4)
 
-#root.columnconfigure(0, minsize=100, weight=0)
+typeOfRounds = tkinter.Button()
+pixel = tkinter.PhotoImage(width=1, height=1)
+
 
 img = tkinter.PhotoImage(file=r'resized_image.png')
-titleScreen1.place(x=0, y=10)
 ammunitionChoice.place(x=20, y=20)
-labelFrame1.place(x=10, y=10)
+accuracyChoice.place(x=20, y=100)
 canvas.place(x=globalVar.canvasX, y=globalVar.canvasY)
-
 """
 label1.grid(row=4, column=0, rowspan=2)
 """
