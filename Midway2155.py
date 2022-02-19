@@ -1,5 +1,5 @@
 import os
-import tkinter
+import tkinter as tk
 from tkinter import *
 from tkinter.filedialog import askopenfilename
 from tkinter import Tk, Canvas, Frame, BOTH
@@ -17,7 +17,7 @@ from PIL import Image, ImageTk
 # sciezkaPython = os.getcwd()
 
 
-root = tkinter.Tk()
+root = tk.Tk()
 
 UIScale = 1
 
@@ -28,7 +28,7 @@ root.geometry(str(rootX*UIScale) + "x" + str(rootY*UIScale))
 
 
 class ship():
-    def __init__(self, owner="ai`", xPos=300, yPos=300, health={'section1': 100, 'section2': 100, 'section3': 100, 'section4': 100}, typesOfAmmunition={"type1:": 0, "type2": 0, "type3": 0, "type4": 0}, detectionRange=200, moveOrderX=None, moveOrderY=None, xDir=0.0, yDir=1.0, turnRate=2, speed=160, outlineColor="red", visible=FALSE):
+    def __init__(self, owner="ai`", xPos=300, yPos=300, health={'section1': 100, 'section2': 100, 'section3': 100, 'section4': 100}, typesOfAmmunition={"type1:": 0, "type2": 0, "type3": 0, "type4": 0}, detectionRange=200, moveOrderX=None, moveOrderY=None, xDir=0.0, yDir=1.0, turnRate=0.5, speed=40, outlineColor="red", visible=FALSE):
 
         self.owner = owner
         self.xPos = xPos
@@ -67,9 +67,12 @@ class global_var():
     toDeleteNextFrame = []
     ## GAME OPTIONS ##
     fogOfWar = TRUE
+    gameSpeed = 1
+    turnBased = False
 
 
 def update():
+    globalVar.gameSpeed = gameSpeedScale.get()
     canvas.delete('all')
     canvas.create_image(0, 0, image=img, anchor='nw')
     detectionCheck()
@@ -77,7 +80,7 @@ def update():
     drawShip(player)
     updateShip(enemy)
     drawShip(enemy)
-    print(gameSpeed.get())
+    print(gameSpeedScale.get())
     root.after(10, update)
     globalVar.mouseButton1 = False
 
@@ -135,16 +138,16 @@ def updateShip(ship):  # rotate and move the chosen ship
                                (moveDirX*120), ship.yPos + (moveDirY*120),   fill='green')
 
         # x is same quadrant y same
-        degree = ship.turnRate
+        degree = ship.turnRate*globalVar.gameSpeed
         if((ship.xDir > moveDirX and ship.yDir > -moveDirY) or ship.xDir < moveDirX and ship.yDir < -moveDirY):
 
-            degree = ship.turnRate
+            degree = ship.turnRate*globalVar.gameSpeed
             ship.xDir = math.cos((degree/360)*math.pi)*ship.xDir - \
                 math.sin((degree/360)*math.pi)*ship.yDir
             ship.yDir = math.sin((degree/360)*math.pi)*ship.xDir + \
                 math.cos((degree/360)*math.pi)*ship.yDir
         else:
-            degree = -ship.turnRate  # change direction
+            degree = -ship.turnRate*globalVar.gameSpeed  # change direction
             ship.xDir = math.cos((degree/360)*math.pi)*ship.xDir -  \
                 math.sin((degree/360)*math.pi)*ship.yDir
             ship.yDir = math.sin((degree/360)*math.pi)*ship.xDir + \
@@ -161,8 +164,8 @@ def updateShip(ship):  # rotate and move the chosen ship
                 canvas.create_line(ship.xPos, ship.yPos,   ship.xPos+(ship.xDir*200),
                                    ship.yPos+(ship.yDir*200), fill="black")
 
-    ship.xPos += ship.xDir*ship.speed/360
-    ship.yPos += ship.yDir*ship.speed/360
+    ship.xPos += ship.xDir*ship.speed/360*globalVar.gameSpeed
+    ship.yPos += ship.yDir*ship.speed/360*globalVar.gameSpeed
 
 
 def drawShip(ship):  # draw ship on the map with all of its accesories
@@ -237,23 +240,41 @@ canvas.imageList = []
 # item with background to avoid python bug people were mentioning about disappearing non-anchored images
 canvas.imageList.append(img)
 
-ammunitionChoice = tkinter.Scale(
-    root, orient=HORIZONTAL, length=100, label="Number of shots to take", to=len(player.typesOfAmmunition), relief=RIDGE)
+ammunitionChoice = tk.Scale(
+    root, orient=HORIZONTAL, length=100, label="Number of shots", to=len(player.typesOfAmmunition), relief=RIDGE)
 
-accuracyChoice = tkinter.Scale(
+accuracyChoice = tk.Scale(
     root, orient=HORIZONTAL, length=100, label="Time to aim", to=4, relief=RIDGE)
 
-gameSpeed = tkinter.Scale(
-    root, orient=HORIZONTAL, length=100, label="Playback speed", from_=1, to=4, tickinterval=1, resolution=-20,  showvalue=0, variable=2, relief=RIDGE)
+gameSpeedScale = tk.Scale(
+    root, orient=HORIZONTAL, length=100, label="Playback speed", from_=1, to=16, resolution=-20, variable=2, relief=RIDGE)
 
-typeOfRounds = tkinter.Button()
-pixel = tkinter.PhotoImage(width=1, height=1)
-img = tkinter.PhotoImage(file=r'resized_image.png')
+typeOfRounds = tk.Button()
+pixel = tk.PhotoImage(width=1, height=1)
+img = tk.PhotoImage(file=r'resized_image.png')
+gameSpeedScale.set(3)
 
+"""
+scrollbar = Scrollbar(root)
+
+consoleFrame = tk.Frame(root, width=globalVar.canvasWidth, height=20)
+
+Label_middle = tk.Text(consoleFrame, height=5, font="COURIER 10", width=10,
+                       bg="black", fg="white", highlightthickness=2, highlightcolor="grey")
+
+consoleFrame.place(x=globalVar.canvasX,  # don't know how it works ... Tkinter mysteries ...
+                   y=(globalVar.canvasY+globalVar.canvasHeight+44), anchor='center')
+
+Label_middle.insert(tk.END, "Welcome aboard, captain!\n")
+Label_middle.config(state=DISABLED)
+scrollbar.place(in_=Label_middle, relx=1.0, rely=0,
+                height=80)
+scrollbar.config(command=Label_middle.yview)
+"""
 
 ammunitionChoice.place(x=20, y=20)
 accuracyChoice.place(x=20, y=100)
-gameSpeed.place(x=globalVar.canvasX, y=globalVar.canvasY - 80)
+gameSpeedScale.place(x=globalVar.canvasX, y=globalVar.canvasY - 80)
 canvas.place(x=globalVar.canvasX, y=globalVar.canvasY)
 """
 label1.grid(row=4, column=0, rowspan=2)
