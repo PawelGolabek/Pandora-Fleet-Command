@@ -9,6 +9,8 @@ from typing import Collection
 import PIL
 from PIL import Image, ImageTk
 import tkinter.ttk as ttk
+import ctypes
+from win32api import GetSystemMetrics
 
 #   Artemis 2021
 #   Project by Pawel Golabek
@@ -19,18 +21,18 @@ root = tk.Tk()
 
 UIScale = 1
 
-rootX = root.winfo_screenwidth()
-rootY = root.winfo_screenheight()
+rootX = 1600
+rootY = 1080
 
 root.geometry(str(rootX*UIScale) + "x" + str(rootY*UIScale))
 
 
 class global_var():
     # CANVAS OPTIONS
-    canvasX = rootX/12
-    canvasY = rootY/12
-    canvasWidth = round(rootX*10/12)
-    canvasHeight = round(rootY*8/12)
+    canvasX = 140
+    canvasY = 100
+    canvasWidth = 800
+    canvasHeight = 600
     ## INPUT HANDLING ##
     mouseWheelUp = FALSE
     mouseWheelDown = FALSE
@@ -659,7 +661,7 @@ ammunitionChoiceDropdown.config(width=10)
 
 shipImage1 = Image.open('ship_modules/ship.png')
 shipImage = shipImage1.resize(
-    (math.floor(globalVar.canvasWidth/8), math.floor(globalVar.canvasHeight/8)), Image.ANTIALIAS)
+    (math.floor(globalVar.canvasWidth/2), math.floor(globalVar.canvasHeight/4)), Image.ANTIALIAS)
 canvas.imageList.append(shipImage)
 playerImage = ImageTk.PhotoImage(shipImage)
 playerDisplay = tk.Label(root, image=playerImage)
