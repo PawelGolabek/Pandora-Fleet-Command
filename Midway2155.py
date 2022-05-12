@@ -19,24 +19,24 @@ root = tk.Tk()
 
 UIScale = 1
 
+rootX = 1600
+rootY = 900
+"""
 rootX = root.winfo_screenwidth()
 rootY = root.winfo_screenheight()
-
+root.attributes('-fullscreen', True)
+"""
 root.geometry(str(rootX*UIScale) + "x" + str(rootY*UIScale))
 
 
 class global_var():
-    # CANVAS OPTIONS
-    canvasX = rootX/12
-    canvasY = rootY/12
-    canvasWidth = round(rootX*10/12)
-    canvasHeight = round(rootY*8/12)
     ## INPUT HANDLING ##
+    mouseOnUI = FALSE
     mouseWheelUp = FALSE
     mouseWheelDown = FALSE
     mouseButton1 = FALSE
-    pointerX = 0
-    pointerY = 0
+    pointerX = 0.0
+    pointerY = 0.0
     ## GAME OPTIONS ##
     fogOfWar = TRUE
     gameSpeed = 1
@@ -44,6 +44,8 @@ class global_var():
     turnLength = 360
     zoom = 1
     # GAME DATA
+    landmarks = []
+    ships = []
     turnInProgress = FALSE
     misslesShot = 0
     currentMissles = []
@@ -51,15 +53,25 @@ class global_var():
     image = Image.open('1/map.png')
     imageMask = Image.open('1/mapMask.png')
     # ZOOM
-    mouseX = canvasWidth/2
-    mouseY = canvasHeight/2
+    mouseX = 0
+    mouseY = 0
     left = 0
-    right = canvasWidth
+    right = 0
     top = 0
-    bottom = canvasHeight
+    bottom = 0
     yellowX = 0
     yellowY = 0
-    zoomChange = False
+    zoomChange = 0
+    # ICONS
+    armorIcon = PhotoImage(file="icons/armor.png")
+
+
+class ui_metrics:   # change for %
+    canvasX = 200
+    canvasY = 100
+    canvasWidth = 1000
+    canvasHeight = 500
+    shipImageFrameHeight = 60
 
 
 class game_rules:
@@ -70,6 +82,18 @@ class game_rules:
 class _events:
     enemyDestroyed = False
     playerDestroyed = False
+
+
+class landmark():
+    def __init__(self, xPos=100, yPos=100, cooldown=200, defaultCooldown=200, radius=100, boost='none'):
+        self.xPos = xPos
+        self.yPos = yPos
+        self.cooldown = cooldown
+        self.defaultCooldown = defaultCooldown
+        self.radius = radius
+        self.boost = boost
+
+############################## AMUNITION #############################################
 
 
 class ammunition():
@@ -131,7 +155,7 @@ ammunition_lookup = {"type1a": type1a,
 
 
 class ship():
-    def __init__(self, name="USS Artemis", owner="ai`", hp=200, xPos=300, yPos=300, health={'section1': 100, 'section2': 100, 'section3': 100, 'section4': 100}, typesOfAmmunition=[type1a, type2a, type3a], ammunitionNumber=[15, 15, 15, 15], ammunitionChoice='type1a', detectionRange=200, xDir=0.0, yDir=1.0, turnRate=0.5, speed=40, outlineColor="red"):
+    def __init__(self, name="USS Artemis", owner="ai`", hp=200, ap=200, xPos=300, yPos=300, health={'section1': 100, 'section2': 100, 'section3': 100, 'section4': 100}, typesOfAmmunition=[type1a, type2a, type3a], ammunitionNumber=[15, 15, 15, 15], ammunitionChoice='type1a', detectionRange=200, xDir=0.0, yDir=1.0, turnRate=0.5, speed=40, outlineColor="red"):
         # Init info
         self.owner = owner
         self.name = name
@@ -148,6 +172,7 @@ class ship():
         self.speed = speed
         self.outlineColor = outlineColor
         self.hp = hp
+        self.ap = ap
         # Mid-round info
         self.shotsTaken = 0
         self.shotsNotTaken = 0
@@ -169,19 +194,31 @@ class aiController():
 
     def ammunitionChoiceScale(ship):  # virtual choice for AI Controller
         return 1
-
     a = 10
 
+################################################ STARTUP ######################################
+
+
+def getZoomMetrics():
+    globalVar.mouseX = uiMetrics.canvasWidth/2
+    globalVar.mouseY = uiMetrics.canvasHeight/2
+    globalVar.left = 0
+    globalVar.right = uiMetrics.canvasWidth
+    globalVar.top = 0
+    globalVar.bottom = uiMetrics.canvasHeight
+    globalVar.yellowX = 0
+    globalVar.yellowY = 0
+    globalVar.zoomChange = False
 
 ################################################ SHIP #########################################
+
 
 def updateShip(ship):  # rotate and move the chosen ship
     if(ship.moveOrderX):
         # check for terrain
         colors = globalVar.imageMask.getpixel((int(ship.xPos), int(ship.yPos)
                                                ))
-        print(ship.name + " " + str((colors[0]) +
-                                    (colors[1]) + (colors[2])/3))
+   #     print(ship.name + " " + str((colors[0]) + (colors[1]) + (colors[2])/3))
 
         colorWeight = (colors[0] + colors[1] + colors[2])
 
@@ -249,6 +286,28 @@ def drawShip(ship):  # draw ship on the map with all of its accesories
                            drawY+(ship.yDir*120*globalVar.zoom), fill="black")
 
 
+def drawLandmarks():
+    for landmark in globalVar.landmarks:
+        drawX = (landmark.xPos - globalVar.left) * \
+            globalVar.zoom   # change ###
+        drawY = (landmark.yPos - globalVar.top) * \
+            globalVar.zoom    # change ###
+
+        radius = landmark.radius * globalVar.zoom
+        canvas.create_text(drawX, drawY+20,
+                           text=landmark.cooldown)
+        canvas.create_oval(drawX-radius, drawY-radius,
+                           drawX+radius, drawY+radius)
+        iconX = drawX
+        iconY = drawY
+        drawLandmarkIcon(iconX, iconY, landmark.boost)
+
+
+def drawLandmarkIcon(iconX, iconY, boost):
+    if(boost == 'armor'):
+        canvas.create_image(iconX, iconY, image=globalVar.armorIcon)
+
+
 def manageShots(ship, ship2):
     # add amunition scale input
     if(ship.owner == 'player1'):
@@ -283,8 +342,9 @@ def getOrders(ship):
     if(ship.owner == "player1"):
         if(globalVar.mouseButton1 and mouseOnCanvas()):
             ship.moveOrderX = globalVar.left + \
-                (globalVar.pointerX/globalVar.zoom)
-            ship.moveOrderY = globalVar.top+(globalVar.pointerY/globalVar.zoom)
+                ((globalVar.pointerX-ui_metrics.canvasX)/globalVar.zoom)
+            ship.moveOrderY = globalVar.top + \
+                ((globalVar.pointerY-ui_metrics.canvasY)/globalVar.zoom)
     elif(ship.owner == "ai1"):
         ship.moveOrderX = 400  # insert ai contrller decision
         ship.moveOrderY = 400
@@ -304,10 +364,37 @@ def detectionCheck():
         player.visible = FALSE
 
 
-def dealDamage(ship, damage):
-    ship_lookup[ship].hp -= damage
-    if(ship_lookup[ship].hp < 1 and not events.enemyDestroyed):
-        if(ship_lookup[ship].owner == 'ai1'):
+def manageLandmarks():
+    for landmark in globalVar.landmarks:
+        if(landmark.cooldown > 0):
+            landmark.cooldown -= 1
+        for ship in globalVar.ships:
+            dist = math.sqrt(math.pow(landmark.xPos - ship.xPos, 2) +
+                             math.pow(landmark.yPos - ship.yPos, 2))
+            if(dist < landmark.radius and landmark.cooldown == 0):
+                getBonus(ship, landmark.boost)
+                landmark.cooldown = landmark.defaultCooldown
+
+
+def getBonus(ship, boost):
+    if(boost == 'health'):
+        ship.hp += 10
+    elif(boost == 'armor'):
+        x = 0
+        # add boosts
+
+
+def dealDamage(shipName, damage):
+    ship = ship_lookup[shipName]
+    while(damage > 0):
+        if(ship.ap > 0):  # armor
+            ship.ap -= 1
+        else:
+            ship.hp -= 1
+        damage -= 1
+
+    if(ship.hp < 1 and not events.enemyDestroyed):
+        if(ship.owner == 'ai1'):
             events.enemyDestroyed = True
             window = tk.Toplevel()
             label = tk.Label(window, text='yes, you won')
@@ -378,10 +465,8 @@ def createRocket(ship, target):
 ############################################ INPUTS #############################################
 
 def motion(event):
-    globalVar.pointerX = root.winfo_pointerx() - root.winfo_x() - \
-        globalVar.canvasX-7
-    globalVar.pointerY = root.winfo_pointery() - root.winfo_y() - \
-        globalVar.canvasY - 31
+    globalVar.pointerX = root.winfo_pointerx() - root.winfo_rootx()
+    globalVar.pointerY = root.winfo_pointery() - root.winfo_rooty()
 
 
 def mouseButton1(event):  # get left mouse button and set it in globalvar
@@ -421,6 +506,7 @@ def update():
             detectionCheck()
             updateShip(player)
             updateShip(enemy)
+            manageLandmarks()
             manageShots(player, enemy)   # check if ship shot
             manageShots(enemy, player)
             manageRockets()   # manage mid-air munitions
@@ -431,7 +517,9 @@ def update():
                 break
     drawShip(player)
     drawShip(enemy)
+    drawLandmarks()
     drawRockets()
+    globalVar.mouseOnUI = False
     globalVar.mouseWheelUp = False
     globalVar.mouseWheelDown = False
     globalVar.mouseButton1 = False
@@ -449,24 +537,26 @@ def newWindow():
 
             if(globalVar.mouseWheelUp and globalVar.zoomChange):
                 if(globalVar.zoom == 1):
-                    globalVar.mouseX = (globalVar.pointerX + globalVar.left)
-                    globalVar.mouseY = (globalVar.pointerY + globalVar.top)
+                    globalVar.mouseX = (
+                        (globalVar.pointerX - ui_metrics.canvasX) + globalVar.left)
+                    globalVar.mouseY = (
+                        (globalVar.pointerY - ui_metrics.canvasY) + globalVar.top)
                 else:
                     globalVar.mouseX = (
-                        globalVar.pointerX/(globalVar.zoom-1) + globalVar.left)
+                        (globalVar.pointerX - ui_metrics.canvasX)/(globalVar.zoom-1) + globalVar.left)
                     globalVar.mouseY = (
-                        globalVar.pointerY/(globalVar.zoom-1) + globalVar.top)
+                        (globalVar.pointerY - ui_metrics.canvasY) / (globalVar.zoom-1) + globalVar.top)
 
                 globalVar.yellowX = (
-                    globalVar.canvasWidth/globalVar.zoom)/2
+                    uiMetrics.canvasWidth/globalVar.zoom)/2
                 globalVar.yellowY = (
-                    globalVar.canvasHeight/globalVar.zoom)/2
+                    uiMetrics.canvasHeight/globalVar.zoom)/2
 
-                if(globalVar.mouseX > globalVar.canvasWidth - globalVar.yellowX):  # bumpers on sides
+                if(globalVar.mouseX > uiMetrics.canvasWidth - globalVar.yellowX):  # bumpers on sides
                     globalVar.mouseX = globalVar.right - globalVar.yellowX
                 if(globalVar.mouseX < globalVar.yellowX):
                     globalVar.mouseX = globalVar.left + globalVar.yellowX
-                if(globalVar.mouseY > globalVar.canvasHeight - globalVar.yellowY):
+                if(globalVar.mouseY > uiMetrics.canvasHeight - globalVar.yellowY):
                     globalVar.mouseY = globalVar.bottom - globalVar.yellowY
                 if(globalVar.mouseY < globalVar.yellowY):
                     globalVar.mouseY = globalVar.top + globalVar.yellowY
@@ -478,16 +568,14 @@ def newWindow():
                 globalVar.mouseX = globalVar.right - globalVar.left
                 globalVar.mouseY = globalVar.bottom - globalVar.top
 
-                canvas.create_oval(globalVar.mouseX, globalVar.mouseY, globalVar.mouseX +
-                                   20, globalVar.mouseY + 20)
             if(globalVar.mouseWheelDown):
-                globalVar.mouseX = globalVar.canvasWidth/2
-                globalVar.mouseY = globalVar.canvasHeight/2
+                globalVar.mouseX = uiMetrics.canvasWidth/2
+                globalVar.mouseY = uiMetrics.canvasHeight/2
                 globalVar.zoom = 1
                 globalVar.left = 0
                 globalVar.top = 0
-                globalVar.right = globalVar.canvasWidth
-                globalVar.bottom = globalVar.canvasHeight
+                globalVar.right = uiMetrics.canvasWidth
+                globalVar.bottom = uiMetrics.canvasHeight
 
             if(globalVar.zoom != 1):
 
@@ -495,9 +583,7 @@ def newWindow():
                                globalVar.right, globalVar.bottom))
                 im = tmp
                 im = im.resize(
-                    (globalVar.canvasWidth, globalVar.canvasHeight), Image.ANTIALIAS)
-
-                im.save('sadgfsd.png')  # testing delete later
+                    (uiMetrics.canvasWidth, uiMetrics.canvasHeight), Image.ANTIALIAS)
 
                 globalVar.im = ImageTk.PhotoImage(im)
 
@@ -532,6 +618,8 @@ def endTurn():
 def updateScales():
     playerHPProgressBar['value'] = player.hp
     enemyHPProgressBar['value'] = enemy.hp
+    playerAPProgressBar['value'] = player.ap
+    enemyAPProgressBar['value'] = enemy.ap
     ammunitionChoiceScale.config(
         to=ammunition_lookup[player.ammunitionChoice].shotsPerTurn)
     if(ammunitionChoiceScale.get() == 0):
@@ -543,11 +631,15 @@ def updateScales():
 
     accuracyChoiceScale.config(
         to=ammunition_lookup[player.ammunitionChoice].shotsPerTurn - ammunitionChoiceScale.get())
+    timeElapsedProgressBar.config(maximum=globalVar.turnLength)
 
 
 ########################################## MULTIPURPOSE #########################################
+
 def mouseOnCanvas():
-    if(globalVar.pointerX > 0 and globalVar.pointerX < (globalVar.canvasWidth) and globalVar.pointerY > 0 and globalVar.pointerY < (globalVar.canvasHeight)):
+    if(globalVar.pointerX > ui_metrics.canvasX and globalVar.pointerX <
+       (uiMetrics.canvasX + uiMetrics.canvasWidth) and globalVar.pointerY >
+            ui_metrics.canvasY and globalVar.pointerY < (uiMetrics.canvasY + uiMetrics.canvasHeight)):
         return True
     else:
         return False
@@ -583,9 +675,12 @@ root.bind('<Button-1>', mouseButton1)
 root.bind('<MouseWheel>', mouseWheel)
 
 root.title("USS Artemis")
+uiMetrics = ui_metrics()
 globalVar = global_var()
 gameRules = game_rules()
 ship_lookup = dict
+
+getZoomMetrics()
 
 playerName = 'USS Artemis'
 enemyName = 'RDD HellWitch'
@@ -593,23 +688,25 @@ enemyName = 'RDD HellWitch'
 player = ship(outlineColor="white", owner="player1", name=playerName)
 enemy = ship(xPos=43, outlineColor="red",
              owner="ai1", ammunitionChoice='type1a', name=enemyName)
+globalVar.ships.append(player)
+globalVar.ships.append(enemy)
 
 events = _events()
 
 ship_lookup = {playerName: player,
                enemyName: enemy}
 
+land1 = landmark(200, 200, 200, 200, 50, 'armor')
+(globalVar.landmarks).append(land1)
+
 # canvas
-# choose image
 img = Image.open('1/map.png')
-# resize image
-img = img.resize((globalVar.canvasWidth, globalVar.canvasHeight))
-# save image
+img = img.resize((uiMetrics.canvasWidth, uiMetrics.canvasHeight))
 img.save('resized_image.png')
 
 
-canvas = Canvas(root, width=globalVar.canvasWidth,
-                height=globalVar.canvasHeight)
+canvas = Canvas(root, width=uiMetrics.canvasWidth,
+                height=uiMetrics.canvasHeight)
 
 globalVar.img = PhotoImage("resized_image.png")
 canvas.imageList = []
@@ -618,10 +715,10 @@ canvas.imageList = []
 globalVar.imageMask = Image.open("1/mapMask.png")
 img = Image.open('1/map.png')
 im = img.resize(
-    (globalVar.canvasWidth, globalVar.canvasHeight), Image.ANTIALIAS)
+    (uiMetrics.canvasWidth, uiMetrics.canvasHeight), Image.ANTIALIAS)
 
 globalVar.imageMask = globalVar.imageMask.resize(
-    (globalVar.canvasWidth, globalVar.canvasHeight), Image.ANTIALIAS)
+    (uiMetrics.canvasWidth, uiMetrics.canvasHeight), Image.ANTIALIAS)
 
 globalVar.im = ImageTk.PhotoImage(im)
 canvas.imageList.append(im)
@@ -643,6 +740,7 @@ timeElapsedProgressBar = ttk.Progressbar(root, maximum=globalVar.turnLength, var
                                          mode='determinate', length=400)
 
 startTurnButton = tk.Button(root, text="Start turn", command=startTurn)
+exitButton = tk.Button(root, text="Exit", command=exit)
 
 options = [
     type1a.typeName,
@@ -659,7 +757,7 @@ ammunitionChoiceDropdown.config(width=10)
 
 shipImage1 = Image.open('ship_modules/ship.png')
 shipImage = shipImage1.resize(
-    (math.floor(globalVar.canvasWidth/8), math.floor(globalVar.canvasHeight/8)), Image.ANTIALIAS)
+    (math.floor(uiMetrics.canvasWidth/8), math.floor(uiMetrics.canvasHeight/8)), Image.ANTIALIAS)
 canvas.imageList.append(shipImage)
 playerImage = ImageTk.PhotoImage(shipImage)
 playerDisplay = tk.Label(root, image=playerImage)
@@ -678,39 +776,53 @@ enemyHPLabelFrame = ttk.LabelFrame(root, text="Enemy HP",
                                    borderwidth=2, relief="groove")
 enemyHPProgressBar = ttk.Progressbar(
     enemyHPLabelFrame, maximum=enemy.hp, length=390, variable=100)
-
+playerAPLabelFrame = ttk.LabelFrame(root, text="Player Armor",
+                                    borderwidth=2, relief="groove")
+playerAPProgressBar = ttk.Progressbar(
+    playerAPLabelFrame, maximum=player.ap, length=390, variable=100)
+enemyAPLabelFrame = ttk.LabelFrame(root, text="Enemy Armor",
+                                   borderwidth=2, relief="groove")
+enemyAPProgressBar = ttk.Progressbar(
+    enemyAPLabelFrame, maximum=enemy.ap, length=390, variable=100)
 
 ######################################################### PLACE ####################################
 # left section
-ammunitionChoiceScale.place(x=20, y=globalVar.canvasY+60)
-accuracyChoiceScale.place(x=20, y=globalVar.canvasY+140)
-gameSpeedScale.place(x=globalVar.canvasX, y=globalVar.canvasY - 80)
-canvas.place(x=globalVar.canvasX, y=globalVar.canvasY)
+ammunitionChoiceScale.place(x=20, y=ui_metrics.canvasY+60)
+accuracyChoiceScale.place(x=20, y=ui_metrics.canvasY+140)
+gameSpeedScale.place(x=ui_metrics.canvasX, y=ui_metrics.canvasY - 80)
+canvas.place(x=ui_metrics.canvasX, y=ui_metrics.canvasY)
 timeElapsedProgressBar.place(
-    x=globalVar.canvasX+120, y=globalVar.canvasY - 60)
-timeElapsedLabel.place(x=globalVar.canvasX+140, y=globalVar.canvasY - 80)
-startTurnButton.place(x=(globalVar.canvasX+globalVar.canvasWidth + 80),
-                      y=globalVar.canvasY+globalVar.canvasHeight-20)
+    x=ui_metrics.canvasX+120, y=ui_metrics.canvasY - 60)
+timeElapsedLabel.place(x=ui_metrics.canvasX+140, y=ui_metrics.canvasY - 80)
+startTurnButton.place(x=(ui_metrics.canvasX+ui_metrics.canvasWidth + 80),
+                      y=ui_metrics.canvasY+ui_metrics.canvasHeight-20)
 # ship displays
-playerDisplay.place(x=globalVar.canvasX,
-                    y=globalVar.canvasY + globalVar.canvasHeight)
-enemyDisplay.place(x=globalVar.canvasX+400,
-                   y=globalVar.canvasY + globalVar.canvasHeight)
+playerDisplay.place(x=ui_metrics.canvasX,
+                    y=ui_metrics.canvasY + ui_metrics.canvasHeight)
+enemyDisplay.place(x=ui_metrics.canvasX+400,
+                   y=ui_metrics.canvasY + ui_metrics.canvasHeight)
 
 # ship hp
-playerHPLabelFrame.place(width=400, height=54, x=globalVar.canvasX,
-                         y=globalVar.canvasY + globalVar.canvasHeight + 160, anchor="nw")
+playerHPLabelFrame.place(width=400, height=54, x=ui_metrics.canvasX,
+                         y=ui_metrics.canvasY + ui_metrics.canvasHeight + 160, anchor="nw")
 playerHPProgressBar.place(x=2, y=5)
-enemyHPLabelFrame.place(width=400, height=54, x=globalVar.canvasX+400,
-                        y=globalVar.canvasY + globalVar.canvasHeight + 160, anchor="nw")
+enemyHPLabelFrame.place(width=400, height=54, x=ui_metrics.canvasX+400,
+                        y=ui_metrics.canvasY + ui_metrics.canvasHeight + 160, anchor="nw")
 enemyHPProgressBar.place(x=2, y=5)
+# ship armor
+playerAPLabelFrame.place(width=400, height=54, x=ui_metrics.canvasX,
+                         y=ui_metrics.canvasY + ui_metrics.canvasHeight + 100, anchor="nw")
+playerAPProgressBar.place(x=2, y=5)
+enemyAPLabelFrame.place(width=400, height=54, x=ui_metrics.canvasX+400,
+                        y=ui_metrics.canvasY + ui_metrics.canvasHeight + 100, anchor="nw")
+enemyAPProgressBar.place(x=2, y=5)
 
 # right section
 ammunitionChoiceDropdown.place(
-    x=globalVar.canvasX + globalVar.canvasWidth + 20, y=globalVar.canvasY)
+    x=ui_metrics.canvasX + ui_metrics.canvasWidth + 20, y=ui_metrics.canvasY)
 
-distanceLabel.place(x=globalVar.canvasX +
-                    globalVar.canvasWidth - 160, y=globalVar.canvasY - 20)
+distanceLabel.place(x=ui_metrics.canvasX +
+                    ui_metrics.canvasWidth - 160, y=ui_metrics.canvasY - 20)
 # create list of elements to disable if round is in progress
 UIElementsList.append(ammunitionChoiceScale)
 UIElementsList.append(accuracyChoiceScale)
