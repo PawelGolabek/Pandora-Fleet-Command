@@ -155,7 +155,7 @@ ammunition_lookup = {"type1a": type1a,
 
 
 class ship():
-    def __init__(self, name="USS Artemis", owner="ai`", hp=200, ap=200, xPos=300, yPos=300, health={'section1': 100, 'section2': 100, 'section3': 100, 'section4': 100}, typesOfAmmunition=[type1a, type2a, type3a], ammunitionNumber=[15, 15, 15, 15], ammunitionChoice='type1a', detectionRange=200, xDir=0.0, yDir=1.0, turnRate=0.5, speed=40, outlineColor="red"):
+    def __init__(self, name="USS Artemis", owner="ai`", hp=200, ap=200, shields=3, xPos=300, yPos=300, health={'section1': 100, 'section2': 100, 'section3': 100, 'section4': 100}, typesOfAmmunition=[type1a, type2a, type3a], ammunitionNumber=[15, 15, 15, 15], ammunitionChoice='type1a', detectionRange=200, xDir=0.0, yDir=1.0, turnRate=0.5, speed=40, outlineColor="red"):
         # Init info
         self.owner = owner
         self.name = name
@@ -173,6 +173,7 @@ class ship():
         self.outlineColor = outlineColor
         self.hp = hp
         self.ap = ap
+        self.shields = shields
         # Mid-round info
         self.shotsTaken = 0
         self.shotsNotTaken = 0
@@ -378,9 +379,9 @@ def manageLandmarks():
 
 def getBonus(ship, boost):
     if(boost == 'health'):
-        ship.hp += 10
+        ship.hp += 50
     elif(boost == 'armor'):
-        x = 0
+        ship.ap += 50
         # add boosts
 
 
@@ -685,8 +686,9 @@ getZoomMetrics()
 playerName = 'USS Artemis'
 enemyName = 'RDD HellWitch'
 
-player = ship(outlineColor="white", owner="player1", name=playerName)
-enemy = ship(xPos=43, outlineColor="red",
+player = ship(outlineColor="white", owner="player1",
+              name=playerName, shields=3)
+enemy = ship(xPos=43, outlineColor="red", shields=2,
              owner="ai1", ammunitionChoice='type1a', name=enemyName)
 globalVar.ships.append(player)
 globalVar.ships.append(enemy)
@@ -700,8 +702,11 @@ land1 = landmark(200, 200, 200, 200, 50, 'armor')
 (globalVar.landmarks).append(land1)
 
 # canvas
+# choose image
 img = Image.open('1/map.png')
+# resize image
 img = img.resize((uiMetrics.canvasWidth, uiMetrics.canvasHeight))
+# save image
 img.save('resized_image.png')
 
 
@@ -768,14 +773,19 @@ enemyDisplay = tk.Label(root, image=enemyImage)
 distanceLabelFrame = ttk.LabelFrame(
     root, text='Distance between ships', width=1000, height=200)
 distanceLabel = tk.Label(distanceLabelFrame, text='0000000')
-playerHPLabelFrame = ttk.LabelFrame(root, text="Player HP",
+
+# ship shields
+playerSPLabelFrame = ttk.LabelFrame(root, text="Enemy Shields",
                                     borderwidth=2, relief="groove")
-playerHPProgressBar = ttk.Progressbar(
-    playerHPLabelFrame, maximum=player.hp, length=390, variable=100)
-enemyHPLabelFrame = ttk.LabelFrame(root, text="Enemy HP",
+playerSPProgressBar = ttk.Progressbar(
+    playerSPLabelFrame, maximum=player.hp, length=390, variable=100)
+enemySPLabelFrame = ttk.LabelFrame(root, text="Enemy Shields",
                                    borderwidth=2, relief="groove")
-enemyHPProgressBar = ttk.Progressbar(
-    enemyHPLabelFrame, maximum=enemy.hp, length=390, variable=100)
+x = enemy.shields
+enemySPProgressBar = ttk.Progressbar(
+    enemySPLabelFrame, maximum=enemy.hp, length=5000, variable=100)
+
+# ship armor
 playerAPLabelFrame = ttk.LabelFrame(root, text="Player Armor",
                                     borderwidth=2, relief="groove")
 playerAPProgressBar = ttk.Progressbar(
@@ -784,6 +794,16 @@ enemyAPLabelFrame = ttk.LabelFrame(root, text="Enemy Armor",
                                    borderwidth=2, relief="groove")
 enemyAPProgressBar = ttk.Progressbar(
     enemyAPLabelFrame, maximum=enemy.ap, length=390, variable=100)
+
+# ship hp
+playerHPLabelFrame = ttk.LabelFrame(root, text="Player HP",
+                                    borderwidth=2, relief="groove")
+playerHPProgressBar = ttk.Progressbar(
+    playerHPLabelFrame, maximum=player.hp, length=390, variable=100)
+enemyHPLabelFrame = ttk.LabelFrame(root, text="Enemy HP",
+                                   borderwidth=2, relief="groove")
+enemyHPProgressBar = ttk.Progressbar(
+    enemyHPLabelFrame, maximum=enemy.hp, length=390, variable=100)
 
 ######################################################### PLACE ####################################
 # left section
@@ -802,13 +822,14 @@ playerDisplay.place(x=ui_metrics.canvasX,
 enemyDisplay.place(x=ui_metrics.canvasX+400,
                    y=ui_metrics.canvasY + ui_metrics.canvasHeight)
 
-# ship hp
-playerHPLabelFrame.place(width=400, height=54, x=ui_metrics.canvasX,
-                         y=ui_metrics.canvasY + ui_metrics.canvasHeight + 160, anchor="nw")
-playerHPProgressBar.place(x=2, y=5)
-enemyHPLabelFrame.place(width=400, height=54, x=ui_metrics.canvasX+400,
-                        y=ui_metrics.canvasY + ui_metrics.canvasHeight + 160, anchor="nw")
-enemyHPProgressBar.place(x=2, y=5)
+# ship shields
+playerSPLabelFrame.place(width=400, height=54, x=ui_metrics.canvasX,
+                         y=ui_metrics.canvasY + ui_metrics.canvasHeight + 60, anchor="nw")
+playerSPProgressBar.place(x=2, y=5)
+enemySPLabelFrame.place(width=400, height=54, x=ui_metrics.canvasX+400,
+                        y=ui_metrics.canvasY + ui_metrics.canvasHeight + 60, anchor="nw")
+enemySPProgressBar.place(x=2, y=5)
+
 # ship armor
 playerAPLabelFrame.place(width=400, height=54, x=ui_metrics.canvasX,
                          y=ui_metrics.canvasY + ui_metrics.canvasHeight + 100, anchor="nw")
@@ -817,6 +838,13 @@ enemyAPLabelFrame.place(width=400, height=54, x=ui_metrics.canvasX+400,
                         y=ui_metrics.canvasY + ui_metrics.canvasHeight + 100, anchor="nw")
 enemyAPProgressBar.place(x=2, y=5)
 
+# ship hp
+playerHPLabelFrame.place(width=400, height=54, x=ui_metrics.canvasX,
+                         y=ui_metrics.canvasY + ui_metrics.canvasHeight + 160, anchor="nw")
+playerHPProgressBar.place(x=2, y=5)
+enemyHPLabelFrame.place(width=400, height=54, x=ui_metrics.canvasX+400,
+                        y=ui_metrics.canvasY + ui_metrics.canvasHeight + 160, anchor="nw")
+enemyHPProgressBar.place(x=2, y=5)
 # right section
 ammunitionChoiceDropdown.place(
     x=ui_metrics.canvasX + ui_metrics.canvasWidth + 20, y=ui_metrics.canvasY)
