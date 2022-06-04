@@ -155,7 +155,7 @@ ammunition_lookup = {"type1a": type1a,
 
 
 class ship():
-    def __init__(self, name="USS Artemis", owner="ai`", hp=200, ap=200, shields=3, xPos=300, yPos=300, health={'section1': 100, 'section2': 100, 'section3': 100, 'section4': 100}, typesOfAmmunition=[type1a, type2a, type3a], ammunitionNumber=[15, 15, 15, 15], ammunitionChoice='type1a', detectionRange=200, xDir=0.0, yDir=1.0, turnRate=0.5, speed=40, outlineColor="red"):
+    def __init__(self, name="USS Artemis", owner="ai2", hp=200, ap=200, shields=3, xPos=300, yPos=300, health={'section1': 100, 'section2': 100, 'section3': 100, 'section4': 100}, typesOfAmmunition=[type1a, type2a, type3a], ammunitionNumber=[15, 15, 15, 15], ammunitionChoice='type1a', detectionRange=200, xDir=0.0, yDir=1.0, turnRate=0.5, speed=40, outlineColor="red"):
         # Init info
         self.owner = owner
         self.name = name
@@ -214,77 +214,78 @@ def getZoomMetrics():
 ################################################ SHIP #########################################
 
 
-def updateShip(ship):  # rotate and move the chosen ship
-    if(ship.moveOrderX):
-        # check for terrain
-        colors = globalVar.imageMask.getpixel((int(ship.xPos), int(ship.yPos)
-                                               ))
-   #     print(ship.name + " " + str((colors[0]) + (colors[1]) + (colors[2])/3))
+def updateShips():  # rotate and move the chosen ship
+    for ship in globalVar.ships:
+        if(ship.moveOrderX):
+            # check for terrain
+            colors = globalVar.imageMask.getpixel((int(ship.xPos), int(ship.yPos)
+                                                   ))
+    #     print(ship.name + " " + str((colors[0]) + (colors[1]) + (colors[2])/3))
 
-        colorWeight = (colors[0] + colors[1] + colors[2])
+            colorWeight = (colors[0] + colors[1] + colors[2])
 
-        # vector normalisation
-        scale = math.sqrt((ship.moveOrderX-ship.xPos)*(ship.moveOrderX-ship.xPos) +
-                          (ship.moveOrderY-ship.yPos)*(ship.moveOrderY-ship.yPos))
+            # vector normalisation
+            scale = math.sqrt((ship.moveOrderX-ship.xPos)*(ship.moveOrderX-ship.xPos) +
+                              (ship.moveOrderY-ship.yPos)*(ship.moveOrderY-ship.yPos))
 
-        # move order into normalised vector
-        moveDirX = -(ship.xPos-ship.moveOrderX) / scale
-        moveDirY = -(ship.yPos-ship.moveOrderY) / scale
+            # move order into normalised vector
+            moveDirX = -(ship.xPos-ship.moveOrderX) / scale
+            moveDirY = -(ship.yPos-ship.moveOrderY) / scale
 
-        degree = ship.turnRate
-        rotateVector(degree, ship, moveDirX, moveDirY)
+            degree = ship.turnRate
+            rotateVector(degree, ship, moveDirX, moveDirY)
 
-        if(colorWeight > 400):
-            movementPenality = gameRules.movementPenalityMedium
-            """
-            canvas.create_rectangle(
-                ship.xPos, ship.yPos, ship.xPos + 10, ship.yPos + 20, fill='orange')"""
-        elif(colorWeight < 200):
-            movementPenality = gameRules.movementPenalityHard
-            dealDamage(ship.name, 1)
-            """
-            canvas.create_rectangle(
-                ship.xPos, ship.yPos, ship.xPos + 10, ship.yPos + 20, fill='red')"""
+            if(colorWeight > 400):
+                movementPenality = gameRules.movementPenalityMedium
+                """
+                canvas.create_rectangle(
+                    ship.xPos, ship.yPos, ship.xPos + 10, ship.yPos + 20, fill='orange')"""
+            elif(colorWeight < 200):
+                movementPenality = gameRules.movementPenalityHard
+                dealDamage(ship.name, 1)
+                """
+                canvas.create_rectangle(
+                    ship.xPos, ship.yPos, ship.xPos + 10, ship.yPos + 20, fill='red')"""
+            else:
+                movementPenality = 0.000001  # change
+
+            xVector = ship.xDir*ship.speed/360
+            yVector = ship.yDir*ship.speed/360
+
+            ship.xPos += xVector - xVector * movementPenality
+            ship.yPos += yVector - yVector * movementPenality
+
+
+def drawShips():  # draw ship on the map with all of its accesories
+    for ship in globalVar.ships:
+        drawX = (ship.xPos - globalVar.left) * \
+            globalVar.zoom   # get coords relative to window
+        drawY = (ship.yPos - globalVar.top) * globalVar.zoom
+
+        if(ship.moveOrderX):
+            drawOrderX = (ship.moveOrderX - globalVar.left) * \
+                globalVar.zoom    # get order relative to window
+            drawOrderY = (ship.moveOrderY - globalVar.top) * globalVar.zoom
+            if(ship.owner == "player1" or (not globalVar.fogOfWar or enemy.visible)):  # draw order
+                canvas.create_line(drawX, drawY, drawOrderX,
+                                   drawOrderY,   fill='white')
+
+        if(ship.owner == "ai1"):
+            if(not globalVar.fogOfWar or enemy.visible):
+                canvas.create_oval(drawX-ship.detectionRange*globalVar.zoom, drawY - ship.detectionRange*globalVar.zoom,
+                                   drawX + ship.detectionRange*globalVar.zoom, drawY+ship.detectionRange*globalVar.zoom, outline=ship.outlineColor)
+                canvas.create_line(drawX-5*globalVar.zoom, drawY-5*globalVar.zoom, drawX +
+                                   5*globalVar.zoom, drawY+5*globalVar.zoom, width=globalVar.zoom,  fill='white')
         else:
-            movementPenality = 0.000001  # change
-
-        xVector = ship.xDir*ship.speed/360
-        yVector = ship.yDir*ship.speed/360
-
-        ship.xPos += xVector - xVector * movementPenality
-        ship.yPos += yVector - yVector * movementPenality
-
-
-def drawShip(ship):  # draw ship on the map with all of its accesories
-
-    drawX = (ship.xPos - globalVar.left) * \
-        globalVar.zoom   # get coords relative to window
-    drawY = (ship.yPos - globalVar.top) * globalVar.zoom
-
-    if(ship.moveOrderX):
-        drawOrderX = (ship.moveOrderX - globalVar.left) * \
-            globalVar.zoom    # get order relative to window
-        drawOrderY = (ship.moveOrderY - globalVar.top) * globalVar.zoom
-        if(ship.owner == "player1" or (not globalVar.fogOfWar or enemy.visible)):  # draw order
-            canvas.create_line(drawX, drawY, drawOrderX,
-                               drawOrderY,   fill='white')
-
-    if(ship.owner == "ai1"):
-        if(not globalVar.fogOfWar or enemy.visible):
-            canvas.create_oval(drawX-ship.detectionRange*globalVar.zoom, drawY - ship.detectionRange*globalVar.zoom,
-                               drawX + ship.detectionRange*globalVar.zoom, drawY+ship.detectionRange*globalVar.zoom, outline=ship.outlineColor)
-            canvas.create_line(drawX-5*globalVar.zoom, drawY-5*globalVar.zoom, drawX +
-                               5*globalVar.zoom, drawY+5*globalVar.zoom, width=globalVar.zoom,  fill='white')
-    else:
-        canvas.create_oval(drawX-ship.detectionRange*globalVar.zoom,
-                           drawY - ship.detectionRange*globalVar.zoom, drawX +
-                           ship.detectionRange*globalVar.zoom,
-                           drawY+ship.detectionRange*globalVar.zoom, outline=ship.outlineColor)
-        canvas.create_line(drawX-5*globalVar.zoom, drawY-5*globalVar.zoom,
-                           drawX + 5*globalVar.zoom, drawY+5*globalVar.zoom, width=globalVar.zoom,  fill='white')  # draw ship
-    if(ship.owner == "player1" or (not globalVar.fogOfWar or enemy.visible)):
-        canvas.create_line(drawX, drawY,   drawX+(ship.xDir*120*globalVar.zoom),
-                           drawY+(ship.yDir*120*globalVar.zoom), fill="black")
+            canvas.create_oval(drawX-ship.detectionRange*globalVar.zoom,
+                               drawY - ship.detectionRange*globalVar.zoom, drawX +
+                               ship.detectionRange*globalVar.zoom,
+                               drawY+ship.detectionRange*globalVar.zoom, outline=ship.outlineColor)
+            canvas.create_line(drawX-5*globalVar.zoom, drawY-5*globalVar.zoom,
+                               drawX + 5*globalVar.zoom, drawY+5*globalVar.zoom, width=globalVar.zoom,  fill='white')  # draw ship
+        if(ship.owner == "player1" or (not globalVar.fogOfWar or enemy.visible)):
+            canvas.create_line(drawX, drawY,   drawX+(ship.xDir*120*globalVar.zoom),
+                               drawY+(ship.yDir*120*globalVar.zoom), fill="black")
 
 
 def drawLandmarks():
@@ -400,7 +401,7 @@ def dealDamage(shipName, damage):
             window = tk.Toplevel()
             label = tk.Label(window, text='yes, you won')
             label.place(x=0, y=0)
-        elif(ship_lookup[ship].owner == 'player1' and events.playerDestroyed == False):
+        elif(ship.owner == 'player1' and events.playerDestroyed == False):
             events.playerDestroyed = True
             window = tk.Toplevel()
             label = tk.Label(window, text='yes, you looose')
@@ -505,10 +506,9 @@ def update():
     if(not globalVar.turnBased or globalVar.turnInProgress):
         while(ticksToEndFrame < globalVar.gameSpeed):
             detectionCheck()
-            updateShip(player)
-            updateShip(enemy)
+            updateShips()
             manageLandmarks()
-            manageShots(player, enemy)   # check if ship shot
+            manageShots(player, enemy)   # check ship shot
             manageShots(enemy, player)
             manageRockets()   # manage mid-air munitions
             ticksToEndFrame += 1
@@ -516,8 +516,7 @@ def update():
             if(timeElapsedProgressBar['value'] > globalVar.turnLength):
                 endTurn()
                 break
-    drawShip(player)
-    drawShip(enemy)
+    drawShips()
     drawLandmarks()
     drawRockets()
     globalVar.mouseOnUI = False
@@ -621,6 +620,10 @@ def updateScales():
     enemyHPProgressBar['value'] = enemy.hp
     playerAPProgressBar['value'] = player.ap
     enemyAPProgressBar['value'] = enemy.ap
+    for progressBar in enemyShields:
+        progressBar['value'] = 100
+        # add player
+
     ammunitionChoiceScale.config(
         to=ammunition_lookup[player.ammunitionChoice].shotsPerTurn)
     if(ammunitionChoiceScale.get() == 0):
@@ -683,31 +686,54 @@ ship_lookup = dict
 
 getZoomMetrics()
 
-playerName = 'USS Artemis'
+# Ships
+
+playerName = 'MMS Artemis'
+playerName2 = 'MMS Scout'
+playerName3 = 'MMS Catalyst'
+
 enemyName = 'RDD HellWitch'
+enemyName2 = 'RDD Redglower'
+enemyName3 = 'RDD Firebath'
 
 player = ship(outlineColor="white", owner="player1",
-              name=playerName, shields=3)
-enemy = ship(xPos=43, outlineColor="red", shields=2,
+              name=playerName, shields=20, xPos=20)
+player2 = ship(outlineColor="white", owner="player1",
+               name=playerName2, shields=10, xPos=40)
+player3 = ship(outlineColor="white", owner="player1",
+               name=playerName3, shields=5, xPos=60)
+
+enemy = ship(xPos=23, outlineColor="red", shields=20,
              owner="ai1", ammunitionChoice='type1a', name=enemyName)
-globalVar.ships.append(player)
-globalVar.ships.append(enemy)
+enemy2 = ship(xPos=43, outlineColor="red", shields=10,
+              owner="ai1", ammunitionChoice='type1a', name=enemyName2)
+enemy3 = ship(xPos=63, outlineColor="red", shields=5,
+              owner="ai1", ammunitionChoice='type1a', name=enemyName3)
+
+(globalVar.ships).append(player)
+(globalVar.ships).append(player2)
+(globalVar.ships).append(player3)
+
+(globalVar.ships).append(enemy)
+(globalVar.ships).append(enemy2)
+(globalVar.ships).append(enemy3)
 
 events = _events()
 
 ship_lookup = {playerName: player,
-               enemyName: enemy}
+               enemyName: enemy,
+               playerName2: player2,
+               enemyName2: enemy2,
+               playerName3: player3,
+               enemyName3: enemy3}
 
 land1 = landmark(200, 200, 200, 200, 50, 'armor')
 (globalVar.landmarks).append(land1)
 
 # canvas
-# choose image
 img = Image.open('1/map.png')
-# resize image
 img = img.resize((uiMetrics.canvasWidth, uiMetrics.canvasHeight))
-# save image
-img.save('resized_image.png')
+# img.save('resized_image.png')
 
 
 canvas = Canvas(root, width=uiMetrics.canvasWidth,
@@ -775,15 +801,19 @@ distanceLabelFrame = ttk.LabelFrame(
 distanceLabel = tk.Label(distanceLabelFrame, text='0000000')
 
 # ship shields
-playerSPLabelFrame = ttk.LabelFrame(root, text="Enemy Shields",
+playerSPLabelFrame = ttk.LabelFrame(root, text="Player Shields",
                                     borderwidth=2, relief="groove")
 playerSPProgressBar = ttk.Progressbar(
     playerSPLabelFrame, maximum=player.hp, length=390, variable=100)
 enemySPLabelFrame = ttk.LabelFrame(root, text="Enemy Shields",
                                    borderwidth=2, relief="groove")
+enemyShields = []
 x = enemy.shields
-enemySPProgressBar = ttk.Progressbar(
-    enemySPLabelFrame, maximum=enemy.hp, length=5000, variable=100)
+n = 0
+while(n < x):
+    enemyShields.append(ttk.Progressbar(
+        enemySPLabelFrame, maximum=100, length=math.floor(390/x * 4/5), variable=100))
+    n += 1
 
 # ship armor
 playerAPLabelFrame = ttk.LabelFrame(root, text="Player Armor",
@@ -824,26 +854,29 @@ enemyDisplay.place(x=ui_metrics.canvasX+400,
 
 # ship shields
 playerSPLabelFrame.place(width=400, height=54, x=ui_metrics.canvasX,
-                         y=ui_metrics.canvasY + ui_metrics.canvasHeight + 60, anchor="nw")
+                         y=ui_metrics.canvasY + ui_metrics.canvasHeight + 80, anchor="nw")
 playerSPProgressBar.place(x=2, y=5)
 enemySPLabelFrame.place(width=400, height=54, x=ui_metrics.canvasX+400,
-                        y=ui_metrics.canvasY + ui_metrics.canvasHeight + 60, anchor="nw")
-enemySPProgressBar.place(x=2, y=5)
+                        y=ui_metrics.canvasY + ui_metrics.canvasHeight + 80, anchor="nw")
+tmp = 0
+for progressBar in enemyShields:
+    progressBar.place(x=tmp + 5, y=5)
+    tmp += (390/(enemy.shields*4+(enemy.shields-1)))*5
 
 # ship armor
 playerAPLabelFrame.place(width=400, height=54, x=ui_metrics.canvasX,
-                         y=ui_metrics.canvasY + ui_metrics.canvasHeight + 100, anchor="nw")
+                         y=ui_metrics.canvasY + ui_metrics.canvasHeight + 140, anchor="nw")
 playerAPProgressBar.place(x=2, y=5)
 enemyAPLabelFrame.place(width=400, height=54, x=ui_metrics.canvasX+400,
-                        y=ui_metrics.canvasY + ui_metrics.canvasHeight + 100, anchor="nw")
+                        y=ui_metrics.canvasY + ui_metrics.canvasHeight + 140, anchor="nw")
 enemyAPProgressBar.place(x=2, y=5)
 
 # ship hp
 playerHPLabelFrame.place(width=400, height=54, x=ui_metrics.canvasX,
-                         y=ui_metrics.canvasY + ui_metrics.canvasHeight + 160, anchor="nw")
+                         y=ui_metrics.canvasY + ui_metrics.canvasHeight + 200, anchor="nw")
 playerHPProgressBar.place(x=2, y=5)
 enemyHPLabelFrame.place(width=400, height=54, x=ui_metrics.canvasX+400,
-                        y=ui_metrics.canvasY + ui_metrics.canvasHeight + 160, anchor="nw")
+                        y=ui_metrics.canvasY + ui_metrics.canvasHeight + 200, anchor="nw")
 enemyHPProgressBar.place(x=2, y=5)
 # right section
 ammunitionChoiceDropdown.place(
