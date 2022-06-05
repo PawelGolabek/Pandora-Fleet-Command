@@ -155,13 +155,18 @@ ammunition_lookup = {"type1a": type1a,
 
 
 class ship():
-    def __init__(self, name="USS Artemis", owner="ai2", hp=200, ap=200, shields=3, xPos=300, yPos=300, health={'section1': 100, 'section2': 100, 'section3': 100, 'section4': 100}, typesOfAmmunition=[type1a, type2a, type3a], ammunitionNumber=[15, 15, 15, 15], ammunitionChoice='type1a', detectionRange=200, xDir=0.0, yDir=1.0, turnRate=0.5, speed=40, outlineColor="red"):
+    def __init__(self, name="USS Artemis", owner="ai2", target='MSS Artemis',
+                 hp=200, ap=200, shields=3, xPos=300, yPos=300,
+                 typesOfAmmunition=[type1a, type2a, type3a],
+                 ammunitionNumber=[15, 15, 15, 15], ammunitionChoice='type1a',
+                 detectionRange=200, xDir=0.0, yDir=1.0, turnRate=0.5, speed=40,
+                 outlineColor="red"):
         # Init info
-        self.owner = owner
         self.name = name
+        self.owner = owner
+        self.target = target
         self.xPos = xPos
         self.yPos = yPos
-        self.health = health
         self.typesOfAmmunition = typesOfAmmunition
         self.ammunitionNumber = ammunitionNumber
         self.ammunitionChoice = ammunitionChoice
@@ -678,7 +683,7 @@ root.bind('<Motion>', motion)
 root.bind('<Button-1>', mouseButton1)
 root.bind('<MouseWheel>', mouseWheel)
 
-root.title("USS Artemis")
+root.title("MMS Artemis")
 uiMetrics = ui_metrics()
 globalVar = global_var()
 gameRules = game_rules()
@@ -800,6 +805,12 @@ distanceLabelFrame = ttk.LabelFrame(
     root, text='Distance between ships', width=1000, height=200)
 distanceLabel = tk.Label(distanceLabelFrame, text='0000000')
 
+# ship choice
+
+shipChoice1 = ttk.Radiobutton(root, text='1. MSS Artemis', value=1)
+shipChoice2 = ttk.Radiobutton(root, text='2. MSS Scout', value=2)
+shipChoice3 = ttk.Radiobutton(root, text='3. MSS Catalyst', value=3)
+
 # ship shields
 playerSPLabelFrame = ttk.LabelFrame(root, text="Player Shields",
                                     borderwidth=2, relief="groove")
@@ -839,13 +850,18 @@ enemyHPProgressBar = ttk.Progressbar(
 # left section
 ammunitionChoiceScale.place(x=20, y=ui_metrics.canvasY+60)
 accuracyChoiceScale.place(x=20, y=ui_metrics.canvasY+140)
+# upper section
+shipChoice1.place(x=ui_metrics.canvasX + 540, y=ui_metrics.canvasY - 60)
+shipChoice2.place(x=ui_metrics.canvasX + 700, y=ui_metrics.canvasY - 60)
+shipChoice3.place(x=ui_metrics.canvasX + 860, y=ui_metrics.canvasY - 60)
+
 gameSpeedScale.place(x=ui_metrics.canvasX, y=ui_metrics.canvasY - 80)
 canvas.place(x=ui_metrics.canvasX, y=ui_metrics.canvasY)
 timeElapsedProgressBar.place(
     x=ui_metrics.canvasX+120, y=ui_metrics.canvasY - 60)
 timeElapsedLabel.place(x=ui_metrics.canvasX+140, y=ui_metrics.canvasY - 80)
-startTurnButton.place(x=(ui_metrics.canvasX+ui_metrics.canvasWidth + 80),
-                      y=ui_metrics.canvasY+ui_metrics.canvasHeight-20)
+gameSpeedScale.place(x=ui_metrics.canvasX, y=ui_metrics.canvasY - 80)
+
 # ship displays
 playerDisplay.place(x=ui_metrics.canvasX,
                     y=ui_metrics.canvasY + ui_metrics.canvasHeight)
@@ -879,6 +895,8 @@ enemyHPLabelFrame.place(width=400, height=54, x=ui_metrics.canvasX+400,
                         y=ui_metrics.canvasY + ui_metrics.canvasHeight + 200, anchor="nw")
 enemyHPProgressBar.place(x=2, y=5)
 # right section
+startTurnButton.place(x=(ui_metrics.canvasX+ui_metrics.canvasWidth + 80),
+                      y=ui_metrics.canvasY+ui_metrics.canvasHeight-20)
 ammunitionChoiceDropdown.place(
     x=ui_metrics.canvasX + ui_metrics.canvasWidth + 20, y=ui_metrics.canvasY)
 
