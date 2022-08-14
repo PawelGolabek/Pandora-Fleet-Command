@@ -1,4 +1,5 @@
 import os
+from tabnanny import check
 import tkinter as tk
 from tkinter import *
 from tkinter.filedialog import askopenfilename
@@ -9,6 +10,7 @@ from typing import Collection
 import PIL
 from PIL import Image, ImageTk
 import tkinter.ttk as ttk
+import inspect
 
 #   Artemis 2021
 #   Project by Pawel Golabek
@@ -31,6 +33,7 @@ root.geometry(str(rootX*UIScale) + "x" + str(rootY*UIScale))
 
 class global_var():
     radio = IntVar(root, 999)
+    radio2 = IntVar(root, 999)
     ammunitionOptionChoice = StringVar(root)
     tmpCounter = 0
     # tmp
@@ -48,10 +51,12 @@ class global_var():
     turnBased = TRUE
     turnLength = 360
     zoom = 1
+    shieldRegen = 20
+    shieldMaxState = 1200
     # GAME DATA
     choices = StringVar()
     options = []
-    shipChoice = ''  # StringVar(value='MMS Artemis')
+    shipChoice = ''
     landmarks = []
     ships = []
     turnInProgress = FALSE
@@ -74,7 +79,7 @@ class global_var():
     armorIcon = PhotoImage(file="icons/armor.png")
 
 
-class ui_metrics:   # change for %
+class ui_metrics:   # change to % for responsible
     canvasX = 200
     canvasY = 100
     canvasWidth = 1000
@@ -126,51 +131,40 @@ class ammunition():
         self.special = special
 
 
-class type1a(ammunition):
-    def __init__(self, name='type1a', typeName='type1a', owner='', target='', xDir=0, yDir=0, turnRate=0, speed=100, shotsPerTurn=5,
-                 damage=10, damageFalloffStart=200, damageFalloffStop=400, defaultAccuracy=90, special=None):  # placeholder values
-        super(type1a, self).__init__(name, typeName, owner, target, xDir, yDir, turnRate, speed, shotsPerTurn,
-                                     damage, damageFalloffStart, damageFalloffStop, defaultAccuracy, special)
-    typeName = 'type1a'
-    shotsPerTurn = 8
-    damage = 6
-    turnRate = 5
+class ammunition_type:
+    type1adefault = ammunition()
+    type1adefault.name = 'type1a'
+    type1adefault.typeName = 'type1a'
+    type1adefault.shotsPerTurn = 8
+    type1adefault.damage = 2
+    type1adefault.turnRate = 6
 
+    type2adefault = ammunition()
+    type2adefault.name = 'type2a'
+    type2adefault.typeName = 'type2a'
+    type2adefault.shotsPerTurn = 5
+    type2adefault.damage = 2
+    type2adefault.turnRate = 6
 
-class type2a(ammunition):
-    def __init__(self, name='type2a', typeName='type2a', owner='', target='', xDir=0, yDir=0, turnRate=0, speed=100, shotsPerTurn=5,
-                 damage=10, damageFalloffStart=200, damageFalloffStop=400, defaultAccuracy=90, special=None):  # placeholder values
-        super(type2a, self).__init__(name, typeName, owner, target, xDir, yDir, turnRate, speed, shotsPerTurn,
-                                     damage, damageFalloffStart, damageFalloffStop, defaultAccuracy, special)
-    typeName = 'type2a'
-    shotsPerTurn = 12
-    damage = 2
-    turnRate = 6
-
-
-class type3a(ammunition):
-    def __init__(self, name='type3a', typeName='type3a', owner='', target='', xDir=0, yDir=0, turnRate=0, speed=100, shotsPerTurn=5,
-                 damage=10, damageFalloffStart=200, damageFalloffStop=400, defaultAccuracy=90, special=None):  # placeholder values
-        super(type3a, self).__init__(name, typeName, owner, target, xDir, yDir, turnRate, speed, shotsPerTurn,
-                                     damage, damageFalloffStart, damageFalloffStop, defaultAccuracy, special)
-    typeName = 'type3a'
-    shotsPerTurn = 1
-    damage = 2
-    turnRate = 10
+    type3adefault = ammunition()
+    type3adefault.name = 'type3a'
+    type3adefault.typeName = 'type3a'
+    type3adefault.shotsPerTurn = 1
+    type3adefault.damage = 2
+    type3adefault.turnRate = 10
 
 
 ammunition_lookup = dict
-ammunition_lookup = {'type1a': type1a,
-                     'type2a': type2a,
-                     'type3a': type3a,
-                     }
+# ammunition_lookup = {'type1a': type1a,
+#                    'type2a': type2a,
+#                   'type3a': type3a,
+#                  }
 
 
 class ship():
     def __init__(self, name="USS Artemis", owner="ai2", target='MSS Artemis',
                  hp=200, ap=200, shields=3, xPos=300, yPos=300,
-                 typesOfAmmunition=[type1a, type2a,
-                                    type3a], ammunitionChoice='type1a',
+                 typesOfAmmunition=[], ammunitionChoice=0, ammunitionNumberChoice=0,
                  detectionRange=200, xDir=0.0, yDir=1.0, turnRate=0.5, speed=40,
                  outlineColor="red"):
         # Init info
@@ -181,6 +175,7 @@ class ship():
         self.yPos = yPos
         self.typesOfAmmunition = typesOfAmmunition
         self.ammunitionChoice = ammunitionChoice
+        self.ammunitionNumberChoice = ammunitionNumberChoice
         self.detectionRange = detectionRange
         self.xDir = xDir
         self.yDir = yDir
@@ -190,6 +185,11 @@ class ship():
         self.hp = hp
         self.ap = ap
         self.shields = shields
+        self.shieldsState = []
+        tmp = 0
+        while(tmp < shields):
+            self.shieldsState.append(globalVar.shieldMaxState)
+            tmp += 1
         # Mid-round info
         self.shotsTaken = 0
         self.shotsNotTaken = 0
@@ -204,7 +204,7 @@ class playerController():
 
 class aiController():
     def ammunitionChoice(ship):
-        ship.ammunitionChoice = 'type1a'
+        ship.ammunitionChoice = 0
 
     def accuracyChoiceScale(ship):  # virtual choice for AI Controller
         return 3
@@ -234,6 +234,10 @@ def updateShips():  # rotate and move the chosen ship
     for ship in globalVar.ships:
         if(ship.moveOrderX):
             # check for terrain
+            if(not 0 < ship.xPos < ui_metrics.canvasWidth-5):
+                globalVar.ships.remove(ship)
+            if(not 0 < ship.yPos < ui_metrics.canvasHeight-5):
+                globalVar.ships.remove(ship)
             colors = globalVar.imageMask.getpixel((int(ship.xPos), int(ship.yPos)
                                                    ))
 
@@ -273,34 +277,33 @@ def updateShips():  # rotate and move the chosen ship
 
 def drawShips():  # draw ship on the map with all of its accesories
     for ship in globalVar.ships:
-        drawX = (ship.xPos - globalVar.left) * \
-            globalVar.zoom   # get coords relative to window
-        drawY = (ship.yPos - globalVar.top) * globalVar.zoom
+        if(ship.visible or not globalVar.fogOfWar or ship.owner == "player1"):
+            drawX = (ship.xPos - globalVar.left) * \
+                globalVar.zoom   # get coords relative to window
+            drawY = (ship.yPos - globalVar.top) * globalVar.zoom
 
-        if(ship.moveOrderX):
-            drawOrderX = (ship.moveOrderX - globalVar.left) * \
-                globalVar.zoom    # get order relative to window
-            drawOrderY = (ship.moveOrderY - globalVar.top) * globalVar.zoom
-            if(ship.owner == "player1" or (not globalVar.fogOfWar or enemy.visible)):  # draw order
+            if(ship.moveOrderX):
+                drawOrderX = (ship.moveOrderX - globalVar.left) * \
+                    globalVar.zoom    # get order relative to window
+                drawOrderY = (ship.moveOrderY - globalVar.top) * globalVar.zoom
                 canvas.create_line(drawX, drawY, drawOrderX,
                                    drawOrderY,   fill='white', dash=(3, 2))
 
-        if(ship.owner == "ai1"):
-            if(not globalVar.fogOfWar or enemy.visible):
+            if(ship.owner == "ai1"):
                 canvas.create_oval(drawX-ship.detectionRange*globalVar.zoom, drawY - ship.detectionRange*globalVar.zoom,
                                    drawX + ship.detectionRange*globalVar.zoom, drawY+ship.detectionRange*globalVar.zoom, outline=ship.outlineColor)
                 canvas.create_line(drawX-5*globalVar.zoom, drawY-5*globalVar.zoom, drawX +
                                    5*globalVar.zoom, drawY+5*globalVar.zoom, width=globalVar.zoom,  fill='red')
-        else:
-            canvas.create_oval(drawX-ship.detectionRange*globalVar.zoom,
-                               drawY - ship.detectionRange*globalVar.zoom, drawX +
-                               ship.detectionRange*globalVar.zoom,
-                               drawY+ship.detectionRange*globalVar.zoom, outline=ship.outlineColor)
-            canvas.create_line(drawX-5*globalVar.zoom, drawY-5*globalVar.zoom,
-                               drawX + 5*globalVar.zoom, drawY+5*globalVar.zoom, width=globalVar.zoom,  fill='white')  # draw ship
-        if(ship.owner == "player1" or (not globalVar.fogOfWar or enemy.visible)):
-            canvas.create_line(drawX, drawY,   drawX+(ship.xDir*120*globalVar.zoom),
-                               drawY+(ship.yDir*120*globalVar.zoom), fill="black")
+            else:
+                canvas.create_oval(drawX-ship.detectionRange*globalVar.zoom,
+                                   drawY - ship.detectionRange*globalVar.zoom, drawX +
+                                   ship.detectionRange*globalVar.zoom,
+                                   drawY+ship.detectionRange*globalVar.zoom, outline=ship.outlineColor)
+                canvas.create_line(drawX-5*globalVar.zoom, drawY-5*globalVar.zoom,
+                                   drawX + 5*globalVar.zoom, drawY+5*globalVar.zoom, width=globalVar.zoom,  fill='white')  # draw ship
+            if(ship.owner == "player1" or (not globalVar.fogOfWar or enemy.visible)):
+                canvas.create_line(drawX, drawY,   drawX+(ship.xDir*120*globalVar.zoom),
+                                   drawY+(ship.yDir*120*globalVar.zoom), fill="black")
 
 
 def drawLandmarks():
@@ -325,34 +328,42 @@ def drawLandmarkIcon(iconX, iconY, boost):
         canvas.create_image(iconX, iconY, image=globalVar.armorIcon)
 
 
-def manageShots(ship, ship2):
+def manageShots():
     # add amunition scale input
-    if(ship.owner == 'player1'):
-        if(ammunitionChoiceScale.get() != 0):
-            shotInterval = globalVar.turnLength / \
-                ammunition_lookup[ship.ammunitionChoice].shotsPerTurn
-            maxShotsNotTaken = accuracyChoiceScale.get()
-            if(timeElapsedProgressBar['value'] % shotInterval == 0 and ship2.visible == TRUE):
-                if(ship.shotsNotTaken < maxShotsNotTaken):
-                    ship.shotsNotTaken += 1
-                else:
-                    if(ship.shotsTaken < ammunitionChoiceScale.get()):
-                        ship.shotsTaken += 1
-                        createRocket(ship, ship2)
-                        print(ship.name + " fired " + ship.ammunitionChoice)
-    else:
-        if(aiController.ammunitionChoiceScale != 0):
-            shotInterval = globalVar.turnLength / \
-                ammunition_lookup[ship.ammunitionChoice].shotsPerTurn
-            maxShotsNotTaken = aiController.accuracyChoiceScale(ship)
-            if(timeElapsedProgressBar['value'] % shotInterval == 0 and ship2.visible == TRUE):
-                if(ship.shotsNotTaken < maxShotsNotTaken):
-                    ship.shotsNotTaken += 1
-                else:
-                    if(ship.shotsTaken < aiController.ammunitionChoiceScale(ship)):
-                        ship.shotsTaken += 1
-                        createRocket(ship, ship2)
-                        print(ship.name + " fired " + ship.ammunitionChoice)
+    for ship1 in globalVar.ships:
+        for ship2 in globalVar.ships:
+            if(ship1.owner == 'player1' and ship2.owner == 'ai1'):
+                if(ammunitionChoiceScale.get() != 0):
+                    shotInterval = globalVar.turnLength / \
+                        ship1.typesOfAmmunition[ship1.ammunitionChoice].shotsPerTurn
+                    maxShotsNotTaken = accuracyChoiceScale.get()
+                    distance = math.sqrt(
+                        abs(pow(ship1.xPos-ship2.xPos, 2)+pow(ship1.yPos-ship2.yPos, 2)))
+                    if(timeElapsedProgressBar['value'] % shotInterval == 0 and ship2.visible == TRUE and distance < ship1.detectionRange):
+                        if(ship1.shotsNotTaken < maxShotsNotTaken):
+                            ship1.shotsNotTaken += 1
+                        else:
+                            if(ship1.shotsTaken < ammunitionChoiceScale.get()):
+                                ship1.shotsTaken += 1
+                                createRocket(ship1, ship2)
+                                print(ship1.name + " fired " +
+                                      str(ship1.typesOfAmmunition[ship1.ammunitionChoice].name))
+            elif(ship1.owner == 'ai1' and not ship2.owner == 'ai1'):
+                if(aiController.ammunitionChoiceScale != 0):
+                    shotInterval = globalVar.turnLength / \
+                        ship1.typesOfAmmunition[ship1.ammunitionChoice].shotsPerTurn
+                    maxShotsNotTaken = aiController.accuracyChoiceScale(ship1)
+                    distance = math.sqrt(
+                        abs(pow(ship1.xPos-ship2.xPos, 2)+pow(ship1.yPos-ship2.yPos, 2)))
+                    if(timeElapsedProgressBar['value'] % shotInterval == 0 and ship2.visible == TRUE and distance < ship1.detectionRange):
+                        if(ship1.shotsNotTaken < maxShotsNotTaken):
+                            ship1.shotsNotTaken += 1
+                        else:
+                            if(ship1.shotsTaken < aiController.ammunitionChoiceScale(ship)):
+                                ship1.shotsTaken += 1
+                                createRocket(ship1, ship2)
+                                print(ship1.name + " fired " +
+                                      str(ship1.typesOfAmmunition[ship1.ammunitionChoice].name))
 
 
 def getOrders(ship):
@@ -368,17 +379,25 @@ def getOrders(ship):
 
 
 def detectionCheck():
-    globalVar.distance = math.sqrt(
-        abs(pow(player.xPos-enemy.xPos, 2)+pow(player.yPos-enemy.yPos, 2)))
 
-    if(globalVar.distance < player.detectionRange):
-        enemy.visible = TRUE
-    else:
-        enemy.visible = FALSE
-    if(globalVar.distance < enemy.detectionRange):
-        player.visible = TRUE
-    else:
-        player.visible = FALSE
+    for ship in globalVar.ships:
+        ship.visible = FALSE
+        if(ship.owner == 'ai1'):
+            for ship2 in globalVar.ships:
+                if(ship2.owner == 'player1'):
+                    distance = math.sqrt(
+                        abs(pow(ship.xPos-ship2.xPos, 2)+pow(ship.yPos-ship2.yPos, 2)))
+                    if(distance < ship2.detectionRange):
+                        ship.visible = TRUE
+                        break
+        else:
+            for ship2 in globalVar.ships:
+                if(ship2.owner == 'ai1'):
+                    distance = math.sqrt(
+                        abs(pow(ship.xPos-ship2.xPos, 2)+pow(ship.yPos-ship2.yPos, 2)))
+                    if(distance < ship2.detectionRange):
+                        ship.visible = TRUE
+                        break
 
 
 def manageLandmarks():
@@ -456,27 +475,31 @@ def manageRockets():    # manage mid-air munitions
 
 def drawRockets():
     for missle in globalVar.currentMissles:
-        drawX = (missle.xPos - globalVar.left) * globalVar.zoom   # change ###
-        drawY = (missle.yPos - globalVar.top)*globalVar.zoom    # change ###
+        drawX = (missle.xPos - globalVar.left) * \
+            globalVar.zoom   # change ok??? ###
+        drawY = (missle.yPos - globalVar.top) * \
+            globalVar.zoom    # change ok ??? ###
         canvas.create_line(drawX-5, drawY-5,
                            drawX+5, drawY+5)
 
 
 def createRocket(ship, target):
     globalVar.misslesShot += 1
-    missleClass = ammunition_lookup[ship.ammunitionChoice]
-    missle = missleClass()
+    missleClass = ship.typesOfAmmunition[ship.ammunitionChoice]
+    # ammunition_lookup[ship.ammunitionChoice]
+    # standard for ammunition instead of evaling?
+    missle = ammunition()
     globalVar.currentMissles.append(missle)
     missleName = 'missle' + str(globalVar.misslesShot)
     setattr(globalVar.currentMissles[-1], 'name', missleName)
     setattr(globalVar.currentMissles[-1], 'class', missleClass)
     setattr(globalVar.currentMissles[-1], 'xPos', ship.xPos)
     setattr(globalVar.currentMissles[-1], 'yPos', ship.yPos)
-    setattr(globalVar.currentMissles[-1], 'xDir', ship.xDir)  # change later
+    setattr(globalVar.currentMissles[-1], 'xDir', ship.xDir)
     setattr(globalVar.currentMissles[-1], 'yDir', ship.yDir)
     setattr(globalVar.currentMissles[-1], 'owner', ship.owner)
     setattr(globalVar.currentMissles[-1], 'turnRate',
-            ammunition_lookup[ship.ammunitionChoice].turnRate)
+            missleClass.turnRate)
     setattr(globalVar.currentMissles[-1], 'target', target.name)
 
 
@@ -523,9 +546,7 @@ def update():
             detectionCheck()
             updateShips()
             manageLandmarks()
-            for ship in globalVar.ships:
-                for ship2 in globalVar.ships:
-                    manageShots(ship, ship2)   # check ship shot
+            manageShots()   # check ship shot
             manageRockets()   # manage mid-air munitions
             ticksToEndFrame += 1
             timeElapsedProgressBar['value'] += 1
@@ -615,7 +636,6 @@ def startTurn():
     print("New Round")
     globalVar.turnInProgress = TRUE
     timeElapsedProgressBar['value'] = 0
-    player.ammunitionChoice = ((globalVar.choices).get())
     aiController.ammunitionChoice(enemy)
     player.shotsNotTaken = 0
     enemy.shotsNotTaken = 0
@@ -623,69 +643,54 @@ def startTurn():
     enemy.shotsTaken = 0
     for object in UIElementsList:
         object.config(state=DISABLED, background="#D0D0D0")
+    for object in RadioElementsList:
+        object.config(state=DISABLED)
 
 
 def endTurn():
     globalVar.turnInProgress = FALSE
     for object in UIElementsList:
         object.config(state=NORMAL, background="#F0F0F0")
+    for object in RadioElementsList:
+        object.config(state=NORMAL)
 
 
 def updateScales():
+    playerAPProgressBar['value'] = player.hp
     playerHPProgressBar['value'] = player.hp
-    enemyHPProgressBar['value'] = enemy.hp
-    playerAPProgressBar['value'] = player.ap
+
     enemyAPProgressBar['value'] = enemy.ap
+    enemyHPProgressBar['value'] = enemy.hp
+    tmp = 0
+    for progressBar in playerShields:
+        player.shieldsState[tmp] += globalVar.shieldRegen  # copy
+        progressBar['value'] = player.shieldsState[tmp]
+        tmp += 1
+    for progressBar in playerShields2:
+        progressBar['value'] = 100
+    for progressBar in playerShields3:
+        progressBar['value'] = 100
     for progressBar in enemyShields:
         progressBar['value'] = 100
-        # add player
-    #######
+    for progressBar in enemyShields2:
+        progressBar['value'] = 100
+    for progressBar in enemyShields3:
+        progressBar['value'] = 100
 
     globalVar.tmpCounter += 1
-    ammunitionOfChoice = 'type1a'
 
-########################
-    a = ammunition_lookup[ammunitionOfChoice]
-    ammunitionChoiceScale.config(
-        to=a.shotsPerTurn)
+    ammunitionNumber = ammunitionChoiceScale.get()
+    shipChosen = ship_lookup[globalVar.shipChoice]
+    shipChosen.ammunitionNumberChoice = ammunitionNumber
 
-    if(ammunitionChoiceScale.get() == 0):
+    if(ammunitionNumber == 0):
         accuracyChoiceScale.set(0)
         accuracyChoiceScale.config(state="disabled", bg='#D0D0D0')
     else:
         if(not globalVar.turnInProgress):
             accuracyChoiceScale.config(state=NORMAL, background="#F0F0F0")
-    a = a.shotsPerTurn - ammunitionChoiceScale.get()
-    accuracyChoiceScale.config(
-        # to=ammunition_lookup[shipChosen.ammunitionChoice].shotsPerTurn - ammunitionChoiceScale.get()
-        to=a
-    )
     timeElapsedProgressBar.config(maximum=globalVar.turnLength)
 
-
-def updateAmmunitionChoiceOptions():
-    shipChosen = ship_lookup[globalVar.shipChoice]
-    globalVar.options = []
-    types = shipChosen.typesOfAmmunition
-    for type in types:
-        (globalVar.options).append(type.typeName)
-
-
-def updateAmunitionChoiceDropdown():
-    ammunitionChoiceDropdown['menu'].delete(0, 'end')
-    for choice in globalVar.options:
-        var = StringVar(root, choice)
-        ammunitionChoiceDropdown['menu'].add_command(
-            label=choice, command=tk._setit(var, choice))
-    optionMenuTrigger()
-
-
-def optionMenuTrigger():
-    shipChosen = ship_lookup[globalVar.shipChoice]
-    shipChosen.ammunitionChoice = (globalVar.ammunitionOptionChoice).get()
-    print(shipChosen.ammunitionChoice)
-    print(player.ammunitionChoice)
-    print("option " + shipChosen.ammunitionChoice)
 
 ########################################## MULTIPURPOSE #########################################
 
@@ -700,7 +705,31 @@ def radioBox():
     if(globalVar.selection == 2):
         globalVar.shipChoice = playerName3
     updateAmmunitionChoiceOptions()
-    updateAmunitionChoiceDropdown()
+    shipChosen = ship_lookup[globalVar.shipChoice]
+    ammunitionChoiceScale.config(
+        to=(shipChosen.typesOfAmmunition[shipChosen.ammunitionChoice]).shotsPerTurn)
+    ammunitionChoiceScale.set(shipChosen.ammunitionNumberChoice)
+
+
+def radioBox2():
+    globalVar.selection2 = (globalVar.radio2).get()
+    label2.config(text=globalVar.selection2)
+    shipChosen = ship_lookup[globalVar.shipChoice]
+    shipChosen.ammunitionChoice = globalVar.selection2
+    ammunitionChoiceScale.config(
+        to=(shipChosen.typesOfAmmunition[shipChosen.ammunitionChoice]).shotsPerTurn)
+    ammunitionChoiceScale.set(shipChosen.ammunitionNumberChoice)
+
+
+def updateAmmunitionChoiceOptions():
+
+    (globalVar.radio2).set(ship_lookup[globalVar.shipChoice].ammunitionChoice)
+    ammunitionChoiceRadioButton1.config(
+        text=ship_lookup[(globalVar.shipChoice)].typesOfAmmunition[0].typeName)
+    ammunitionChoiceRadioButton2.config(
+        text=ship_lookup[(globalVar.shipChoice)].typesOfAmmunition[1].typeName)
+    ammunitionChoiceRadioButton3.config(
+        text=ship_lookup[(globalVar.shipChoice)].typesOfAmmunition[2].typeName)
 
 
 def mouseOnCanvas():
@@ -745,6 +774,7 @@ root.title("MMS Artemis")
 uiMetrics = ui_metrics()
 globalVar = global_var()
 gameRules = game_rules()
+ammunitionType = ammunition_type()
 ship_lookup = dict
 
 getZoomMetrics()
@@ -760,18 +790,18 @@ enemyName2 = 'RDD Redglower'
 enemyName3 = 'RDD Firebath'
 
 player = ship(outlineColor="white", owner="player1",
-              name=playerName, shields=20, xPos=20, typesOfAmmunition=[type1a, type2a, type2a], detectionRange=100, ammunitionChoice='type1a')
+              name=playerName, shields=10, xPos=20, typesOfAmmunition=[ammunitionType.type1adefault, ammunitionType.type3adefault, ammunitionType.type3adefault], detectionRange=100, ammunitionChoice=0)
 player2 = ship(outlineColor="white", owner="player1",
-               name=playerName2, shields=10, xPos=40, typesOfAmmunition=[type2a, type2a, type2a], detectionRange=160, ammunitionChoice='type1a')
+               name=playerName2, shields=5, xPos=40, typesOfAmmunition=[ammunitionType.type2adefault, ammunitionType.type2adefault, ammunitionType.type2adefault], detectionRange=160, ammunitionChoice=1)
 player3 = ship(outlineColor="white", owner="player1",
-               name=playerName3, shields=5, xPos=60, typesOfAmmunition=[type3a, type3a, type3a], detectionRange=180, ammunitionChoice='type1a')
+               name=playerName3, shields=3, xPos=900, typesOfAmmunition=[ammunitionType.type1adefault, ammunitionType.type2adefault, ammunitionType.type3adefault], detectionRange=180, ammunitionChoice=1)
 
-enemy = ship(xPos=100, yPos=100, outlineColor="red", shields=20,
-             owner="ai1", ammunitionChoice='type1a', name=enemyName)
-enemy2 = ship(xPos=40, yPos=100, outlineColor="red", shields=10,
-              owner="ai1", ammunitionChoice='type1a', name=enemyName2)
-enemy3 = ship(xPos=50, yPos=100, outlineColor="red", shields=5,
-              owner="ai1", ammunitionChoice='type1a', name=enemyName3)
+enemy = ship(xPos=300, yPos=100, outlineColor="red", shields=10, typesOfAmmunition=[ammunitionType.type1adefault, ammunitionType.type2adefault, ammunitionType.type2adefault],
+             owner="ai1", ammunitionChoice=0, name=enemyName)
+enemy2 = ship(xPos=600, yPos=100, outlineColor="red", shields=5,
+              owner="ai1", ammunitionChoice=0, name=enemyName2, typesOfAmmunition=[ammunitionType.type1adefault, ammunitionType.type2adefault, ammunitionType.type2adefault])
+enemy3 = ship(xPos=50, yPos=100, outlineColor="red", shields=3, typesOfAmmunition=[ammunitionType.type1adefault, ammunitionType.type2adefault, ammunitionType.type3adefault],
+              owner="ai1", ammunitionChoice=0, name=enemyName3)
 
 (globalVar.ships).append(player)
 (globalVar.ships).append(player2)
@@ -783,15 +813,13 @@ enemy3 = ship(xPos=50, yPos=100, outlineColor="red", shields=5,
 
 events = _events()
 
-ship_lookup = {'MSS Artemis': player,
-               'MMS Scout': player,
-               'MMS Catalyst': player,
-               playerName: player,
-               enemyName: enemy,
-               playerName2: player2,
-               enemyName2: enemy2,
-               playerName3: player3,
-               enemyName3: enemy3}
+ship_lookup = {
+    playerName: player,
+    enemyName: enemy,
+    playerName2: player2,
+    enemyName2: enemy2,
+    playerName3: player3,
+    enemyName3: enemy3}
 
 land1 = landmark(200, 200, 200, 200, 50, 'armor')
 (globalVar.landmarks).append(land1)
@@ -822,6 +850,7 @@ canvas.imageList.append(im)
 canvas.imageList.append(globalVar.img)
 
 UIElementsList = []
+RadioElementsList = []
 
 ammunitionChoiceScale = tk.Scale(
     root, orient=HORIZONTAL, length=100, label="Number of shots", to=len(player.typesOfAmmunition), relief=RIDGE)
@@ -840,11 +869,7 @@ startTurnButton = tk.Button(root, text="Start turn", command=startTurn)
 exitButton = tk.Button(root, text="Exit", command=exit)
 
 globalVar.shipChoice = player.name
-updateAmmunitionChoiceOptions()
-ammunitionChoiceDropdown = OptionMenu(
-    root, globalVar.ammunitionOptionChoice, *globalVar.options, command=optionMenuTrigger)
-optionMenuTrigger()
-ammunitionChoiceDropdown.config(width=10)
+
 
 # ship choice
 label = Label(root)
@@ -855,6 +880,15 @@ shipChoiceRadioButton2 = ttk.Radiobutton(
     root, text='2. MMS Scout', variable=globalVar.radio, value=1, command=radioBox)
 shipChoiceRadioButton3 = ttk.Radiobutton(
     root, text='3. MMS Catalyst', variable=globalVar.radio, value=2, command=radioBox)
+
+label2 = Label(root)
+var = IntVar()
+ammunitionChoiceRadioButton1 = ttk.Radiobutton(
+    root, text='1. Type 1a', variable=globalVar.radio2, value=0, command=radioBox2)
+ammunitionChoiceRadioButton2 = ttk.Radiobutton(
+    root, text='2. Type 2a', variable=globalVar.radio2, value=1, command=radioBox2)
+ammunitionChoiceRadioButton3 = ttk.Radiobutton(
+    root, text='3. Type 3a', variable=globalVar.radio2, value=2, command=radioBox2)
 
 radioBox()
 
@@ -877,14 +911,63 @@ playerSPLabelFrame = ttk.LabelFrame(root, text="Player Shields",
                                     borderwidth=2, relief="groove")
 playerSPProgressBar = ttk.Progressbar(
     playerSPLabelFrame, maximum=player.hp, length=(ui_metrics.shipDataWidth-10), variable=100)
+playerSPLabelFrame2 = ttk.LabelFrame(root, text="Player Shields 2",
+                                     borderwidth=2, relief="groove")
+playerSPProgressBar2 = ttk.Progressbar(
+    playerSPLabelFrame2, maximum=player.hp, length=(ui_metrics.shipDataWidth-10), variable=100)
+playerSPLabelFrame3 = ttk.LabelFrame(root, text="Player Shields 3",
+                                     borderwidth=2, relief="groove")
+playerSPProgressBar3 = ttk.Progressbar(
+    playerSPLabelFrame3, maximum=player.hp, length=(ui_metrics.shipDataWidth-10), variable=100)
 enemySPLabelFrame = ttk.LabelFrame(root, text="Enemy Shields",
                                    borderwidth=2, relief="groove")
+enemySPLabelFrame2 = ttk.LabelFrame(root, text="Enemy Shields 2",
+                                    borderwidth=2, relief="groove")
+enemySPLabelFrame3 = ttk.LabelFrame(root, text="Enemy Shields 3",
+                                    borderwidth=2, relief="groove")
+playerShields = []
+playerShields2 = []
+playerShields3 = []
 enemyShields = []
+enemyShields2 = []
+enemyShields3 = []
+
+x = player.shields
+n = 0
+while(n < x):
+    playerShields.append(ttk.Progressbar(
+        playerSPLabelFrame, maximum=100, length=math.floor((ui_metrics.shipDataWidth-10)/x * 4/5), variable=100))
+    n += 1
+x = player2.shields
+n = 0
+while(n < x):
+    playerShields2.append(ttk.Progressbar(
+        playerSPLabelFrame2, maximum=100, length=math.floor((ui_metrics.shipDataWidth-10)/x * 4/5), variable=100))
+    n += 1
+x = player3.shields
+n = 0
+while(n < x):
+    playerShields3.append(ttk.Progressbar(
+        playerSPLabelFrame3, maximum=100, length=math.floor((ui_metrics.shipDataWidth-10)/x * 4/5), variable=100))
+    n += 1
+
 x = enemy.shields
 n = 0
 while(n < x):
     enemyShields.append(ttk.Progressbar(
         enemySPLabelFrame, maximum=100, length=math.floor((ui_metrics.shipDataWidth-10)/x * 4/5), variable=100))
+    n += 1
+x = enemy2.shields
+n = 0
+while(n < x):
+    enemyShields2.append(ttk.Progressbar(
+        enemySPLabelFrame2, maximum=100, length=math.floor((ui_metrics.shipDataWidth-10)/x * 4/5), variable=100))
+    n += 1
+x = enemy3.shields
+n = 0
+while(n < x):
+    enemyShields3.append(ttk.Progressbar(
+        enemySPLabelFrame3, maximum=100, length=math.floor((ui_metrics.shipDataWidth-10)/x * 4/5), variable=100))
     n += 1
 
 label.place(x=1000, y=900)
@@ -893,20 +976,55 @@ playerAPLabelFrame = ttk.LabelFrame(root, text="Player Armor",
                                     borderwidth=2, relief="groove")
 playerAPProgressBar = ttk.Progressbar(
     playerAPLabelFrame, maximum=player.ap, length=(ui_metrics.shipDataWidth-10), variable=100)
+playerAPLabelFrame2 = ttk.LabelFrame(root, text="Player Armor 2",
+                                     borderwidth=2, relief="groove")
+playerAPProgressBar2 = ttk.Progressbar(
+    playerAPLabelFrame2, maximum=player.ap, length=(ui_metrics.shipDataWidth-10), variable=100)
+playerAPLabelFrame3 = ttk.LabelFrame(root, text="Player Armor 3",
+                                     borderwidth=2, relief="groove")
+playerAPProgressBar3 = ttk.Progressbar(
+    playerAPLabelFrame3, maximum=player.ap, length=(ui_metrics.shipDataWidth-10), variable=100)
 enemyAPLabelFrame = ttk.LabelFrame(root, text="Enemy Armor",
                                    borderwidth=2, relief="groove")
 enemyAPProgressBar = ttk.Progressbar(
     enemyAPLabelFrame, maximum=enemy.ap, length=(ui_metrics.shipDataWidth-10), variable=100)
+enemyAPLabelFrame2 = ttk.LabelFrame(root, text="Enemy Armor 2",
+                                    borderwidth=2, relief="groove")
+enemyAPProgressBar2 = ttk.Progressbar(
+    enemyAPLabelFrame2, maximum=enemy.ap, length=(ui_metrics.shipDataWidth-10), variable=100)
+
+enemyAPLabelFrame3 = ttk.LabelFrame(root, text="Enemy Armor 3",
+                                    borderwidth=2, relief="groove")
+enemyAPProgressBar3 = ttk.Progressbar(
+    enemyAPLabelFrame3, maximum=enemy.ap, length=(ui_metrics.shipDataWidth-10), variable=100)
 
 # ship hp
 playerHPLabelFrame = ttk.LabelFrame(root, text="Player HP",
                                     borderwidth=2, relief="groove")
 playerHPProgressBar = ttk.Progressbar(
     playerHPLabelFrame, maximum=player.hp, length=(ui_metrics.shipDataWidth-10), variable=100)
+playerHPLabelFrame2 = ttk.LabelFrame(root, text="Player HP 2",
+                                     borderwidth=2, relief="groove")
+playerHPProgressBar2 = ttk.Progressbar(
+    playerHPLabelFrame2, maximum=player.hp, length=(ui_metrics.shipDataWidth-10), variable=100)
+
+playerHPLabelFrame3 = ttk.LabelFrame(root, text="Player HP 3",
+                                     borderwidth=2, relief="groove")
+playerHPProgressBar3 = ttk.Progressbar(
+    playerHPLabelFrame3, maximum=player.hp, length=(ui_metrics.shipDataWidth-10), variable=100)
+
 enemyHPLabelFrame = ttk.LabelFrame(root, text="Enemy HP",
                                    borderwidth=2, relief="groove")
 enemyHPProgressBar = ttk.Progressbar(
     enemyHPLabelFrame, maximum=enemy.hp, length=(ui_metrics.shipDataWidth-10), variable=100)
+enemyHPLabelFrame2 = ttk.LabelFrame(root, text="Enemy HP 2",
+                                    borderwidth=2, relief="groove")
+enemyHPProgressBar2 = ttk.Progressbar(
+    enemyHPLabelFrame2, maximum=enemy.hp, length=(ui_metrics.shipDataWidth-10), variable=100)
+enemyHPLabelFrame3 = ttk.LabelFrame(root, text="Enemy HP 3",
+                                    borderwidth=2, relief="groove")
+enemyHPProgressBar3 = ttk.Progressbar(
+    enemyHPLabelFrame3, maximum=enemy.hp, length=(ui_metrics.shipDataWidth-10), variable=100)
 
 ######################################################### PLACE ####################################
 # left section
@@ -920,6 +1038,13 @@ shipChoiceRadioButton2.place(
 shipChoiceRadioButton3.place(
     x=ui_metrics.canvasX + 860, y=ui_metrics.canvasY - 60)
 
+ammunitionChoiceRadioButton1.place(
+    x=ui_metrics.canvasX + ui_metrics.canvasWidth + 20, y=ui_metrics.canvasY - 60)
+ammunitionChoiceRadioButton2.place(
+    x=ui_metrics.canvasX + ui_metrics.canvasWidth + 20, y=ui_metrics.canvasY - 40)
+ammunitionChoiceRadioButton3.place(
+    x=ui_metrics.canvasX + ui_metrics.canvasWidth + 20, y=ui_metrics.canvasY - 20)
+
 gameSpeedScale.place(x=ui_metrics.canvasX, y=ui_metrics.canvasY - 80)
 canvas.place(x=ui_metrics.canvasX, y=ui_metrics.canvasY)
 timeElapsedProgressBar.place(
@@ -928,43 +1053,102 @@ timeElapsedLabel.place(x=ui_metrics.canvasX+140, y=ui_metrics.canvasY - 80)
 gameSpeedScale.place(x=ui_metrics.canvasX, y=ui_metrics.canvasY - 80)
 
 # ship displays
-playerDisplay.place(x=ui_metrics.canvasX,
-                    y=ui_metrics.canvasY + ui_metrics.canvasHeight)
-enemyDisplay.place(x=ui_metrics.canvasX+400,
-                   y=ui_metrics.canvasY + ui_metrics.canvasHeight)
+# playerDisplay.place(x=ui_metrics.canvasX,
+#                   y=ui_metrics.canvasY + ui_metrics.canvasHeight)
+# enemyDisplay.place(x=ui_metrics.canvasX+400,
+#                   y=ui_metrics.canvasY + ui_metrics.canvasHeight)
 
-# ship shields
+# ship shields                                                                              1
 playerSPLabelFrame.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX,
                          y=ui_metrics.canvasY + ui_metrics.canvasHeight + 80, anchor="nw")
-playerSPProgressBar.place(x=2, y=5)
-enemySPLabelFrame.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + ui_metrics.shipDataWidth,
+playerSPLabelFrame2.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + ui_metrics.shipDataWidth,
+                          y=ui_metrics.canvasY + ui_metrics.canvasHeight + 80, anchor="nw")
+playerSPLabelFrame3.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + 2*ui_metrics.shipDataWidth,
+                          y=ui_metrics.canvasY + ui_metrics.canvasHeight + 80, anchor="nw")
+enemySPLabelFrame.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + 3*ui_metrics.shipDataWidth,
                         y=ui_metrics.canvasY + ui_metrics.canvasHeight + 80, anchor="nw")
+enemySPLabelFrame2.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + 4*ui_metrics.shipDataWidth,
+                         y=ui_metrics.canvasY + ui_metrics.canvasHeight + 80, anchor="nw")
+enemySPLabelFrame3.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + 5*ui_metrics.shipDataWidth,
+                         y=ui_metrics.canvasY + ui_metrics.canvasHeight + 80, anchor="nw")
+
+tmp = 0
+for progressBar in playerShields:
+    progressBar.place(x=tmp + 5, y=5)
+    tmp += ((ui_metrics.shipDataWidth-10) /
+            (player.shields*4+(player.shields-1)))*5
+tmp = 0
+for progressBar in playerShields2:
+    progressBar.place(x=tmp + 5, y=5)
+    tmp += ((ui_metrics.shipDataWidth-10) /
+            (player2.shields*4+(player2.shields-1)))*5
+tmp = 0
+for progressBar in playerShields3:
+    progressBar.place(x=tmp + 5, y=5)
+    tmp += ((ui_metrics.shipDataWidth-10) /
+            (player3.shields*4+(player3.shields-1)))*5
+
 tmp = 0
 for progressBar in enemyShields:
     progressBar.place(x=tmp + 5, y=5)
     tmp += ((ui_metrics.shipDataWidth-10) /
             (enemy.shields*4+(enemy.shields-1)))*5
+tmp = 0
+for progressBar in enemyShields2:
+    progressBar.place(x=tmp + 5, y=5)
+    tmp += ((ui_metrics.shipDataWidth-10) /
+            (enemy2.shields*4+(enemy2.shields-1)))*5
+tmp = 0
+for progressBar in enemyShields3:
+    progressBar.place(x=tmp + 5, y=5)
+    tmp += ((ui_metrics.shipDataWidth-10) /
+            (enemy3.shields*4+(enemy3.shields-1)))*5
 
-# ship armor
+# ship armor   player
 playerAPLabelFrame.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX,
                          y=ui_metrics.canvasY + ui_metrics.canvasHeight + 140, anchor="nw")
 playerAPProgressBar.place(x=2, y=5)
-enemyAPLabelFrame.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX+ui_metrics.shipDataWidth,
+playerAPLabelFrame2.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + ui_metrics.shipDataWidth,
+                          y=ui_metrics.canvasY + ui_metrics.canvasHeight + 140, anchor="nw")
+playerAPProgressBar2.place(x=2, y=5)
+playerAPLabelFrame3.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + 2*ui_metrics.shipDataWidth,
+                          y=ui_metrics.canvasY + ui_metrics.canvasHeight + 140, anchor="nw")
+playerAPProgressBar3.place(x=2, y=5)
+
+enemyAPLabelFrame.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + 3*ui_metrics.shipDataWidth,
                         y=ui_metrics.canvasY + ui_metrics.canvasHeight + 140, anchor="nw")
 enemyAPProgressBar.place(x=2, y=5)
+enemyAPLabelFrame2.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + 4*ui_metrics.shipDataWidth,
+                         y=ui_metrics.canvasY + ui_metrics.canvasHeight + 140, anchor="nw")
+enemyAPProgressBar2.place(x=2, y=5)
+enemyAPLabelFrame3.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + 5*ui_metrics.shipDataWidth,
+                         y=ui_metrics.canvasY + ui_metrics.canvasHeight + 140, anchor="nw")
+enemyAPProgressBar3.place(x=2, y=5)
 
-# ship hp
+# ship hp      player                                                                        1
 playerHPLabelFrame.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX,
                          y=ui_metrics.canvasY + ui_metrics.canvasHeight + 200, anchor="nw")
 playerHPProgressBar.place(x=2, y=5)
-enemyHPLabelFrame.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX+ui_metrics.shipDataWidth,
+playerHPLabelFrame2.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + ui_metrics.shipDataWidth,
+                          y=ui_metrics.canvasY + ui_metrics.canvasHeight + 200, anchor="nw")
+playerHPProgressBar2.place(x=2, y=5)
+playerHPLabelFrame3.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + 2*ui_metrics.shipDataWidth,
+                          y=ui_metrics.canvasY + ui_metrics.canvasHeight + 200, anchor="nw")
+playerHPProgressBar3.place(x=2, y=5)
+enemyHPLabelFrame.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + 3*ui_metrics.shipDataWidth,
                         y=ui_metrics.canvasY + ui_metrics.canvasHeight + 200, anchor="nw")
 enemyHPProgressBar.place(x=2, y=5)
-# right section
+enemyHPLabelFrame2.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX+4*ui_metrics.shipDataWidth,
+                         y=ui_metrics.canvasY + ui_metrics.canvasHeight + 200, anchor="nw")
+enemyHPProgressBar2.place(x=2, y=5)
+enemyHPLabelFrame3.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX+5*ui_metrics.shipDataWidth,
+                         y=ui_metrics.canvasY + ui_metrics.canvasHeight + 200, anchor="nw")
+enemyHPProgressBar3.place(x=2, y=5)
+
+
+######################### right section ###################################
 startTurnButton.place(x=(ui_metrics.canvasX+ui_metrics.canvasWidth + 80),
                       y=ui_metrics.canvasY+ui_metrics.canvasHeight-20)
-ammunitionChoiceDropdown.place(
-    x=ui_metrics.canvasX + ui_metrics.canvasWidth + 20, y=ui_metrics.canvasY)
 
 distanceLabel.place(x=ui_metrics.canvasX +
                     ui_metrics.canvasWidth - 160, y=ui_metrics.canvasY - 20)
@@ -973,7 +1157,13 @@ UIElementsList.append(ammunitionChoiceScale)
 UIElementsList.append(accuracyChoiceScale)
 UIElementsList.append(gameSpeedScale)
 UIElementsList.append(startTurnButton)
-UIElementsList.append(ammunitionChoiceDropdown)
+
+RadioElementsList.append(shipChoiceRadioButton1)
+RadioElementsList.append(shipChoiceRadioButton2)
+RadioElementsList.append(shipChoiceRadioButton3)
+RadioElementsList.append(ammunitionChoiceRadioButton1)
+RadioElementsList.append(ammunitionChoiceRadioButton2)
+RadioElementsList.append(ammunitionChoiceRadioButton3)
 # clock
 update()
 
