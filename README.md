@@ -1,1 +1,1 @@
-# PYTHON-TKINTER-Gra-Midway2155
+# PYTHON-TKINTER-Strategiczna-Gra-Turowa
