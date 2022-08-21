@@ -7,7 +7,6 @@ from tkinter import Tk, Canvas, Frame, BOTH
 from random import randint
 import math
 from typing import Collection
-import PIL
 from PIL import Image, ImageTk
 import tkinter.ttk as ttk
 import inspect
@@ -38,7 +37,9 @@ class global_var():
     tmpCounter = 0
     # tmp
     radio.set(0)
-    ## INPUT HANDLING ##
+    ## TKINTER INPUTS ##
+    uiSystemsLabelFrame = tk.Scale(root)
+    ## INPUT HANDLING VARIABLES ##
     mouseOnUI = FALSE
     mouseWheelUp = FALSE
     mouseWheelDown = FALSE
@@ -56,6 +57,7 @@ class global_var():
     # GAME DATA
     choices = StringVar()
     options = []
+    uiSystems = []
     shipChoice = ''
     landmarks = []
     ships = []
@@ -81,17 +83,22 @@ class global_var():
 
 
 class ui_metrics:   # change to % for responsible
-    canvasX = 200
-    canvasY = 100
     canvasWidth = 1000
     canvasHeight = 500
     shipImageFrameHeight = 60
-    shipDataX = canvasX
-    shipDataY = canvasY + 20
     shipDataWidth = 200
     shipDataHeight = 40
     shipDataOffsetY = 20
     shipDataOffsetBetween = 60
+    leftMargin = 10
+    systemScalesWidth = 120
+    systemScalesHeightOffset = 80
+    systemScalesWidth = systemScalesWidth + 40
+    systemScalesLabelFrameWidth = systemScalesWidth + 40
+    canvasX = systemScalesLabelFrameWidth + 20
+    canvasY = 100
+    shipDataX = canvasX
+    shipDataY = canvasY + 20
 
 
 class game_rules:
@@ -117,7 +124,8 @@ class landmark():
 
 
 class ammunition():
-    def __init__(self, name='', typeName='', sort = '', owner='', target='', xDir=0, yDir=0, turnRate=2, speed=100, shotsPerTurn=5, damage=10, damageFalloffStart=200, damageFalloffStop=400, defaultAccuracy=90, ttl = 10000, special=None):
+    def __init__(self, name='', typeName='', sort = '', owner='', target='', xDir=0, yDir=0, turnRate=2, speed=100, \
+         shotsPerTurn=5, damage=10, damageFalloffStart=200, damageFalloffStop=400, defaultAccuracy=90, ttl = 10000, special=None):
         self.owner = owner
         self.target = target
         self.name = name
@@ -171,8 +179,26 @@ class ammunition_type:
     laser1adefault.speed = 1000
     laser1adefault.ttl = 600
 
+############################## SYSTEMS #############################################
 
-ammunition_lookup = dict
+class system():
+    def __init__(self,minEnergy=0,maxEnergy=1,energy=0): 
+        self.minEnergy = minEnergy
+        self.maxEnergy = maxEnergy
+        self.energy = energy
+
+class system_type:
+    antiMissleSystem1 = system()
+    antiMissleSystem1.name = "anti-missle system I"
+    antiMissleSystem1.minEnergy = 1
+    antiMissleSystem1.maxEnergy = 10
+
+    antiMissleSystem2 = system()
+    antiMissleSystem2.name = "anti-missle system II"
+    antiMissleSystem2.minEnergy = 4
+    antiMissleSystem2.maxEnergy = 12
+
+# ammunition_lookup = dict
 # ammunition_lookup = {'type1a': type1a,
 #                    'type2a': type2a,
 #                   'type3a': type3a,
@@ -182,7 +208,7 @@ ammunition_lookup = dict
 class ship():
     def __init__(self, name="USS Artemis", owner="ai2", target='MSS Artemis',
                  hp=200, maxHp=None, ap=200, maxAp=None, shields=3, xPos=300, yPos=300,
-                 typesOfAmmunition=[], ammunitionChoice=0, ammunitionNumberChoice=0, accuracyChoice=0,
+                 typesOfAmmunition=[], ammunitionChoice=0, ammunitionNumberChoice=0, accuracyChoice=0, systemSlots = [],
                  detectionRange=200, xDir=0.0, yDir=1.0, turnRate=0.5, ghostPoints = [], speed=40,
                  outlineColor="red"):  # replace alreadyShot with some clever formula to
         # Init info                                             ## handle shots when more than one enemy in range
@@ -195,6 +221,15 @@ class ship():
         self.ammunitionChoice = ammunitionChoice
         self.ammunitionNumberChoice = ammunitionNumberChoice
         self.accuracyChoice = accuracyChoice
+
+        self.systemSlots = []
+        for tmp in systemSlots:
+            tmpSystem = system()
+            tmpSystem.name = tmp.name
+            tmpSystem.minEnergy = tmp.minEnergy
+            tmpSystem.maxEnergy = tmp.maxEnergy
+            self.systemSlots.append(tmpSystem)
+
         self.detectionRange = detectionRange
         self.xDir = xDir
         self.yDir = yDir
@@ -252,7 +287,6 @@ class laser():
 
 class playerController():
     a = 10
-
 
 class aiController():
     def ammunitionChoice(ship):
@@ -711,9 +745,7 @@ def drawLasers():
 def createRocket(ship, target):
     globalVar.misslesShot += 1
     missleClass = ship.typesOfAmmunition[ship.ammunitionChoice]
-    print(missleClass)
-    # ammunition_lookup[ship.ammunitionChoice]
-    # standard for ammunition instead of evaling?
+    # copy standard for ammunition. To be transformed into constructor like in c++ if needed
     missle = ammunition()
     globalVar.currentMissles.append(missle)
     missleName = 'missle' + str(globalVar.misslesShot)
@@ -730,7 +762,6 @@ def createRocket(ship, target):
     setattr(globalVar.currentMissles[-1], 'turnRate',
             missleClass.turnRate)
     setattr(globalVar.currentMissles[-1], 'target', target.name)
-
 
 ############################################ INPUTS #############################################
 
@@ -922,6 +953,11 @@ def updateScales():
             accuracyChoiceScale.config(state=NORMAL, background="#F0F0F0")
     timeElapsedProgressBar.config(maximum=globalVar.turnLength)
 
+    i = 0
+    for system in globalVar.uiSystems:
+        (shipChosen.systemSlots[i]).energy = (globalVar.uiSystems[i]).get()
+        i+=1
+
 
 def updateShields(ship1):
     for tmp, progressBar in enumerate(ship1.shieldsLabel):
@@ -934,7 +970,6 @@ def updateShields(ship1):
                     ship1.shields += 1
         progressBar['value'] = ship1.shieldsState[tmp] * 100 \
             / globalVar.shieldMaxState
-
 ########################################## MULTIPURPOSE #########################################
 
 
@@ -952,6 +987,7 @@ def radioBox():
     ammunitionChoiceScale.config(
         to=(shipChosen.typesOfAmmunition[shipChosen.ammunitionChoice]).shotsPerTurn)
     ammunitionChoiceScale.set(shipChosen.ammunitionNumberChoice)
+    updateUtilityChoice()
 
 
 def radioBox2():
@@ -973,6 +1009,25 @@ def updateAmmunitionChoiceOptions():
         text=ship_lookup[(globalVar.shipChoice)].typesOfAmmunition[1].typeName)
     ammunitionChoiceRadioButton3.config(
         text=ship_lookup[(globalVar.shipChoice)].typesOfAmmunition[2].typeName)
+
+def updateUtilityChoice():
+    shipChosen = ship_lookup[globalVar.shipChoice]
+    (globalVar.uiSystemsLabelFrame).destroy()
+    globalVar.uiSystems = []
+    shipChosen = ship_lookup[globalVar.shipChoice]
+    globalVar.uiSystemsLabelFrame = tk.LabelFrame(root,width=ui_metrics.systemScalesLabelFrameWidth, \
+                                                    height = 100*len(shipChosen.systemSlots), text= shipChosen.name + " systems", \
+                                                    borderwidth=2, relief="groove")
+    (globalVar.uiSystemsLabelFrame).place(x = uiMetrics.leftMargin, y = ui_metrics.canvasY)
+    i=0
+    for system in shipChosen.systemSlots:
+        scale = tk.Scale(globalVar.uiSystemsLabelFrame, orient=HORIZONTAL, length=ui_metrics.systemScalesWidth, \
+                            label=system.name, from_ = system.minEnergy, to=system.maxEnergy, relief=RIDGE)
+        scale.set(system.energy)
+        (globalVar.uiSystems).append(scale)
+        scale.place(x=10,y=10+i*ui_metrics.systemScalesHeightOffset)
+        i+=1
+
 
 
 def mouseOnCanvas():
@@ -1018,6 +1073,7 @@ uiMetrics = ui_metrics()
 globalVar = global_var()
 gameRules = game_rules()
 ammunitionType = ammunition_type()
+systemType = system_type()
 ship_lookup = dict
 
 getZoomMetrics()
@@ -1032,12 +1088,17 @@ enemyName = 'RDD HellWitch'
 enemyName2 = 'RDD Redglower'
 enemyName3 = 'RDD Firebath'
 
-player = ship(outlineColor="white", owner="player1",
-              name=playerName, shields=10, xPos=300, typesOfAmmunition=[ammunitionType.type1adefault, ammunitionType.laser1adefault, ammunitionType.type3adefault], detectionRange=100, ammunitionChoice=0, turnRate = 0.3)
+player = ship(outlineColor="white", owner="player1", \
+              name=playerName, shields=10, xPos=300, \
+               typesOfAmmunition=[ammunitionType.type1adefault, ammunitionType.laser1adefault, ammunitionType.type3adefault],\
+              systemSlots=[systemType.antiMissleSystem1, systemType.antiMissleSystem1], detectionRange=100, ammunitionChoice=0, turnRate = 0.3)
 player2 = ship(outlineColor="white", owner="player1",
-               name=playerName2, shields=5, xPos=40, typesOfAmmunition=[ammunitionType.type2adefault, ammunitionType.type2adefault, ammunitionType.type2adefault], detectionRange=160, ammunitionChoice=1, turnRate = 0.3)
+                name=playerName2, shields=5, xPos=40, typesOfAmmunition=[ammunitionType.type2adefault, ammunitionType.type2adefault, ammunitionType.type2adefault], \
+                detectionRange=160, ammunitionChoice=1, turnRate = 0.3)
 player3 = ship(outlineColor="white", owner="player1",
-               name=playerName3, shields=3, xPos=900, typesOfAmmunition=[ammunitionType.type1adefault, ammunitionType.type2adefault, ammunitionType.type3adefault], detectionRange=180, ammunitionChoice=1, turnRate = 0.3)
+               systemSlots=[systemType.antiMissleSystem1, systemType.antiMissleSystem2, systemType.antiMissleSystem2], name=playerName3, shields=3, xPos=900, \
+                    typesOfAmmunition=[ammunitionType.type1adefault, ammunitionType.type2adefault, ammunitionType.type3adefault], \
+                    detectionRange=180, ammunitionChoice=1, turnRate = 0.3)
 
 enemy = ship(xPos=500, yPos=300, outlineColor="red", shields=10, typesOfAmmunition=[ammunitionType.type1adefault, ammunitionType.type2adefault, ammunitionType.type2adefault],
              owner="ai1", ammunitionChoice=0, name=enemyName,  turnRate = 0.3)
@@ -1097,6 +1158,7 @@ RadioElementsList = []
 
 ammunitionChoiceScale = tk.Scale(
     root, orient=HORIZONTAL, length=100, label="Number of shots", to=len(player.typesOfAmmunition), relief=RIDGE)
+
 accuracyChoiceScale = tk.Scale(
     root, orient=HORIZONTAL, length=100, label="Time to aim", to=4, relief=RIDGE)
 gameSpeedScale = tk.Scale(
@@ -1127,13 +1189,15 @@ shipChoiceRadioButton3 = ttk.Radiobutton(
 label2 = Label(root)
 var = IntVar()
 ammunitionChoiceRadioButton1 = ttk.Radiobutton(
-    root, text='1. Type 1a', variable=globalVar.radio2, value=0, command=radioBox2)
+    root, text='default Ammunition Type 1', variable=globalVar.radio2, value=0, command=radioBox2)
 ammunitionChoiceRadioButton2 = ttk.Radiobutton(
-    root, text='2. Type 2a', variable=globalVar.radio2, value=1, command=radioBox2)
+    root, text='default Ammunition Type 2', variable=globalVar.radio2, value=1, command=radioBox2)
 ammunitionChoiceRadioButton3 = ttk.Radiobutton(
-    root, text='3. Type 3a', variable=globalVar.radio2, value=2, command=radioBox2)
+    root, text='default Ammunition Type 3', variable=globalVar.radio2, value=2, command=radioBox2)
 
 radioBox()
+updateUtilityChoice()
+shipChosen = ship_lookup[globalVar.shipChoice]
 
 shipImage1 = Image.open('ship_modules/ship.png')
 shipImage = shipImage1.resize(
@@ -1280,8 +1344,8 @@ enemy3.shieldsLabel = enemyShields3
 
 ######################################################### PLACE ####################################
 # left section
-ammunitionChoiceScale.place(x=20, y=ui_metrics.canvasY+60)
-accuracyChoiceScale.place(x=20, y=ui_metrics.canvasY+140)
+#ammunitionChoiceScale.place(x=20, y=ui_metrics.canvasY+60)     ## delete later 
+#accuracyChoiceScale.place(x=20, y=ui_metrics.canvasY+140)     ## delete later 
 # upper section
 shipChoiceRadioButton1.place(
     x=ui_metrics.canvasX + 540, y=ui_metrics.canvasY - 60)
