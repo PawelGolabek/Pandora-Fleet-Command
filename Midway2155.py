@@ -1,3 +1,6 @@
+from dis import dis
+from email.policy import default
+from faulthandler import disable
 import os
 from tabnanny import check
 import tkinter as tk
@@ -17,28 +20,38 @@ import inspect
 #   Used libraries (excluding build-in): Pillow, Pil
 
 root = tk.Tk()
-
 UIScale = 1
 
-rootX = 1600
-rootY = 900
+rootX = 1850
+rootY = 1000
 """
 rootX = root.winfo_screenwidth()
 rootY = root.winfo_screenheight()
 root.attributes('-fullscreen', True)
 """
-root.geometry(str(rootX*UIScale) + "x" + str(rootY*UIScale))
+root.geometry(str(rootX*UIScale) + "x" + str(rootY*UIScale)+"+0+0")
 
+#s = ttk.Style()
+#s.theme_use('xpnative')
+##s.configure("red.Horizontal.TProgressbar", foreground='blue', background='red')
+
+
+def rgbtohex(r,g,b):
+    return f'#{r:02x}{g:02x}{b:02x}'
 
 class global_var():
+    shipChoiceRadioButtons = []
     radio = IntVar(root, 999)
     radio2 = IntVar(root, 999)
     ammunitionOptionChoice = StringVar(root)
     tmpCounter = 0
-    # tmp
+    # START CONDITIONS
     radio.set(0)
-    ## TKINTER INPUTS ##
-    uiSystemsLabelFrame = tk.Scale(root)
+    ## DYNAMIC UI ##
+    uiSystemsLabelFrame = tk.LabelFrame(root,text= "" + " systems",borderwidth=2)
+    uiEnergyLabel =  ttk.Label(uiSystemsLabelFrame, width=20, text = "Energy remaining: ", font = "16")
+    uiSystems = []
+    uiSystemsProgressbars = []
     ## INPUT HANDLING VARIABLES ##
     mouseOnUI = FALSE
     mouseWheelUp = FALSE
@@ -49,15 +62,13 @@ class global_var():
     ## GAME OPTIONS ##
     fogOfWar = TRUE
     gameSpeed = 1
-    turnBased = TRUE
     turnLength = 1080
     zoom = 1
     shieldRegen = 1
-    shieldMaxState = 1200
+    shieldMaxState = 400
     # GAME DATA
     choices = StringVar()
     options = []
-    uiSystems = []
     shipChoice = ''
     landmarks = []
     ships = []
@@ -83,18 +94,20 @@ class global_var():
 
 
 class ui_metrics:   # change to % for responsible
-    canvasWidth = 1000
-    canvasHeight = 500
+    canvasWidth = 1300
+    canvasHeight = 600
     shipImageFrameHeight = 60
-    shipDataWidth = 200
+    shipDataWidth = canvasWidth/6
     shipDataHeight = 40
     shipDataOffsetY = 20
     shipDataOffsetBetween = 60
     leftMargin = 10
     systemScalesWidth = 120
-    systemScalesHeightOffset = 80
+    systemScalesMarginTop = 80
+    systemScalesHeightOffset = 90
     systemScalesWidth = systemScalesWidth + 40
-    systemScalesLabelFrameWidth = systemScalesWidth + 40
+    systemScalesLabelFrameWidth = systemScalesWidth + 60
+    systemProgressbarsHeightOffset = 60
     canvasX = systemScalesLabelFrameWidth + 20
     canvasY = 100
     shipDataX = canvasX
@@ -125,7 +138,7 @@ class landmark():
 
 class ammunition():
     def __init__(self, name='', typeName='', sort = '', owner='', target='', xDir=0, yDir=0, turnRate=2, speed=100, \
-         shotsPerTurn=5, damage=10, damageFalloffStart=200, damageFalloffStop=400, defaultAccuracy=90, ttl = 10000, special=None):
+         shotsPerTurn=5, damage=10, damageFalloffStart=200, damageFalloffStop=400, defaultAccuracy=90, ttl = 10000, color = (rgbtohex(20,255,255)), special=None):
         self.owner = owner
         self.target = target
         self.name = name
@@ -141,6 +154,7 @@ class ammunition():
         self.damageFalloffStop = damageFalloffStop
         self.defaultAccuracy = defaultAccuracy
         self.ttl = ttl
+        self.color = color
         self.special = special
 
 
@@ -149,54 +163,155 @@ class ammunition_type:
     type1adefault.name = 'type1a'
     type1adefault.typeName = 'type1a'
     type1adefault.shotsPerTurn = 8
-    type1adefault.damage = 1
+    type1adefault.damage = 10
     type1adefault.turnRate = 6
-    type1adefault.speed = 120
+    type1adefault.speed = 80
+    type1adefault.color = rgbtohex(250,250,20)
 
     type2adefault = ammunition()
     type2adefault.name = 'type2a'
     type2adefault.typeName = 'type2a'
-    type2adefault.shotsPerTurn = 5
-    type2adefault.damage = 2
+    type2adefault.damage = 20
     type2adefault.turnRate = 6
-    type2adefault.speed = 200
+    type2adefault.speed = 100
 
     type3adefault = ammunition()
     type3adefault.name = 'type3a'
     type3adefault.typeName = 'type3a'
-    type3adefault.shotsPerTurn = 1
-    type3adefault.damage = 55
+    type3adefault.damage = 300
     type3adefault.turnRate = 10
-    type3adefault.speed = 20
+    type3adefault.speed = 50
 
     laser1adefault = ammunition()
     laser1adefault.name = 'laser1a'
     laser1adefault.typeName = 'laser1a'
     laser1adefault.sort = 'laser'
-    laser1adefault.shotsPerTurn = 10
     laser1adefault.damage = 1
     laser1adefault.turnRate = 25
     laser1adefault.speed = 1000
     laser1adefault.ttl = 600
+    laser1adefault.color = rgbtohex(250,250,20)
+
+    highEnergyLaser1 = ammunition()
+    highEnergyLaser1.name = 'highEnergyLaser1'
+    highEnergyLaser1.typeName = 'highEnergyLaser1'
+    highEnergyLaser1.sort = 'laser'
+    highEnergyLaser1.damage = 40
+    highEnergyLaser1.speed = 1000
+    highEnergyLaser1.ttl = 800
+    highEnergyLaser1.color = rgbtohex(200,20,125)
 
 ############################## SYSTEMS #############################################
-
-class system():
-    def __init__(self,minEnergy=0,maxEnergy=1,energy=0): 
+class system(object):
+    def __init__(self,name = "system",minEnergy=0,maxEnergy=5,energy=0, maxCooldown = 200, cooldown = 0):
+        self.name = name
         self.minEnergy = minEnergy
         self.maxEnergy = maxEnergy
         self.energy = energy
+        self.maxCooldown = maxCooldown
+        self.cooldown = cooldown
+    def trigger(self,ship):
+        pass
+    def activate(self,ship):
+        pass
 
-class system_type:
-    antiMissleSystem1 = system()
-    antiMissleSystem1.name = "anti-missle system I"
-    antiMissleSystem1.minEnergy = 1
-    antiMissleSystem1.maxEnergy = 10
+class throttleBrake1(system):
+    def __init__ (self,name = "Throttle Brake I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 300, cooldown = 0):
+        super(throttleBrake1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
 
-    antiMissleSystem2 = system()
-    antiMissleSystem2.name = "anti-missle system II"
-    antiMissleSystem2.minEnergy = 4
-    antiMissleSystem2.maxEnergy = 12
+    def trigger(self,ship):
+        if(self.cooldown <= 0 and True):
+            i=100
+            while(ship.hp != ship.maxHp and i>0):
+                ship.hp+=1
+                i-=1
+            self.cooldown=self.maxCooldown
+    def activate(self,ship):
+        value = ship.maxSpeed/4
+        ship.speed = ship.maxSpeed - self.energy*value
+        putTracer(ship)
+        pass
+    
+
+class antiMissleSystem1(system):
+    def __init__ (self,name = "Anti Missle System I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 300, cooldown = 0):
+        super(antiMissleSystem1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
+
+    def trigger(self,ship):
+        if(self.cooldown <= 0 and True):
+            i=100
+            while(ship.hp != ship.maxHp and i>0):
+                ship.hp+=1
+                i-=1
+            self.cooldown=self.maxCooldown
+
+class antiMissleSystem2(system):
+    def __init__ (self,name = "Anti Missle System II",minEnergy=0,maxEnergy=10,energy=0, maxCooldown = 200, cooldown = 0):
+        super(antiMissleSystem2,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
+
+    def trigger(self,ship):
+        if(self.cooldown <= 0 and ship.hp != ship.maxHp):
+            i=100
+            while(ship.hp != ship.maxAp and i>0):
+                ship.hp+=1
+                i-=1
+            self.cooldown=self.maxCooldown
+
+class type1aCannon1(system):
+    def __init__ (self,name = "Type1a Cannon I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 1000, cooldown = 0):
+        super(type1aCannon1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
+
+    def trigger(self,ship1):
+        shoot(self,ship1,ammunition_type.type1adefault)
+
+class type2aCannon1(system):
+    def __init__ (self,name = "Type2a Cannon I",minEnergy=0,maxEnergy=6,energy=0, maxCooldown = 300, cooldown = 0):
+        super(type2aCannon1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
+
+    def trigger(self,ship1):
+        shoot(self,ship1,ammunition_type.type2adefault)
+
+class type3aCannon1(system):
+    def __init__ (self,name = "Type3a Cannon I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 1700, cooldown = 0):
+        super(type3aCannon1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
+
+    def trigger(self,ship1):
+        shoot(self,ship1,ammunition_type.type3adefault)
+
+class gattlingLaser1(system):
+    def __init__ (self,name = "Gattling Laser I",minEnergy=0,maxEnergy=9,energy=0, maxCooldown = 60, cooldown = 0):
+        super(gattlingLaser1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
+
+    def trigger(self,ship1):
+        shoot(self,ship1,ammunition_type.laser1adefault)
+
+class gattlingLaser2(system):
+    def __init__ (self,name = "Gattling Laser II",minEnergy=2,maxEnergy=8,energy=0, maxCooldown = 40, cooldown = 0):
+        super(gattlingLaser2,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
+
+    def trigger(self,ship1):
+        shoot(self,ship1,ammunition_type.laser1adefault)
+
+class highEnergyLaser1(system):
+    def __init__ (self,name = "High Energy Laser I",minEnergy=4,maxEnergy=8,energy=0, maxCooldown = 800, cooldown = 0):
+        super(highEnergyLaser1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
+
+    def trigger(self,ship1):
+        shoot(self,ship1,ammunition_type.highEnergyLaser1)
+
+
+system_lookup = {
+    "throttleBrake1": throttleBrake1,
+    "type1aCannon1": type1aCannon1,
+    "type2aCannon1": type2aCannon1,
+    "type3aCannon1": type3aCannon1,
+    "antiMissleSystem1": antiMissleSystem1,
+    "antiMissleSystem2": antiMissleSystem2,
+    "gattlingLaser1": gattlingLaser1,
+    "gattlingLaser2": gattlingLaser2,
+    "highEnergyLaser1": highEnergyLaser1,
+    "system": system,
+    }
 
 # ammunition_lookup = dict
 # ammunition_lookup = {'type1a': type1a,
@@ -207,9 +322,9 @@ class system_type:
 
 class ship():
     def __init__(self, name="USS Artemis", owner="ai2", target='MSS Artemis',
-                 hp=200, maxHp=None, ap=200, maxAp=None, shields=3, xPos=300, yPos=300,
-                 typesOfAmmunition=[], ammunitionChoice=0, ammunitionNumberChoice=0, accuracyChoice=0, systemSlots = [],
-                 detectionRange=200, xDir=0.0, yDir=1.0, turnRate=0.5, ghostPoints = [], speed=40,
+                 hp=200, maxHp=None, ap=200, maxAp=None, shields=3, xPos=300, yPos=300,energyLimit = 20,
+                 typesOfAmmunition=[], ammunitionChoice=0, ammunitionNumberChoice=0, systemSlots = [],
+                 detectionRange=200, xDir=0.0, yDir=1.0, turnRate=0.5, ghostPoints = [], speed=40, maxSpeed = 40,
                  outlineColor="red"):  # replace alreadyShot with some clever formula to
         # Init info                                             ## handle shots when more than one enemy in range
         self.name = name
@@ -217,17 +332,17 @@ class ship():
         self.target = target
         self.xPos = xPos
         self.yPos = yPos
+        self.energyLimit = energyLimit
+        self.tmpEnergyLimit = energyLimit
+        self.energy = energyLimit
         self.typesOfAmmunition = typesOfAmmunition
         self.ammunitionChoice = ammunitionChoice
         self.ammunitionNumberChoice = ammunitionNumberChoice
-        self.accuracyChoice = accuracyChoice
 
         self.systemSlots = []
         for tmp in systemSlots:
-            tmpSystem = system()
-            tmpSystem.name = tmp.name
-            tmpSystem.minEnergy = tmp.minEnergy
-            tmpSystem.maxEnergy = tmp.maxEnergy
+            targetClass =  system_lookup[tmp]
+            tmpSystem = targetClass()
             self.systemSlots.append(tmpSystem)
 
         self.detectionRange = detectionRange
@@ -236,6 +351,7 @@ class ship():
         self.turnRate = turnRate
         self.ghostPoints = ghostPoints
         self.speed = speed
+        self.maxSpeed = maxSpeed
         self.outlineColor = outlineColor
         self.hp = hp
         if(maxHp == None):
@@ -278,11 +394,12 @@ class ghostPoint():
         self.yPos = yPos
 
 class laser():
-    def __init__(self, xPos=300, yPos=300, targetXPos=300, targetYPos=300, ttl = 10): 
+    def __init__(self, xPos=300, yPos=300, targetXPos=300, targetYPos=300, color = rgbtohex(22,22,22), ttl = 10): 
         self.xPos = xPos
         self.yPos = yPos
         self.targetXPos = targetXPos
         self.targetYPos = targetYPos
+        self.color = color
         self.ttl = ttl
 
 class playerController():
@@ -384,14 +501,14 @@ def drawShips():  # draw ship on the map with all of its accesories
 
             if(ship.owner == "ai1"):
                 canvas.create_oval(drawX-ship.detectionRange*globalVar.zoom, drawY - ship.detectionRange*globalVar.zoom,
-                                   drawX + ship.detectionRange*globalVar.zoom, drawY+ship.detectionRange*globalVar.zoom, outline=ship.outlineColor)
+                                   drawX + ship.detectionRange*globalVar.zoom, drawY+ship.detectionRange*globalVar.zoom, outline=ship.outlineColor, dash = (1,3))
                 canvas.create_line(drawX-5*globalVar.zoom, drawY-5*globalVar.zoom, drawX +
                                    5*globalVar.zoom, drawY+5*globalVar.zoom, width=1+2*globalVar.zoom,  fill='red')
             else:
                 canvas.create_oval(drawX-ship.detectionRange*globalVar.zoom,
                                    drawY - ship.detectionRange*globalVar.zoom, drawX +
                                    ship.detectionRange*globalVar.zoom,
-                                   drawY+ship.detectionRange*globalVar.zoom, outline=ship.outlineColor)
+                                   drawY+ship.detectionRange*globalVar.zoom, outline=ship.outlineColor, dash = (1,3))
                 canvas.create_line(drawX-5*globalVar.zoom, drawY-5*globalVar.zoom,
                                    drawX + 5*globalVar.zoom, drawY+5*globalVar.zoom, width=1+2*globalVar.zoom,  fill='white') 
 
@@ -409,6 +526,7 @@ def putLaser(missle):
     currentLaser.yPos = missle.yPos
     currentLaser.targetXPos = target.xPos
     currentLaser.targetYPos = target.yPos
+    currentLaser.color = missle.color
     currentLaser.ttl = missle.ttl
     (globalVar.lasers).append(currentLaser)
     
@@ -488,13 +606,26 @@ def drawGhostPoints():
             drawX = (ghost.xPos - globalVar.left) * \
                 globalVar.zoom
             drawY = (ghost.yPos - globalVar.top) * globalVar.zoom 
-            canvas.create_line(drawX-1*globalVar.zoom, drawY, drawX, drawY, width=globalVar.zoom,  fill='red')
+            canvas.create_line(drawX-1*globalVar.zoom, drawY, drawX, drawY, width=globalVar.zoom,  fill='orange')
 
 
 def drawLandmarkIcon(iconX, iconY, boost):
     if(boost == 'armor'):
         canvas.create_image(iconX, iconY, image=globalVar.armorIcon)
 
+
+def shoot(system,ship1,ammunitionType):    #newer than manageShots without strange interval system
+        if(system.cooldown <= 0 and True):
+            for ship2 in globalVar.ships:
+                if(ship1.owner == 'player1' and ship2.owner == 'ai1'):
+                    distance = math.sqrt(
+                        abs(pow(ship1.xPos-ship2.xPos, 2)+pow(ship1.yPos-ship2.yPos, 2)))
+                    if(ship2.visible == TRUE and distance < ship1.detectionRange):
+                        createRocket(ship1, ship2,ammunitionType)
+                        system.cooldown = system.maxCooldown
+                        break
+                    #     print(ship1.name + " fired " +
+                    #           str(ship1.typesOfAmmunition[ship1.ammunitionChoice].name))
 
 # replace alreadyShot with some clever formula t
 def manageShots():
@@ -516,7 +647,7 @@ def manageShots():
                         else:
                             if(ship1.shotsTaken < ship1.ammunitionNumberChoice):
                                 ship1.shotsTaken += 1
-                                createRocket(ship1, ship2)
+                                createRocket(ship1, ship2,ammunition_type(ship1.ammunitionChoice))
                                 ship1.alreadyShot = TRUE
                            #     print(ship1.name + " fired " +
                            #           str(ship1.typesOfAmmunition[ship1.ammunitionChoice].name))
@@ -533,12 +664,21 @@ def manageShots():
                         else:
                             if(ship1.shotsTaken < aiController.ammunitionChoiceScale(ship)):
                                 ship1.shotsTaken += 1
-                                createRocket(ship1, ship2)
+                                createRocket(ship1, ship2,ammunition_type.type1adefault)
                                 ship1.alreadyShot = TRUE
                              #   print(ship1.name + " fired " +
                             #          str(ship1.typesOfAmmunition[ship1.ammunitionChoice].name))
+def manageSystemActivations():
+    for ship in globalVar.ships:
+        for system in ship.systemSlots:
+            system.activate(ship)
 
-
+def manageSystemTriggers():
+    for ship in globalVar.ships:
+        for system in ship.systemSlots:
+            system.trigger(ship)
+                # trigger is activated during round and activation is between
+                                    
 def getOrders(ship, forced=False):
     tracered = False
     if(ship.owner == "player1"):
@@ -664,7 +804,6 @@ def manageRockets():    # manage mid-air munitions
         moveDirX = - (missle.xPos-ship_lookup[missle.target].xPos) / scale
         moveDirY = - \
             (missle.yPos-ship_lookup[missle.target].yPos) / scale
-
         degree = missle.turnRate
         rotateVector(degree, missle, moveDirX, moveDirY)
         missle.xPos += missle.xDir*missle.speed/360
@@ -727,6 +866,7 @@ def drawRockets():
             canvas.create_line(drawX, drawY+1,
                             drawX, drawY-1, fill = color)
 
+
 def drawLasers():
     for laser in globalVar.lasers:
         if laser.ttl>0:
@@ -738,13 +878,13 @@ def drawLasers():
                 globalVar.zoom
             drawY2 = (laser.targetYPos - globalVar.top) * \
                 globalVar.zoom
-            canvas.create_line(drawX,drawY,drawX2,drawY2, fill = "yellow")
+            canvas.create_line(drawX,drawY,drawX2,drawY2, fill = laser.color)# "yellow")
         else:
             (globalVar.lasers).remove(laser)
 
-def createRocket(ship, target):
+def createRocket(ship, target,_type):
     globalVar.misslesShot += 1
-    missleClass = ship.typesOfAmmunition[ship.ammunitionChoice]
+    missleClass = _type
     # copy standard for ammunition. To be transformed into constructor like in c++ if needed
     missle = ammunition()
     globalVar.currentMissles.append(missle)
@@ -754,11 +894,13 @@ def createRocket(ship, target):
     setattr(globalVar.currentMissles[-1], 'sort', missleClass.sort)
     setattr(globalVar.currentMissles[-1], 'damage', missleClass.damage)
     setattr(globalVar.currentMissles[-1], 'ttl', missleClass.ttl)
+    setattr(globalVar.currentMissles[-1], 'color', missleClass.color)
     setattr(globalVar.currentMissles[-1], 'xPos', ship.xPos)
     setattr(globalVar.currentMissles[-1], 'yPos', ship.yPos)
     setattr(globalVar.currentMissles[-1], 'xDir', ship.xDir)
     setattr(globalVar.currentMissles[-1], 'yDir', ship.yDir)
     setattr(globalVar.currentMissles[-1], 'owner', ship.owner)
+    setattr(globalVar.currentMissles[-1], 'speed',missleClass.speed)
     setattr(globalVar.currentMissles[-1], 'turnRate',
             missleClass.turnRate)
     setattr(globalVar.currentMissles[-1], 'target', target.name)
@@ -795,19 +937,24 @@ def mouseWheel(event):
 def update():
     canvas.delete('all')
     updateScales()
+    updateEnergy()
     globalVar.gameSpeed = gameSpeedScale.get()
     newWindow()
     if(not globalVar.turnInProgress):
+        manageSystemActivations()
         for ship in globalVar.ships:
             getOrders(ship)
     ticksToEndFrame = 0
-    if(not globalVar.turnBased or globalVar.turnInProgress):
+    if(globalVar.turnInProgress):
+        root.title("TURN IN PROGRESS")
         while(ticksToEndFrame < globalVar.gameSpeed):
             detectionCheck()
             updateShips()
             manageLandmarks()
             manageShots()   # check ship shot
             manageRockets()   # manage mid-air munitions
+            manageSystemTriggers()
+            updateCooldowns()
             for laser in globalVar.lasers:
                 if globalVar.turnInProgress:
                     laser.ttl -= 1
@@ -817,6 +964,8 @@ def update():
             if(timeElapsedProgressBar['value'] > globalVar.turnLength):
                 endTurn()
                 break
+    else:
+        root.title("Year 2155 Day 23 Turn 20")
     drawShips()
     drawGhostPoints()
     drawLandmarks()
@@ -910,6 +1059,8 @@ def startTurn():
         object.config(state=DISABLED, background="#D0D0D0")
     for object in RadioElementsList:
         object.config(state=DISABLED)
+    for object in globalVar.uiSystems:
+        object.config(state = DISABLED, background="#D0D0D0")
 
 
 def endTurn():
@@ -918,6 +1069,8 @@ def endTurn():
         object.config(state=NORMAL, background="#F0F0F0")
     for object in RadioElementsList:
         object.config(state=NORMAL)
+    for object in globalVar.uiSystems:
+        object.config(state = NORMAL, background="#F0F0F0")
     for ship in globalVar.ships:
         ship.ghostPoints = []
         getOrders(ship,True)
@@ -936,28 +1089,52 @@ def updateScales():
     enemyHPProgressBar['value'] = enemy.hp
     enemyHPProgressBar2['value'] = enemy2.hp
     enemyHPProgressBar3['value'] = enemy3.hp
+
     for ship1 in globalVar.ships:
         updateShields(ship1)
 
     globalVar.tmpCounter += 1
-
     ammunitionNumber = ammunitionChoiceScale.get()
     shipChosen = ship_lookup[globalVar.shipChoice]
-    shipChosen.ammunitionNumberChoice = ammunitionNumber
 
-    if(ammunitionNumber == 0):
-        accuracyChoiceScale.set(0)
-        accuracyChoiceScale.config(state="disabled", bg='#D0D0D0')
-    else:
-        if(not globalVar.turnInProgress):
-            accuracyChoiceScale.config(state=NORMAL, background="#F0F0F0")
     timeElapsedProgressBar.config(maximum=globalVar.turnLength)
 
-    i = 0
-    for system in globalVar.uiSystems:
+    i = 0 
+    for system in globalVar.uiSystemsProgressbars:
         (shipChosen.systemSlots[i]).energy = (globalVar.uiSystems[i]).get()
+        system1 = shipChosen.systemSlots[i]
+        system['value'] = (system1.maxCooldown-system1.cooldown)
         i+=1
 
+def updateCooldowns():
+    for ship in globalVar.ships:
+        for system in ship.systemSlots:
+            #change if needed
+            energyTicks = system.energy
+            while( system.cooldown > 0 and energyTicks):
+                system.cooldown -= 0.1
+                energyTicks -=1
+
+def updateEnergy():
+    shipChosen = ship_lookup[globalVar.shipChoice]
+    tmpEnergy = shipChosen.tmpEnergyLimit
+    for system in shipChosen.systemSlots:
+        tmpEnergy -= system.energy
+    shipChosen.energy = tmpEnergy
+    if(tmpEnergy<0):
+        (globalVar.uiEnergyLabel).config(foreground = "red")
+        for radio in globalVar.shipChoiceRadioButtons:
+            radio.configure(state=DISABLED)
+            startTurnButton.config(state = DISABLED)
+
+    else:
+        (globalVar.uiEnergyLabel).config(foreground = "black")
+        for radio in globalVar.shipChoiceRadioButtons:
+            radio.configure(state = NORMAL)
+            if(not globalVar.turnInProgress):
+                startTurnButton.config(state = NORMAL)
+    (globalVar.uiEnergyLabel).config(text = "Energy remaining: " + str(shipChosen.energy))
+    
 
 def updateShields(ship1):
     for tmp, progressBar in enumerate(ship1.shieldsLabel):
@@ -975,14 +1152,12 @@ def updateShields(ship1):
 
 def radioBox():
     globalVar.selection = int((globalVar.radio).get())
-    label.config(text=globalVar.selection)
     if(globalVar.selection == 0):
         globalVar.shipChoice = playerName
     if(globalVar.selection == 1):
         globalVar.shipChoice = playerName2
     if(globalVar.selection == 2):
         globalVar.shipChoice = playerName3
-    updateAmmunitionChoiceOptions()
     shipChosen = ship_lookup[globalVar.shipChoice]
     ammunitionChoiceScale.config(
         to=(shipChosen.typesOfAmmunition[shipChosen.ammunitionChoice]).shotsPerTurn)
@@ -990,45 +1165,33 @@ def radioBox():
     updateUtilityChoice()
 
 
-def radioBox2():
-    globalVar.selection2 = (globalVar.radio2).get()
-    label2.config(text=globalVar.selection2)
-    shipChosen = ship_lookup[globalVar.shipChoice]
-    shipChosen.ammunitionChoice = globalVar.selection2
-    ammunitionChoiceScale.config(
-        to=(shipChosen.typesOfAmmunition[shipChosen.ammunitionChoice]).shotsPerTurn)
-    ammunitionChoiceScale.set(shipChosen.ammunitionNumberChoice)
-
-
-def updateAmmunitionChoiceOptions():
-
-    (globalVar.radio2).set(ship_lookup[globalVar.shipChoice].ammunitionChoice)
-    ammunitionChoiceRadioButton1.config(
-        text=ship_lookup[(globalVar.shipChoice)].typesOfAmmunition[0].typeName)
-    ammunitionChoiceRadioButton2.config(
-        text=ship_lookup[(globalVar.shipChoice)].typesOfAmmunition[1].typeName)
-    ammunitionChoiceRadioButton3.config(
-        text=ship_lookup[(globalVar.shipChoice)].typesOfAmmunition[2].typeName)
-
 def updateUtilityChoice():
     shipChosen = ship_lookup[globalVar.shipChoice]
+    for widget in (globalVar.uiSystemsLabelFrame).winfo_children():
+        widget.destroy()
     (globalVar.uiSystemsLabelFrame).destroy()
     globalVar.uiSystems = []
+    globalVar.uiSystemsProgressbars = []
     shipChosen = ship_lookup[globalVar.shipChoice]
     globalVar.uiSystemsLabelFrame = tk.LabelFrame(root,width=ui_metrics.systemScalesLabelFrameWidth, \
-                                                    height = 100*len(shipChosen.systemSlots), text= shipChosen.name + " systems", \
+                                                    height = (ui_metrics.systemScalesMarginTop*1.5 + (ui_metrics.systemScalesHeightOffset)*len(shipChosen.systemSlots)), text= shipChosen.name + " systems", \
                                                     borderwidth=2, relief="groove")
     (globalVar.uiSystemsLabelFrame).place(x = uiMetrics.leftMargin, y = ui_metrics.canvasY)
     i=0
+    globalVar.uiEnergyLabel = ttk.Label(globalVar.uiSystemsLabelFrame, width=20, text = "Energy remaining: " + str(shipChosen.energy), font = "16")
+    globalVar.uiEnergyLabel.place(x = 10, y = 20)
     for system in shipChosen.systemSlots:
         scale = tk.Scale(globalVar.uiSystemsLabelFrame, orient=HORIZONTAL, length=ui_metrics.systemScalesWidth, \
                             label=system.name, from_ = system.minEnergy, to=system.maxEnergy, relief=RIDGE)
         scale.set(system.energy)
+        if(globalVar.turnInProgress):
+            scale.config(state = 'disabled', background="#D0D0D0")
         (globalVar.uiSystems).append(scale)
-        scale.place(x=10,y=10+i*ui_metrics.systemScalesHeightOffset)
+        progressBar = ttk.Progressbar(globalVar.uiSystemsLabelFrame, maximum=system.maxCooldown, length=(ui_metrics.systemScalesWidth), variable=(system.maxCooldown-system.cooldown))
+        (globalVar.uiSystemsProgressbars).append(progressBar)
+        scale.place(x=10,y=ui_metrics.systemScalesMarginTop+i*ui_metrics.systemScalesHeightOffset)
+        progressBar.place(x=10,y=ui_metrics.systemScalesMarginTop+i*(ui_metrics.systemScalesHeightOffset)+ui_metrics.systemProgressbarsHeightOffset)
         i+=1
-
-
 
 def mouseOnCanvas():
     if(globalVar.pointerX > ui_metrics.canvasX and globalVar.pointerX <
@@ -1073,7 +1236,6 @@ uiMetrics = ui_metrics()
 globalVar = global_var()
 gameRules = game_rules()
 ammunitionType = ammunition_type()
-systemType = system_type()
 ship_lookup = dict
 
 getZoomMetrics()
@@ -1091,21 +1253,21 @@ enemyName3 = 'RDD Firebath'
 player = ship(outlineColor="white", owner="player1", \
               name=playerName, shields=10, xPos=300, \
                typesOfAmmunition=[ammunitionType.type1adefault, ammunitionType.laser1adefault, ammunitionType.type3adefault],\
-              systemSlots=[systemType.antiMissleSystem1, systemType.antiMissleSystem1], detectionRange=100, ammunitionChoice=0, turnRate = 0.3)
+              systemSlots=["throttleBrake1","gattlingLaser1", "antiMissleSystem2", "highEnergyLaser1"], detectionRange=100, ammunitionChoice=0, turnRate = 0.3,maxSpeed = 50)
 player2 = ship(outlineColor="white", owner="player1",
                 name=playerName2, shields=5, xPos=40, typesOfAmmunition=[ammunitionType.type2adefault, ammunitionType.type2adefault, ammunitionType.type2adefault], \
-                detectionRange=160, ammunitionChoice=1, turnRate = 0.3)
+                systemSlots=["type1aCannon1", "type2aCannon1", "type3aCannon1"],detectionRange=160, ammunitionChoice=1, turnRate = 0.3)
 player3 = ship(outlineColor="white", owner="player1",
-               systemSlots=[systemType.antiMissleSystem1, systemType.antiMissleSystem2, systemType.antiMissleSystem2], name=playerName3, shields=3, xPos=900, \
+               systemSlots=["system", "antiMissleSystem1","gattlingLaser2", "antiMissleSystem2"], name=playerName3, shields=3, xPos=350, \
                     typesOfAmmunition=[ammunitionType.type1adefault, ammunitionType.type2adefault, ammunitionType.type3adefault], \
-                    detectionRange=180, ammunitionChoice=1, turnRate = 0.3)
+                    detectionRange=180, ammunitionChoice=1, turnRate = 0.3, maxSpeed = 50)
 
 enemy = ship(xPos=500, yPos=300, outlineColor="red", shields=10, typesOfAmmunition=[ammunitionType.type1adefault, ammunitionType.type2adefault, ammunitionType.type2adefault],
              owner="ai1", ammunitionChoice=0, name=enemyName,  turnRate = 0.3)
 enemy2 = ship(xPos=550, yPos=300, outlineColor="red", shields=5,
               owner="ai1", ammunitionChoice=0, name=enemyName2, typesOfAmmunition=[ammunitionType.type1adefault, ammunitionType.type2adefault, ammunitionType.type2adefault], turnRate = 0.3)
 enemy3 = ship(xPos=450, yPos=300, outlineColor="red", shields=3, typesOfAmmunition=[ammunitionType.type1adefault, ammunitionType.type2adefault, ammunitionType.type3adefault],
-              owner="ai1", ammunitionChoice=0, name=enemyName3, turnRate = 0.3)
+              owner="ai1", ammunitionChoice=0, name=enemyName3, turnRate = 0.3, maxSpeed = 0, speed = 0)
 
 (globalVar.ships).append(player)
 (globalVar.ships).append(player2)
@@ -1170,14 +1332,13 @@ timeElapsedLabel = tk.Label(root, text="Time elapsed")
 timeElapsedProgressBar = ttk.Progressbar(root, maximum=globalVar.turnLength, variable=1,  orient='horizontal',
                                          mode='determinate', length=ui_metrics.shipDataWidth)
 
-startTurnButton = tk.Button(root, text="Start turn", command=startTurn)
+startTurnButton = tk.Button(root, text="Start turn", command=startTurn, width = 20, height= 7)
 exitButton = tk.Button(root, text="Exit", command=exit)
 
 globalVar.shipChoice = player.name
 
 
 # ships choice
-label = Label(root)
 var = IntVar()
 shipChoiceRadioButton1 = ttk.Radiobutton(
     root, text='1. MMS Artemis', variable=globalVar.radio, value=0, command=radioBox)
@@ -1186,19 +1347,19 @@ shipChoiceRadioButton2 = ttk.Radiobutton(
 shipChoiceRadioButton3 = ttk.Radiobutton(
     root, text='3. MMS Catalyst', variable=globalVar.radio, value=2, command=radioBox)
 
-label2 = Label(root)
-var = IntVar()
-ammunitionChoiceRadioButton1 = ttk.Radiobutton(
-    root, text='default Ammunition Type 1', variable=globalVar.radio2, value=0, command=radioBox2)
-ammunitionChoiceRadioButton2 = ttk.Radiobutton(
-    root, text='default Ammunition Type 2', variable=globalVar.radio2, value=1, command=radioBox2)
-ammunitionChoiceRadioButton3 = ttk.Radiobutton(
-    root, text='default Ammunition Type 3', variable=globalVar.radio2, value=2, command=radioBox2)
-
 radioBox()
 updateUtilityChoice()
+detectionCheck()
+for ship1 in globalVar.ships:
+    if(ship1.owner == "player1"):
+        putTracer(ship1)
+
 shipChosen = ship_lookup[globalVar.shipChoice]
 
+globalVar.shipChoiceRadioButtons = []
+(globalVar.shipChoiceRadioButtons).append(shipChoiceRadioButton1)
+(globalVar.shipChoiceRadioButtons).append(shipChoiceRadioButton2)
+(globalVar.shipChoiceRadioButtons).append(shipChoiceRadioButton3)
 shipImage1 = Image.open('ship_modules/ship.png')
 shipImage = shipImage1.resize(
     (math.floor(uiMetrics.canvasWidth/8), math.floor(uiMetrics.canvasHeight/8)), Image.ANTIALIAS)
@@ -1209,28 +1370,28 @@ playerDisplay = tk.Label(root, image=playerImage)
 enemyImage = ImageTk.PhotoImage(shipImage)
 enemyDisplay = tk.Label(root, image=enemyImage)
 
-distanceLabelFrame = ttk.LabelFrame(
+distanceLabelFrame = tk.LabelFrame(
     root, text='Distance between ships', width=1000, height=200)
 distanceLabel = tk.Label(distanceLabelFrame, text='0000000')
 
 # ship shields
-playerSPLabelFrame = ttk.LabelFrame(root, text= playerName + " Shields",
+playerSPLabelFrame = tk.LabelFrame(root, text= playerName + " Shields",
                                     borderwidth=2, relief="groove")
 playerSPProgressBar = ttk.Progressbar(
     playerSPLabelFrame, maximum=player.hp, length=(ui_metrics.shipDataWidth-10), variable=100)
-playerSPLabelFrame2 = ttk.LabelFrame(root, text= playerName2 + " Shields",
+playerSPLabelFrame2 = tk.LabelFrame(root, text= playerName2 + " Shields",
                                      borderwidth=2, relief="groove")
 playerSPProgressBar2 = ttk.Progressbar(
     playerSPLabelFrame2, maximum=player.hp, length=(ui_metrics.shipDataWidth-10), variable=100)
-playerSPLabelFrame3 = ttk.LabelFrame(root, text= playerName3 + " Shields",
+playerSPLabelFrame3 = tk.LabelFrame(root, text= playerName3 + " Shields",
                                      borderwidth=2, relief="groove")
 playerSPProgressBar3 = ttk.Progressbar(
     playerSPLabelFrame3, maximum=player.hp, length=(ui_metrics.shipDataWidth-10), variable=100)
-enemySPLabelFrame = ttk.LabelFrame(root, text=enemyName + " Shields",
+enemySPLabelFrame = tk.LabelFrame(root, text=enemyName + " Shields",
                                    borderwidth=2, relief="groove")
-enemySPLabelFrame2 = ttk.LabelFrame(root, text=enemyName2 + " Shields",
+enemySPLabelFrame2 = tk.LabelFrame(root, text=enemyName2 + " Shields",
                                     borderwidth=2, relief="groove")
-enemySPLabelFrame3 = ttk.LabelFrame(root, text= enemyName3 + " Shields",
+enemySPLabelFrame3 = tk.LabelFrame(root, text= enemyName3 + " Shields",
                                     borderwidth=2, relief="groove")
 playerShields = []
 playerShields2 = []
@@ -1277,58 +1438,57 @@ while(n < x):
         enemySPLabelFrame3, maximum=100, length=math.floor((ui_metrics.shipDataWidth-10)/x * 4/5), variable=100))
     n += 1
 
-label.place(x=1000, y=900)
 # ship armor
-playerAPLabelFrame = ttk.LabelFrame(root, text=playerName + " Armor",
+playerAPLabelFrame = tk.LabelFrame(root, text=playerName + " Armor",
                                     borderwidth=2, relief="groove")
 playerAPProgressBar = ttk.Progressbar(
     playerAPLabelFrame, maximum=player.maxAp, length=(ui_metrics.shipDataWidth-10), variable=100)
-playerAPLabelFrame2 = ttk.LabelFrame(root, text=playerName2 + " Armor",
+playerAPLabelFrame2 = tk.LabelFrame(root, text=playerName2 + " Armor",
                                      borderwidth=2, relief="groove")
 playerAPProgressBar2 = ttk.Progressbar(
     playerAPLabelFrame2, maximum=player2.maxAp, length=(ui_metrics.shipDataWidth-10), variable=100)
-playerAPLabelFrame3 = ttk.LabelFrame(root, text=playerName3 + " Armor",
+playerAPLabelFrame3 = tk.LabelFrame(root, text=playerName3 + " Armor",
                                      borderwidth=2, relief="groove")
 playerAPProgressBar3 = ttk.Progressbar(
     playerAPLabelFrame3, maximum=player3.maxAp, length=(ui_metrics.shipDataWidth-10), variable=100)
-enemyAPLabelFrame = ttk.LabelFrame(root, text=enemyName + " Armor",
+enemyAPLabelFrame = tk.LabelFrame(root, text=enemyName + " Armor",
                                    borderwidth=2, relief="groove")
 enemyAPProgressBar = ttk.Progressbar(
     enemyAPLabelFrame, maximum=enemy.maxAp, length=(ui_metrics.shipDataWidth-10), variable=100)
-enemyAPLabelFrame2 = ttk.LabelFrame(root, text= enemyName2 + " Armor",
+enemyAPLabelFrame2 = tk.LabelFrame(root, text= enemyName2 + " Armor",
                                     borderwidth=2, relief="groove")
 enemyAPProgressBar2 = ttk.Progressbar(
     enemyAPLabelFrame2, maximum=enemy.maxAp, length=(ui_metrics.shipDataWidth-10), variable=100)
 
-enemyAPLabelFrame3 = ttk.LabelFrame(root, text=enemyName3 + " Armor",
+enemyAPLabelFrame3 = tk.LabelFrame(root, text=enemyName3 + " Armor",
                                     borderwidth=2, relief="groove")
 enemyAPProgressBar3 = ttk.Progressbar(
     enemyAPLabelFrame3, maximum=enemy.maxAp, length=(ui_metrics.shipDataWidth-10), variable=100)
 
 # ship hp
-playerHPLabelFrame = ttk.LabelFrame(root, text= playerName + " HP",
+playerHPLabelFrame = tk.LabelFrame(root, text= playerName + " HP",
                                     borderwidth=2, relief="groove")
 playerHPProgressBar = ttk.Progressbar(
     playerHPLabelFrame, maximum=player.maxHp, length=(ui_metrics.shipDataWidth-10), variable=100)
-playerHPLabelFrame2 = ttk.LabelFrame(root, text= playerName2 + " HP",
+playerHPLabelFrame2 = tk.LabelFrame(root, text= playerName2 + " HP",
                                      borderwidth=2, relief="groove")
 playerHPProgressBar2 = ttk.Progressbar(
     playerHPLabelFrame2, maximum=player2.maxHp, length=(ui_metrics.shipDataWidth-10), variable=100)
 
-playerHPLabelFrame3 = ttk.LabelFrame(root, text=playerName3 + " HP",
+playerHPLabelFrame3 = tk.LabelFrame(root, text=playerName3 + " HP",
                                      borderwidth=2, relief="groove")
 playerHPProgressBar3 = ttk.Progressbar(
     playerHPLabelFrame3, maximum=player3.maxHp, length=(ui_metrics.shipDataWidth-10), variable=100)
 
-enemyHPLabelFrame = ttk.LabelFrame(root, text=enemyName + " HP",
+enemyHPLabelFrame = tk.LabelFrame(root, text=enemyName + " HP",
                                    borderwidth=2, relief="groove")
 enemyHPProgressBar = ttk.Progressbar(
     enemyHPLabelFrame, maximum=enemy.maxHp, length=(ui_metrics.shipDataWidth-10), variable=100)
-enemyHPLabelFrame2 = ttk.LabelFrame(root, text= enemyName2 + " HP",
+enemyHPLabelFrame2 = tk.LabelFrame(root, text= enemyName2 + " HP",
                                     borderwidth=2, relief="groove")
 enemyHPProgressBar2 = ttk.Progressbar(
     enemyHPLabelFrame2, maximum=enemy2.maxHp, length=(ui_metrics.shipDataWidth-10), variable=100)
-enemyHPLabelFrame3 = ttk.LabelFrame(root, text= enemyName3 +" HP",
+enemyHPLabelFrame3 = tk.LabelFrame(root, text= enemyName3 +" HP",
                                     borderwidth=2, relief="groove")
 enemyHPProgressBar3 = ttk.Progressbar(
     enemyHPLabelFrame3, maximum=enemy3.maxHp, length=(ui_metrics.shipDataWidth-10), variable=100)
@@ -1342,6 +1502,13 @@ enemy.shieldsLabel = enemyShields
 enemy2.shieldsLabel = enemyShields2
 enemy3.shieldsLabel = enemyShields3
 
+tmpShieldsLabel = []
+tmpShieldsLabel.append(playerShields)
+tmpShieldsLabel.append(playerShields2)
+tmpShieldsLabel.append(playerShields3)
+tmpShieldsLabel.append(enemyShields)
+tmpShieldsLabel.append(enemyShields2)
+tmpShieldsLabel.append(enemyShields3)
 ######################################################### PLACE ####################################
 # left section
 #ammunitionChoiceScale.place(x=20, y=ui_metrics.canvasY+60)     ## delete later 
@@ -1353,13 +1520,6 @@ shipChoiceRadioButton2.place(
     x=ui_metrics.canvasX + 700, y=ui_metrics.canvasY - 60)
 shipChoiceRadioButton3.place(
     x=ui_metrics.canvasX + 860, y=ui_metrics.canvasY - 60)
-
-ammunitionChoiceRadioButton1.place(
-    x=ui_metrics.canvasX + ui_metrics.canvasWidth + 20, y=ui_metrics.canvasY - 60)
-ammunitionChoiceRadioButton2.place(
-    x=ui_metrics.canvasX + ui_metrics.canvasWidth + 20, y=ui_metrics.canvasY - 40)
-ammunitionChoiceRadioButton3.place(
-    x=ui_metrics.canvasX + ui_metrics.canvasWidth + 20, y=ui_metrics.canvasY - 20)
 
 gameSpeedScale.place(x=ui_metrics.canvasX, y=ui_metrics.canvasY - 80)
 canvas.place(x=ui_metrics.canvasX, y=ui_metrics.canvasY)
@@ -1387,39 +1547,14 @@ enemySPLabelFrame2.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics
                          y=ui_metrics.canvasY + ui_metrics.canvasHeight + ui_metrics.shipDataOffsetY, anchor="nw")
 enemySPLabelFrame3.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + 5*ui_metrics.shipDataWidth,
                          y=ui_metrics.canvasY + ui_metrics.canvasHeight + ui_metrics.shipDataOffsetY, anchor="nw")
-
+# place shields
 tmp = 0
-for progressBar in playerShields:
-    progressBar.place(x=tmp + 5, y=5)
-    tmp += ((ui_metrics.shipDataWidth-10) /
-            (player.shields*4+(player.shields-1)))*5
-tmp = 0
-for progressBar in playerShields2:
-    progressBar.place(x=tmp + 5, y=5)
-    tmp += ((ui_metrics.shipDataWidth-10) /
-            (player2.shields*4+(player2.shields-1)))*5
-tmp = 0
-for progressBar in playerShields3:
-    progressBar.place(x=tmp + 5, y=5)
-    tmp += ((ui_metrics.shipDataWidth-10) /
-            (player3.shields*4+(player3.shields-1)))*5
-
-tmp = 0
-for progressBar in enemyShields:
-    progressBar.place(x=tmp + 5, y=5)
-    tmp += ((ui_metrics.shipDataWidth-10) /
-            (enemy.shields*4+(enemy.shields-1)))*5
-tmp = 0
-for progressBar in enemyShields2:
-    progressBar.place(x=tmp + 5, y=5)
-    tmp += ((ui_metrics.shipDataWidth-10) /
-            (enemy2.shields*4+(enemy2.shields-1)))*5
-tmp = 0
-for progressBar in enemyShields3:
-    progressBar.place(x=tmp + 5, y=5)
-    tmp += ((ui_metrics.shipDataWidth-10) /
-            (enemy3.shields*4+(enemy3.shields-1)))*5
-
+for tmpShip,shieldArray in zip(globalVar.ships,tmpShieldsLabel):
+    tmp = 0
+    for progressBar in shieldArray:
+        progressBar.place(x=tmp + 5, y=5)
+        tmp += ((ui_metrics.shipDataWidth-10) /
+                (tmpShip.shields*4+(tmpShip.shields-1)))*5
 # ship armor   player
 playerAPLabelFrame.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX,
                          y=ui_metrics.canvasY + ui_metrics.canvasHeight + uiMetrics.shipDataOffsetY + ui_metrics.shipDataOffsetBetween, anchor="nw")
@@ -1463,7 +1598,7 @@ enemyHPProgressBar3.place(x=2, y=5)
 
 
 ######################### right section ###################################
-startTurnButton.place(x=(ui_metrics.canvasX+ui_metrics.canvasWidth + 80),
+startTurnButton.place(x=(ui_metrics.canvasX+ui_metrics.canvasWidth + 20),
                       y=ui_metrics.canvasY+ui_metrics.canvasHeight-20)
 
 distanceLabel.place(x=ui_metrics.canvasX +
@@ -1477,9 +1612,6 @@ UIElementsList.append(startTurnButton)
 RadioElementsList.append(shipChoiceRadioButton1)
 RadioElementsList.append(shipChoiceRadioButton2)
 RadioElementsList.append(shipChoiceRadioButton3)
-RadioElementsList.append(ammunitionChoiceRadioButton1)
-RadioElementsList.append(ammunitionChoiceRadioButton2)
-RadioElementsList.append(ammunitionChoiceRadioButton3)
 # clock
 update()
 
