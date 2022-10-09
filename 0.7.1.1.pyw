@@ -778,7 +778,6 @@ def mouseButton3up(event):
 def trackMouse():
     globalVar.pointerDeltaX = globalVar.pointerX - globalVar.prevPointerX
     globalVar.pointerDeltaY = globalVar.pointerY - globalVar.prevPointerY
-    print(str(globalVar.pointerDeltaX) + str(globalVar.pointerDeltaY))
     globalVar.prevPointerX = globalVar.pointerX
     globalVar.prevPointerY = globalVar.pointerY
     globalVar.prevPointerX = globalVar.pointerX
@@ -791,7 +790,7 @@ def update(globalVar,uiElements,canvas):
     canvas.delete('all')
     updateScales(uiElements)
     updateEnergy(globalVar)
-    globalVar.gameSpeed = gameSpeedScale.get()
+    globalVar.gameSpeed = (uiElements.gameSpeedScale).get()
     newWindow(uiMetrics)
     if(not globalVar.turnInProgress):
         manageSystemActivations(globalVar.ships)
@@ -977,15 +976,15 @@ def updateScales(uiElements):
     uiElements.playerAPProgressBar['value'] = player.ap
     uiElements.playerAPProgressBar2['value'] = player2.ap
     uiElements.playerAPProgressBar3['value'] = player3.ap
-    enemyAPProgressBar['value'] = enemy.ap
-    enemyAPProgressBar2['value'] = enemy2.ap
-    enemyAPProgressBar3['value'] = enemy3.ap
-    playerHPProgressBar['value'] = player.hp
-    playerHPProgressBar2['value'] = player2.hp
-    playerHPProgressBar3['value'] = player3.hp
-    enemyHPProgressBar['value'] = enemy.hp
-    enemyHPProgressBar2['value'] = enemy2.hp
-    enemyHPProgressBar3['value'] = enemy3.hp
+    uiElements.enemyAPProgressBar['value'] = enemy.ap
+    uiElements.enemyAPProgressBar2['value'] = enemy2.ap
+    uiElements.enemyAPProgressBar3['value'] = enemy3.ap
+    uiElements.playerHPProgressBar['value'] = player.hp
+    uiElements.playerHPProgressBar2['value'] = player2.hp
+    uiElements.playerHPProgressBar3['value'] = player3.hp
+    uiElements.enemyHPProgressBar['value'] = enemy.hp
+    uiElements.enemyHPProgressBar2['value'] = enemy2.hp
+    uiElements.enemyHPProgressBar3['value'] = enemy3.hp
 
     for ship1 in globalVar.ships:
         updateShields(ship1)
@@ -1022,14 +1021,14 @@ def updateEnergy(var):
         (var.uiEnergyLabel).config(foreground = "red")
         for radio in var.shipChoiceRadioButtons:
             radio.configure(state=DISABLED)
-            startTurnButton.config(state = DISABLED)
+            (uiElements.startTurnButton).config(state = DISABLED)
 
     else:
         (var.uiEnergyLabel).config(foreground = "black")
         for radio in var.shipChoiceRadioButtons:
             radio.configure(state = NORMAL)
             if(not var.turnInProgress):
-                startTurnButton.config(state = NORMAL)
+                (uiElements.startTurnButton).config(state = NORMAL)
     (var.uiEnergyLabel).config(text = "Energy remaining: " + str(shipChosen.energy))
     
 
@@ -1208,24 +1207,23 @@ ammunitionChoiceScale = tk.Scale(
 
 accuracyChoiceScale = tk.Scale(
     root, orient=HORIZONTAL, length=100, label="Time to aim", to=4, relief=RIDGE)
-gameSpeedScale = tk.Scale(
+uiElements.gameSpeedScale = tk.Scale(
     root, orient=HORIZONTAL, length=100, label="Playback speed", from_=1, to=16, resolution=-20, variable=2, relief=RIDGE)
 pixel = tk.PhotoImage(width=1, height=1)
 img = tk.PhotoImage(file=r'resized_image.png')
-gameSpeedScale.set(3)
+(uiElements.gameSpeedScale).set(3)
 uiElements.timeElapsedLabel = tk.Label(root, text="Time elapsed")
 uiElements.timeElapsedProgressBar = ttk.Progressbar(root, maximum=globalVar.turnLength, variable=1,  orient='horizontal',
                                          mode='determinate', length=ui_metrics.shipDataWidth)
 
 startTurnCommand = partial(startTurn, uiElements)
-startTurnButton = tk.Button(root, text="Start turn", command=startTurnCommand, width = 20, height= 7)
+uiElements.startTurnButton = tk.Button(root, text="Start turn", command=startTurnCommand, width = 20, height= 7)
 uiElements.exitButton = tk.Button(root, text="Exit", command=exit)
 
 globalVar.shipChoice = player.name
 
 
 # ships choice
-var = IntVar()
 uiElements.shipChoiceRadioButton1 = ttk.Radiobutton(
     root, text='1. MMS Artemis', variable=globalVar.radio, value=0, command=radioBox)
 uiElements.shipChoiceRadioButton2 = ttk.Radiobutton(
@@ -1255,10 +1253,6 @@ playerDisplay = tk.Label(root, image=playerImage)
 
 enemyImage = ImageTk.PhotoImage(shipImage)
 enemyDisplay = tk.Label(root, image=enemyImage)
-
-distanceLabelFrame = tk.LabelFrame(
-    root, text='Distance between ships', width=1000, height=200)
-distanceLabel = tk.Label(distanceLabelFrame, text='0000000')
 
 # ship shields
 playerSPLabelFrame = tk.LabelFrame(root, text= globalVar.playerName + " Shields",
@@ -1325,59 +1319,59 @@ while(n < x):
     n += 1
 
 # ship armor
-playerAPLabelFrame = tk.LabelFrame(root, text=globalVar.playerName + " Armor",
+uiElements.playerAPLabelFrame = tk.LabelFrame(root, text=globalVar.playerName + " Armor",
                                     borderwidth=2, relief="groove")
 uiElements.playerAPProgressBar = ttk.Progressbar(
-    playerAPLabelFrame, maximum=player.maxAp, length=(ui_metrics.shipDataWidth-10), variable=100)
-playerAPLabelFrame2 = tk.LabelFrame(root, text=globalVar.playerName2 + " Armor",
+    uiElements.playerAPLabelFrame, maximum=player.maxAp, length=(ui_metrics.shipDataWidth-10), variable=100)
+uiElements.playerAPLabelFrame2 = tk.LabelFrame(root, text=globalVar.playerName2 + " Armor",
                                      borderwidth=2, relief="groove")
 uiElements.playerAPProgressBar2 = ttk.Progressbar(
-    playerAPLabelFrame2, maximum=player2.maxAp, length=(ui_metrics.shipDataWidth-10), variable=100)
-playerAPLabelFrame3 = tk.LabelFrame(root, text=globalVar.playerName3 + " Armor",
+    uiElements.playerAPLabelFrame2, maximum=player2.maxAp, length=(ui_metrics.shipDataWidth-10), variable=100)
+uiElements.playerAPLabelFrame3 = tk.LabelFrame(root, text=globalVar.playerName3 + " Armor",
                                      borderwidth=2, relief="groove")
 uiElements.playerAPProgressBar3 = ttk.Progressbar(
-    playerAPLabelFrame3, maximum=player3.maxAp, length=(ui_metrics.shipDataWidth-10), variable=100)
-enemyAPLabelFrame = tk.LabelFrame(root, text=globalVar.enemyName + " Armor",
+    uiElements.playerAPLabelFrame3, maximum=player3.maxAp, length=(ui_metrics.shipDataWidth-10), variable=100)
+uiElements.enemyAPLabelFrame = tk.LabelFrame(root, text=globalVar.enemyName + " Armor",
                                    borderwidth=2, relief="groove")
-enemyAPProgressBar = ttk.Progressbar(
-    enemyAPLabelFrame, maximum=enemy.maxAp, length=(ui_metrics.shipDataWidth-10), variable=100)
-enemyAPLabelFrame2 = tk.LabelFrame(root, text= globalVar.enemyName2 + " Armor",
+uiElements.enemyAPProgressBar = ttk.Progressbar(
+    uiElements.enemyAPLabelFrame, maximum=enemy.maxAp, length=(ui_metrics.shipDataWidth-10), variable=100)
+uiElements.enemyAPLabelFrame2 = tk.LabelFrame(root, text= globalVar.enemyName2 + " Armor",
                                     borderwidth=2, relief="groove")
-enemyAPProgressBar2 = ttk.Progressbar(
-    enemyAPLabelFrame2, maximum=enemy.maxAp, length=(ui_metrics.shipDataWidth-10), variable=100)
+uiElements.enemyAPProgressBar2 = ttk.Progressbar(
+    uiElements.enemyAPLabelFrame2, maximum=enemy.maxAp, length=(ui_metrics.shipDataWidth-10), variable=100)
 
-enemyAPLabelFrame3 = tk.LabelFrame(root, text=globalVar.enemyName3 + " Armor",
+uiElements.enemyAPLabelFrame3 = tk.LabelFrame(root, text=globalVar.enemyName3 + " Armor",
                                     borderwidth=2, relief="groove")
-enemyAPProgressBar3 = ttk.Progressbar(
-    enemyAPLabelFrame3, maximum=enemy.maxAp, length=(ui_metrics.shipDataWidth-10), variable=100)
+uiElements.enemyAPProgressBar3 = ttk.Progressbar(
+    uiElements.enemyAPLabelFrame3, maximum=enemy.maxAp, length=(ui_metrics.shipDataWidth-10), variable=100)
 
 # ship hp
-playerHPLabelFrame = tk.LabelFrame(root, text= globalVar.playerName + " HP",
+uiElements.playerHPLabelFrame = tk.LabelFrame(root, text= globalVar.playerName + " HP",
                                     borderwidth=2, relief="groove")
-playerHPProgressBar = ttk.Progressbar(
-    playerHPLabelFrame, maximum=player.maxHp, length=(ui_metrics.shipDataWidth-10), variable=100)
-playerHPLabelFrame2 = tk.LabelFrame(root, text= globalVar.playerName2 + " HP",
+uiElements.playerHPProgressBar = ttk.Progressbar(
+    uiElements.playerHPLabelFrame, maximum=player.maxHp, length=(ui_metrics.shipDataWidth-10), variable=100)
+uiElements.playerHPLabelFrame2 = tk.LabelFrame(root, text= globalVar.playerName2 + " HP",
                                      borderwidth=2, relief="groove")
-playerHPProgressBar2 = ttk.Progressbar(
-    playerHPLabelFrame2, maximum=player2.maxHp, length=(ui_metrics.shipDataWidth-10), variable=100)
+uiElements.playerHPProgressBar2 = ttk.Progressbar(
+    uiElements.playerHPLabelFrame2, maximum=player2.maxHp, length=(ui_metrics.shipDataWidth-10), variable=100)
 
-playerHPLabelFrame3 = tk.LabelFrame(root, text=globalVar.playerName3 + " HP",
+uiElements.playerHPLabelFrame3 = tk.LabelFrame(root, text=globalVar.playerName3 + " HP",
                                      borderwidth=2, relief="groove")
-playerHPProgressBar3 = ttk.Progressbar(
-    playerHPLabelFrame3, maximum=player3.maxHp, length=(ui_metrics.shipDataWidth-10), variable=100)
+uiElements.playerHPProgressBar3 = ttk.Progressbar(
+    uiElements.playerHPLabelFrame3, maximum=player3.maxHp, length=(ui_metrics.shipDataWidth-10), variable=100)
 
-enemyHPLabelFrame = tk.LabelFrame(root, text=globalVar.enemyName + " HP",
+uiElements.enemyHPLabelFrame = tk.LabelFrame(root, text=globalVar.enemyName + " HP",
                                    borderwidth=2, relief="groove")
-enemyHPProgressBar = ttk.Progressbar(
-    enemyHPLabelFrame, maximum=enemy.maxHp, length=(ui_metrics.shipDataWidth-10), variable=100)
-enemyHPLabelFrame2 = tk.LabelFrame(root, text= globalVar.enemyName2 + " HP",
+uiElements.enemyHPProgressBar = ttk.Progressbar(
+    uiElements.enemyHPLabelFrame, maximum=enemy.maxHp, length=(ui_metrics.shipDataWidth-10), variable=100)
+uiElements.enemyHPLabelFrame2 = tk.LabelFrame(root, text= globalVar.enemyName2 + " HP",
                                     borderwidth=2, relief="groove")
-enemyHPProgressBar2 = ttk.Progressbar(
-    enemyHPLabelFrame2, maximum=enemy2.maxHp, length=(ui_metrics.shipDataWidth-10), variable=100)
-enemyHPLabelFrame3 = tk.LabelFrame(root, text= globalVar.enemyName3 +" HP",
+uiElements.enemyHPProgressBar2 = ttk.Progressbar(
+    uiElements.enemyHPLabelFrame2, maximum=enemy2.maxHp, length=(ui_metrics.shipDataWidth-10), variable=100)
+uiElements.enemyHPLabelFrame3 = tk.LabelFrame(root, text= globalVar.enemyName3 +" HP",
                                     borderwidth=2, relief="groove")
-enemyHPProgressBar3 = ttk.Progressbar(
-    enemyHPLabelFrame3, maximum=enemy3.maxHp, length=(ui_metrics.shipDataWidth-10), variable=100)
+uiElements.enemyHPProgressBar3 = ttk.Progressbar(
+    uiElements.enemyHPLabelFrame3, maximum=enemy3.maxHp, length=(ui_metrics.shipDataWidth-10), variable=100)
 
 ######################################################### PROGRESSBAR ASSIGNMENT ####################################
 
@@ -1388,13 +1382,13 @@ enemy.shieldsLabel = enemyShields
 enemy2.shieldsLabel = enemyShields2
 enemy3.shieldsLabel = enemyShields3
 
-tmpShieldsLabel = []
-tmpShieldsLabel.append(playerShields)
-tmpShieldsLabel.append(playerShields2)
-tmpShieldsLabel.append(playerShields3)
-tmpShieldsLabel.append(enemyShields)
-tmpShieldsLabel.append(enemyShields2)
-tmpShieldsLabel.append(enemyShields3)
+(uiElements.tmpShieldsLabel) = []
+(uiElements.tmpShieldsLabel).append(playerShields)
+(uiElements.tmpShieldsLabel).append(playerShields2)
+(uiElements.tmpShieldsLabel).append(playerShields3)
+(uiElements.tmpShieldsLabel).append(enemyShields)
+(uiElements.tmpShieldsLabel).append(enemyShields2)
+(uiElements.tmpShieldsLabel).append(enemyShields3)
 ######################################################### PLACE ####################################
 # left section
 #ammunitionChoiceScale.place(x=20, y=ui_metrics.canvasY+60)     ## delete later 
@@ -1407,12 +1401,12 @@ uiElements.shipChoiceRadioButton2.place(
 uiElements.shipChoiceRadioButton3.place(
     x=ui_metrics.canvasX + 860, y=ui_metrics.canvasY - 60)
 
-gameSpeedScale.place(x=ui_metrics.canvasX, y=ui_metrics.canvasY - 80)
+(uiElements.gameSpeedScale).place(x=ui_metrics.canvasX, y=ui_metrics.canvasY - 80)
 canvas.place(x=ui_metrics.canvasX, y=ui_metrics.canvasY)
 uiElements.timeElapsedProgressBar.place(
     x=ui_metrics.canvasX+120, y=ui_metrics.canvasY - 60)
 uiElements.timeElapsedLabel.place(x=ui_metrics.canvasX+140, y=ui_metrics.canvasY - 80)
-gameSpeedScale.place(x=ui_metrics.canvasX, y=ui_metrics.canvasY - 80)
+(uiElements.gameSpeedScale).place(x=ui_metrics.canvasX, y=ui_metrics.canvasY - 80)
 
 # ship displays
 # playerDisplay.place(x=ui_metrics.canvasX,
@@ -1435,65 +1429,63 @@ enemySPLabelFrame3.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics
                          y=ui_metrics.canvasY + ui_metrics.canvasHeight + ui_metrics.shipDataOffsetY, anchor="nw")
 # place shields
 tmp = 0
-for tmpShip,shieldArray in zip(globalVar.ships,tmpShieldsLabel):
+for tmpShip,shieldArray in zip(globalVar.ships,uiElements.tmpShieldsLabel):
     tmp = 0
     for progressBar in shieldArray:
         progressBar.place(x=tmp + 5, y=5)
         tmp += ((ui_metrics.shipDataWidth-10) /
                 (tmpShip.shields*4+(tmpShip.shields-1)))*5
 # ship armor   player
-playerAPLabelFrame.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX,
+uiElements.playerAPLabelFrame.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX,
                          y=ui_metrics.canvasY + ui_metrics.canvasHeight + uiMetrics.shipDataOffsetY + ui_metrics.shipDataOffsetBetween, anchor="nw")
 uiElements.playerAPProgressBar.place(x=2, y=5)
-playerAPLabelFrame2.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + ui_metrics.shipDataWidth,
+uiElements.playerAPLabelFrame2.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + ui_metrics.shipDataWidth,
                           y=ui_metrics.canvasY + ui_metrics.canvasHeight + uiMetrics.shipDataOffsetY + ui_metrics.shipDataOffsetBetween, anchor="nw")
 uiElements.playerAPProgressBar2.place(x=2, y=5)
-playerAPLabelFrame3.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + 2*ui_metrics.shipDataWidth,
+uiElements.playerAPLabelFrame3.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + 2*ui_metrics.shipDataWidth,
                           y=ui_metrics.canvasY + ui_metrics.canvasHeight + uiMetrics.shipDataOffsetY + ui_metrics.shipDataOffsetBetween, anchor="nw")
 uiElements.playerAPProgressBar3.place(x=2, y=5)
 
-enemyAPLabelFrame.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + 3*ui_metrics.shipDataWidth,
+uiElements.enemyAPLabelFrame.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + 3*ui_metrics.shipDataWidth,
                         y=ui_metrics.canvasY + ui_metrics.canvasHeight + uiMetrics.shipDataOffsetY + ui_metrics.shipDataOffsetBetween, anchor="nw")
-enemyAPProgressBar.place(x=2, y=5)
-enemyAPLabelFrame2.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + 4*ui_metrics.shipDataWidth,
+uiElements.enemyAPProgressBar.place(x=2, y=5)
+uiElements.enemyAPLabelFrame2.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + 4*ui_metrics.shipDataWidth,
                          y=ui_metrics.canvasY + ui_metrics.canvasHeight + uiMetrics.shipDataOffsetY + ui_metrics.shipDataOffsetBetween, anchor="nw")
-enemyAPProgressBar2.place(x=2, y=5)
-enemyAPLabelFrame3.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + 5*ui_metrics.shipDataWidth,
+uiElements.enemyAPProgressBar2.place(x=2, y=5)
+uiElements.enemyAPLabelFrame3.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + 5*ui_metrics.shipDataWidth,
                          y=ui_metrics.canvasY + ui_metrics.canvasHeight + uiMetrics.shipDataOffsetY + ui_metrics.shipDataOffsetBetween, anchor="nw")
-enemyAPProgressBar3.place(x=2, y=5)
+uiElements.enemyAPProgressBar3.place(x=2, y=5)
 
 # ship hp      player                                                                        1
-playerHPLabelFrame.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX,
+uiElements.playerHPLabelFrame.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX,
                          y=ui_metrics.canvasY + ui_metrics.canvasHeight + uiMetrics.shipDataOffsetY + ui_metrics.shipDataOffsetBetween * 2, anchor="nw")
-playerHPProgressBar.place(x=2, y=5)
-playerHPLabelFrame2.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + ui_metrics.shipDataWidth,
+uiElements.playerHPProgressBar.place(x=2, y=5)
+uiElements.playerHPLabelFrame2.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + ui_metrics.shipDataWidth,
                           y=ui_metrics.canvasY + ui_metrics.canvasHeight + uiMetrics.shipDataOffsetY + ui_metrics.shipDataOffsetBetween * 2, anchor="nw")
-playerHPProgressBar2.place(x=2, y=5)
-playerHPLabelFrame3.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + 2*ui_metrics.shipDataWidth,
+uiElements.playerHPProgressBar2.place(x=2, y=5)
+uiElements.playerHPLabelFrame3.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + 2*ui_metrics.shipDataWidth,
                           y=ui_metrics.canvasY + ui_metrics.canvasHeight + uiMetrics.shipDataOffsetY + ui_metrics.shipDataOffsetBetween * 2, anchor="nw")
-playerHPProgressBar3.place(x=2, y=5)
-enemyHPLabelFrame.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + 3*ui_metrics.shipDataWidth,
+uiElements.playerHPProgressBar3.place(x=2, y=5)
+uiElements.enemyHPLabelFrame.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX + 3*ui_metrics.shipDataWidth,
                         y=ui_metrics.canvasY + ui_metrics.canvasHeight + uiMetrics.shipDataOffsetY + ui_metrics.shipDataOffsetBetween * 2, anchor="nw")
-enemyHPProgressBar.place(x=2, y=5)
-enemyHPLabelFrame2.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX+4*ui_metrics.shipDataWidth,
+uiElements.enemyHPProgressBar.place(x=2, y=5)
+uiElements.enemyHPLabelFrame2.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX+4*ui_metrics.shipDataWidth,
                          y=ui_metrics.canvasY + ui_metrics.canvasHeight + uiMetrics.shipDataOffsetY + ui_metrics.shipDataOffsetBetween * 2, anchor="nw")
-enemyHPProgressBar2.place(x=2, y=5)
-enemyHPLabelFrame3.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX+5*ui_metrics.shipDataWidth,
+uiElements.enemyHPProgressBar2.place(x=2, y=5)
+uiElements.enemyHPLabelFrame3.place(width=ui_metrics.shipDataWidth, height=54, x=ui_metrics.canvasX+5*ui_metrics.shipDataWidth,
                          y=ui_metrics.canvasY + ui_metrics.canvasHeight + uiMetrics.shipDataOffsetY + ui_metrics.shipDataOffsetBetween * 2, anchor="nw")
-enemyHPProgressBar3.place(x=2, y=5)
+uiElements.enemyHPProgressBar3.place(x=2, y=5)
 
 
 ######################### right section ###################################
-startTurnButton.place(x=(ui_metrics.canvasX+ui_metrics.canvasWidth + 20),
+(uiElements.startTurnButton).place(x=(ui_metrics.canvasX+ui_metrics.canvasWidth + 20),
                       y=ui_metrics.canvasY+ui_metrics.canvasHeight-20)
 
-distanceLabel.place(x=ui_metrics.canvasX +
-                    ui_metrics.canvasWidth - 160, y=ui_metrics.canvasY - 20)
 # create list of elements to disable if round is in progress
 uiElements.UIElementsList.append(ammunitionChoiceScale)
 uiElements.UIElementsList.append(accuracyChoiceScale)
-uiElements.UIElementsList.append(gameSpeedScale)
-uiElements.UIElementsList.append(startTurnButton)
+uiElements.UIElementsList.append(uiElements.gameSpeedScale)
+uiElements.UIElementsList.append(uiElements.startTurnButton)
 
 (uiElements.RadioElementsList).append(uiElements.shipChoiceRadioButton1)
 (uiElements.RadioElementsList).append(uiElements.shipChoiceRadioButton2)
