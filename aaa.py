@@ -13,11 +13,11 @@ from PIL import Image, ImageTk
 import PIL.Image
 import tkinter.ttk as ttk
 from functools import partial
-import configparser
-import os
-
 from shipCombat import *
 from canvasCalls import *
+from functools import partial
+import configparser
+import os
 
 #   Artemis 2021
 #   Project by Pawel Golabek
