@@ -1,6 +1,5 @@
 from ctypes import pointer
 from dis import dis
-from email.policy import default
 from faulthandler import disable
 from tabnanny import check
 import tkinter as tk
@@ -13,143 +12,31 @@ from PIL import Image, ImageTk
 import PIL.Image
 import tkinter.ttk as ttk
 from functools import partial
-from shipCombat import *
-from canvasCalls import *
-from functools import partial
 import configparser
 import os
+
+from shipCombat import *
+from canvasCalls import *
+from naglowek import *
+from rootCommands import *
 
 #   Artemis 2021
 #   Project by Pawel Golabek
 #
 #   Used libraries (excluding build-in): Pillow, Pil
 
-root = tk.Tk()
-UIScale = 1
-
-rootX = 1850
-rootY = 1000
-"""
-rootX = root.winfo_screenwidth()
-rootY = root.winfo_screenheight()
-root.attributes('-fullscreen', True)
-"""
-root.geometry(str(rootX*UIScale) + "x" + str(rootY*UIScale)+"+0+0")
 
 #s = ttk.Style()
 #s.theme_use('xpnative')
 ##s.configure("red.Horizontal.TProgressbar", foreground='blue', background='red')
 
-
-def rgbtohex(r,g,b):
-    return f'#{r:02x}{g:02x}{b:02x}'
-
-class global_var():
-    shipChoiceRadioButtons = []
-    radio = IntVar(root, 999)
-    radio2 = IntVar(root, 999)
-    ammunitionOptionChoice = StringVar(root)
-    tmpCounter = 0
-    # START CONDITIONS
-    radio.set(0)
-    ## DYNAMIC UI ##
-    uiSystemsLabelFrame = tk.LabelFrame(root,text= "" + " systems",borderwidth=2)
-    uiEnergyLabel =  ttk.Label(uiSystemsLabelFrame, width=20, text = "Energy remaining: ", font = "16")
-    uiSystems = []
-    uiSystemsProgressbars = []
-    ## INPUT HANDLING VARIABLES ##
-    mouseOnUI = FALSE
-    mouseWheelUp = FALSE
-    mouseWheelDown = FALSE
-    mouseButton1 = FALSE
-    mouseButton2 = FALSE
-    mouseButton3 = FALSE
-    mouseButton3justPressed = FALSE
-    mouseButton3released = FALSE
-    prevPointerX = 0.0
-    prevPointerY = 0.0
-    pointerX = 0.0
-    pointerX = 0.0
-    pointerY = 0.0
-    pointerDeltaX = 0.0
-    pointerDeltaY = 0.0
-    ## GAME OPTIONS ##
-    fogOfWar = TRUE
-    gameSpeed = 1
-    turnLength = 1080
-    zoom = 1
-    shieldRegen = 1
-    shieldMaxState = 400
-    # GAME DATA
-    choices = StringVar()
-    options = []
-    shipChoice = ''
-    landmarks = []
-    ships = []
-    turnInProgress = FALSE
-    misslesShot = 0
-    currentMissles = []
-    lasers = []
-    # ZOOM
-    mouseX = 0
-    mouseY = 0
-    left = 0
-    right = 0
-    top = 0
-    bottom = 0
-    yellowX = 0
-    yellowY = 0
-    zoomChange = 0
-    def __init__(self,config):
-        self.img = PhotoImage((config.get("Images", "img")))
-        self.image = PIL.Image.open((config.get("Images", "image")))
-        self.imageMask = PIL.Image.open(config.get("Images", "imageMask"))
-        pass
-
 class ui_icons():
-    armorIcon = PhotoImage(file="icons/armor.png")
-
-
-class ui_metrics():   # change to % for responsible
-    canvasWidth = 1120
-    canvasHeight = 640
-    shipImageFrameHeight = 60
-    shipDataWidth = canvasWidth/6
-    shipDataHeight = 40
-    shipDataOffsetY = 20
-    shipDataOffsetBetween = 60
-    leftMargin = 10
-    systemScalesWidth = 160
-    systemScalesMarginTop = 80
-    systemScalesHeightOffset = 90
-    systemScalesLabelFrameWidth = 220#systemScalesWidth + 60
-    systemProgressbarsHeightOffset = 60
-    canvasX = systemScalesLabelFrameWidth + 20
-    canvasY = 100
-    shipDataX = canvasX
-    shipDataY = canvasY + 20
-
-class ui_elements():
-    x=1
-
-class game_rules():
-    movementPenalityHard = 0.9
-    movementPenalityMedium = 0.5
-
+    x=10
 
 class _events():
     playerDestroyed = False
     showedWin = False
 
-
-class landmark():
-    def __init__(self, xPos=100, yPos=100, cooldown=200, defaultCooldown=200, radius=100, boost='none'):
-        self.xPos = xPos
-        self.yPos = yPos
-        self.cooldown = cooldown
-        self.defaultCooldown = defaultCooldown
-        self.radius = radius
-        self.boost = boost
 
 ############################## AMUNITION #############################################
 
@@ -230,41 +117,42 @@ class ammunition_type:
 
 ############################## SYSTEMS #############################################
 class system(object):
-    def __init__(self,name = "system",minEnergy=0,maxEnergy=5,energy=0, maxCooldown = 200, cooldown = 0):
+    def __init__(self,globalVar,name = "system",minEnergy=0,maxEnergy=5,energy=0, maxCooldown = 200, cooldown = 0):
+        self.var = globalVar
         self.name = name
         self.minEnergy = minEnergy
         self.maxEnergy = maxEnergy
         self.energy = energy
         self.maxCooldown = maxCooldown
         self.cooldown = cooldown
-    def trigger(self,ship1,ships):
+    def trigger(self,var,ship1,ships):
         pass
-    def activate(self,ship):
+    def activate(self,ship,var,gameRules,uiMetrics):
         pass
 
 class throttleBrake1(system):
-    def __init__ (self,name = "Throttle Brake I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 300, cooldown = 0):
-        super(throttleBrake1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
+    def __init__ (self,globalVar,name = "Throttle Brake I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 300, cooldown = 0):
+        super(throttleBrake1,self).__init__(globalVar,name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
 
-    def trigger(self,ship1,ships):
+    def trigger(self,var,ship1,ships):
         if(self.cooldown <= 0 and True):
             i=100
             while(ship1.hp != ship1.maxHp and i>0):
                 ship1.hp+=1
                 i-=1
             self.cooldown=self.maxCooldown
-    def activate(self,ship):
+    def activate(self,ship,var,gameRules,uiMetrics):
         value = ship.maxSpeed/4
         ship.speed = ship.maxSpeed - self.energy*value
-        putTracer(ship)
+        putTracer(ship,var,gameRules,uiMetrics)
         pass
     
 
 class antiMissleSystem1(system):
-    def __init__ (self,name = "Anti Missle System I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 300, cooldown = 0):
-        super(antiMissleSystem1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
+    def __init__ (self,globalVar,name = "Anti Missle System I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 300, cooldown = 0):
+        super(antiMissleSystem1,self).__init__(globalVar,name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
 
-    def trigger(self,ship1,ships):
+    def trigger(self,var,ship1,ships):
         if(self.cooldown <= 0 and True):
             i=100
             while(ship1.hp != ship1.maxHp and i>0):
@@ -273,68 +161,68 @@ class antiMissleSystem1(system):
             self.cooldown=self.maxCooldown
 
 class antiMissleSystem2(system):
-    def __init__ (self,name = "Anti Missle System II",minEnergy=0,maxEnergy=10,energy=0, maxCooldown = 200, cooldown = 0):
-        super(antiMissleSystem2,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
+    def __init__ (self,globalVar,name = "Anti Missle System II",minEnergy=0,maxEnergy=10,energy=0, maxCooldown = 200, cooldown = 0):
+        super(antiMissleSystem2,self).__init__(globalVar,name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
 
-    def trigger(self,ship,ships):
-        if(self.cooldown <= 0 and ship.hp != ship.maxHp):
+    def trigger(self,var,ship1,ships):
+        if(self.cooldown <= 0 and ship1.hp != ship1.maxHp):
             i=100
-            while(ship.hp != ship.maxAp and i>0):
-                ship.hp+=1
+            while(ship1.hp != ship1.maxAp and i>0):
+                ship1.hp+=1
                 i-=1
             self.cooldown=self.maxCooldown
 
 class type1aCannon1(system):
-    def __init__ (self,name = "Type1a Cannon I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 1000, cooldown = 0):
-        super(type1aCannon1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
+    def __init__ (self,globalVar,name = "Type1a Cannon I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 1000, cooldown = 0):
+        super(type1aCannon1,self).__init__(globalVar,name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
 
-    def trigger(self,ship1,ships):
-        shoot(self,ship1,ammunition_type.type1adefault,ships)
+    def trigger(self,var,ship1,ships):
+        shoot(var,self,ship1,ammunition_type.type1adefault,ships)
 
 class type2aCannon1(system):
-    def __init__ (self,name = "Type2a Cannon I",minEnergy=0,maxEnergy=6,energy=0, maxCooldown = 300, cooldown = 0):
-        super(type2aCannon1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
+    def __init__ (self,globalVar,name = "Type2a Cannon I",minEnergy=0,maxEnergy=6,energy=0, maxCooldown = 300, cooldown = 0):
+        super(type2aCannon1,self).__init__(globalVar,name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
 
-    def trigger(self,ship1,ships):
-        shoot(self,ship1,ammunition_type.type2adefault,ships)
+    def trigger(self,var,ship1,ships):
+        shoot(var,self,ship1,ammunition_type.type2adefault,ships)
 
 class type3aCannon1(system):
-    def __init__ (self,name = "Type3a Cannon I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 1700, cooldown = 0):
-        super(type3aCannon1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
+    def __init__ (self,globalVar,name = "Type3a Cannon I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 1700, cooldown = 0):
+        super(type3aCannon1,self).__init__(globalVar,name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
 
-    def trigger(self,ship1,ships):
-        shoot(self,ship1,ammunition_type.type3adefault,ships)
+    def trigger(self,var,ship1,ships):
+        shoot(var,self,ship1,ammunition_type.type3adefault,ships)
 
 class gattlingLaser1(system):
-    def __init__ (self,name = "Gattling Laser I",minEnergy=0,maxEnergy=9,energy=0, maxCooldown = 60, cooldown = 0):
-        super(gattlingLaser1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
+    def __init__ (self,globalVar,name = "Gattling Laser I",minEnergy=0,maxEnergy=9,energy=0, maxCooldown = 60, cooldown = 0):
+        super(gattlingLaser1,self).__init__(globalVar,name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
 
-    def trigger(self,ship1,ships):
-        shoot(self,ship1,ammunition_type.laser1adefault,ships)
+    def trigger(self,var,ship1,ships):
+        shoot(var,self,ship1,ammunition_type.laser1adefault,ships)
 
 class gattlingLaser2(system):
-    def __init__ (self,name = "Gattling Laser II",minEnergy=2,maxEnergy=8,energy=0, maxCooldown = 40, cooldown = 0):
-        super(gattlingLaser2,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
+    def __init__ (self,globalVar,name = "Gattling Laser II",minEnergy=2,maxEnergy=8,energy=0, maxCooldown = 40, cooldown = 0):
+        super(gattlingLaser2,self).__init__(globalVar,name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
 
-    def trigger(self,ship1,ships):
-        shoot(self,ship1,ammunition_type.laser1adefault,ships)
+    def trigger(self,var,ship1,ships):
+        shoot(var,self,ship1,ammunition_type.laser1adefault,ships)
 
 class highEnergyLaser1(system):
-    def __init__ (self,name = "High Energy Laser I",minEnergy=4,maxEnergy=8,energy=0, maxCooldown = 800, cooldown = 0):
-        super(highEnergyLaser1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
+    def __init__ (self,globalVar,name = "High Energy Laser I",minEnergy=4,maxEnergy=8,energy=0, maxCooldown = 800, cooldown = 0):
+        super(highEnergyLaser1,self).__init__(globalVar,name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
 
-    def trigger(self,ship1,ships):
-        shoot(self,ship1,ammunition_type.highEnergyLaser1,ships)
+    def trigger(self,var,ship1,ships):
+        shoot(var,self,ship1,ammunition_type.highEnergyLaser1,ships)
 
 class kinetic1(system):
-    def __init__ (self,name = "Kinetic cannon I",minEnergy=0,maxEnergy=7,energy=0, maxCooldown = 5, cooldown = 0):
-        super(kinetic1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
+    def __init__ (self,globalVar,name = "Kinetic cannon I",minEnergy=0,maxEnergy=7,energy=0, maxCooldown = 5, cooldown = 0):
+        super(kinetic1,self).__init__(globalVar,name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
 
-    def trigger(self,ship1,ships):
-        shoot(self,ship1,ammunition_type.kinetic1,ships)
-        shoot(self,ship1,ammunition_type.kinetic1,ships,100,1000) #?
-        shoot(self,ship1,ammunition_type.kinetic1,ships,-100,-100)
-        shoot(self,ship1,ammunition_type.kinetic1,ships,0,100)
+    def trigger(self,var,ship1,ships):
+        shoot(var,self,ship1,ammunition_type.kinetic1,ships)
+        shoot(var,self,ship1,ammunition_type.kinetic1,ships,10,10)
+        shoot(var,self,ship1,ammunition_type.kinetic1,ships,-10,-10)
+        shoot(var,self,ship1,ammunition_type.kinetic1,ships,0,10)
 
 
 system_lookup = {
@@ -359,7 +247,7 @@ system_lookup = {
 
 
 class ship():
-    def __init__(self, name="MSS Artemis", owner="ai2", target='MSS Artemis',
+    def __init__(self,globalVar, name="MSS Artemis", owner="ai2", target='MSS Artemis',
                  hp=200, maxHp=None, ap=200, maxAp=None, shields=3, xPos=300, yPos=300,energyLimit = 20,
                  ammunitionChoice=0, ammunitionNumberChoice=0, systemSlots = [],
                  detectionRange=200, xDir=0.0, yDir=1, turnRate=0.5, ghostPoints = [], speed=40, maxSpeed = 40,
@@ -380,7 +268,7 @@ class ship():
         for tmp in systemSlots:
             if(not tmp == ''):
                 targetClass =  system_lookup[tmp]
-                tmpSystem = targetClass()
+                tmpSystem = targetClass(globalVar)
                 self.systemSlots.append(tmpSystem)
 
         self.detectionRange = detectionRange
@@ -426,11 +314,6 @@ class tracer():
         self.moveOrderX = None
         self.moveOrderY = None
 
-class ghostPoint():
-    def __init__(self, xPos=300, yPos=300): 
-        self.xPos = xPos
-        self.yPos = yPos
-
 class laser():
     def __init__(self, xPos=300, yPos=300, targetXPos=300, targetYPos=300, color = rgbtohex(22,22,22), ttl = 10): 
         self.xPos = xPos
@@ -457,23 +340,22 @@ class aiController():
 ################################################ STARTUP ######################################
 
 
-def getZoomMetrics():
-    globalVar.mouseX = uiMetrics.canvasWidth/2
-    globalVar.mouseY = uiMetrics.canvasHeight/2
-    globalVar.left = 0
-    globalVar.right = uiMetrics.canvasWidth
-    globalVar.top = 0
-    globalVar.bottom = uiMetrics.canvasHeight
-    globalVar.yellowX = 0
-    globalVar.yellowY = 0
-    globalVar.zoomChange = False
-
-################################################ SHIP #########################################
+def getZoomMetrics(var,uiMetrics):
+    var.mouseX = uiMetrics.canvasWidth/2
+    var.mouseY = uiMetrics.canvasHeight/2
+    var.left = 0
+    var.right = uiMetrics.canvasWidth
+    var.top = 0
+    var.bottom = uiMetrics.canvasHeight
+    var.yellowX = 0
+    var.yellowY = 0
+    var.zoomChange = False
 
 
 
 
-def putLaser(missle):
+
+def putLaser(missle,var,shipLookup):
     target = shipLookup[missle.target]
     currentLaser = laser()
     currentLaser.xPos = missle.xPos
@@ -482,80 +364,25 @@ def putLaser(missle):
     currentLaser.targetYPos = target.yPos
     currentLaser.color = missle.color
     currentLaser.ttl = missle.ttl
-    (globalVar.lasers).append(currentLaser)
+    (var.lasers).append(currentLaser)
     
-def putTracer(ship): # rotate and move the chosen ship
-    if(ship.owner == 'player1'):
-        ship.ghostPoints = []
-        currentTracer = tracer()
-        currentTracer.xPos = ship.xPos
-        currentTracer.yPos = ship.yPos
-        currentTracer.xDir = ship.xDir
-        currentTracer.yDir = ship.yDir
-        currentTracer.turnRate = ship.turnRate
-        currentTracer.speed = ship.speed
-        currentTracer.moveOrderX = ship.moveOrderX
-        currentTracer.moveOrderY = ship.moveOrderY
-        currentTracer.ttl = globalVar.turnLength
-        while(currentTracer.ttl>0):
-            # check for terrain
-            if(not 0 < currentTracer.xPos < ui_metrics.canvasWidth-5):
-                currentTracer.ttl = 0
-            if(not 0 < currentTracer.yPos < ui_metrics.canvasHeight-5):
-                currentTracer.ttl = 0
-            colors = globalVar.imageMask.getpixel((int(currentTracer.xPos), int(currentTracer.yPos)))
-            colorWeight = (colors[0] + colors[1] + colors[2])
-            # vector normalisation
-            scale = math.sqrt((currentTracer.moveOrderX-currentTracer.xPos)*(currentTracer.moveOrderX-currentTracer.xPos) +
-                                (currentTracer.moveOrderY-currentTracer.yPos)*(currentTracer.moveOrderY-currentTracer.yPos))
-            # move order into normalised vector
-            moveDirX = -(currentTracer.xPos-currentTracer.moveOrderX) / scale
-            moveDirY = -(currentTracer.yPos-currentTracer.moveOrderY) / scale
-
-            degree = currentTracer.turnRate
-            rotateVector(degree, currentTracer, moveDirX, moveDirY)
-
-            if(colorWeight < 600 and colorWeight > 200):
-                movementPenality = gameRules.movementPenalityMedium
-            elif(colorWeight < 200):
-                movementPenality = gameRules.movementPenalityHard
-            else:
-                movementPenality = 0.000001  # change
-
-            xVector = currentTracer.xDir*currentTracer.speed/360
-            yVector = currentTracer.yDir*currentTracer.speed/360
-
-            currentTracer.xPos += xVector - xVector * movementPenality
-            currentTracer.yPos += yVector - yVector * movementPenality
-
-            if(currentTracer.ttl % 40 == 0):
-                createGhostPoint(ship, currentTracer.xPos, currentTracer.yPos)
-            currentTracer.ttl -= 1
-        del currentTracer
-
-def createGhostPoint(ship, xPos, yPos):
-    ghost = ghostPoint()
-    ship.ghostPoints.append(ghost)
-    setattr(ship.ghostPoints[-1],'xPos',xPos)
-    setattr(ship.ghostPoints[-1],'yPos',yPos)
 
 
-
-def shoot(system,ship1,ammunitionType,ships,offsetX=0,offsetY=0):    #newer than manageShots without strange interval system
+def shoot(var,system,ship1,ammunitionType,ships,offsetX=0,offsetY=0):    #newer than manageShots without strange interval system
         if(system.cooldown <= 0 and True):
             for ship2 in ships:
                 if(ship1.owner == 'player1' and ship2.owner == 'ai1'):
                     distance = math.sqrt(
                         abs(pow(ship1.xPos-ship2.xPos, 2)+pow(ship1.yPos-ship2.yPos, 2)))
                     if(ship2.visible == TRUE and distance < ship1.detectionRange):
-                        createRocket(ship1, ship2,ammunitionType,offsetX,offsetY)
+                        createRocket(var,ship1,ship2,ammunitionType,offsetX,offsetY)
                         system.cooldown = system.maxCooldown
                         break
                     #     print(ship1.name + " fired " +
                     #           str(ship1.typesOfAmmunition[ship1.ammunitionChoice].name))
 
 # replace alreadyShot with some clever formula t
-def manageShots(ships, turnLength,uiElements):
+def manageShots(ships, turnLength,uiElements,var):
     # add amunition scale input                                 ## handle shots when more than one enemy in range
     for ship1 in ships:
         ship1.alreadyShot = FALSE
@@ -572,7 +399,7 @@ def manageShots(ships, turnLength,uiElements):
                         else:
                             if(ship1.shotsTaken < ship1.ammunitionNumberChoice):
                                 ship1.shotsTaken += 1
-                                createRocket(ship1, ship2,ammunition_type(ship1.ammunitionChoice))
+                                createRocket(var,ship1, ship2,ammunition_type(ship1.ammunitionChoice))
                                 ship1.alreadyShot = TRUE
                            #     print(ship1.name + " fired " +
                            #           str(ship1.typesOfAmmunition[ship1.ammunitionChoice].name))
@@ -587,33 +414,33 @@ def manageShots(ships, turnLength,uiElements):
                         else:
                             if(ship1.shotsTaken < aiController.ammunitionChoiceScale(ship)):
                                 ship1.shotsTaken += 1
-                                createRocket(ship1, ship2,ammunition_type.type1adefault)
+                                createRocket(var,ship1, ship2,var,ammunition_type.type1adefault)
                                 ship1.alreadyShot = TRUE
                              #   print(ship1.name + " fired " +
                             #          str(ship1.typesOfAmmunition[ship1.ammunitionChoice].name))
-def manageSystemActivations(ships):
+def manageSystemActivations(ships,var,gameRules,uiMetrics):
     for ship in ships:
         for system in ship.systemSlots:
-            system.activate(ship)
+            system.activate(ship,var,gameRules,uiMetrics)
 
-def manageSystemTriggers(ships):
-    for ship in ships:
-        for system in ship.systemSlots:
-            system.trigger(ship,globalVar.ships)
+def manageSystemTriggers(ships,var):
+    for ship1 in ships:
+        for system in ship1.systemSlots:
+            system.trigger(var,ship1,ships)
                 # trigger is activated during round and activation is between
                                     
-def getOrders(ship, forced=False):
+def getOrders(ship,var,gameRules,uiMetrics,forced=False):
     tracered = False
     if(ship.owner == "player1"):
-        if(globalVar.mouseButton1 and mouseOnCanvas() and globalVar.shipChoice == ship.name):
-            ship.moveOrderX = globalVar.left + \
-                ((globalVar.pointerX-ui_metrics.canvasX)/globalVar.zoom)
-            ship.moveOrderY = globalVar.top + \
-                ((globalVar.pointerY-ui_metrics.canvasY)/globalVar.zoom)
+        if(var.mouseButton1 and mouseOnCanvas(var,uiMetrics) and var.shipChoice == ship.name):
+            ship.moveOrderX = var.left + \
+                ((var.pointerX-ui_metrics.canvasX)/var.zoom)
+            ship.moveOrderY = var.top + \
+                ((var.pointerY-ui_metrics.canvasY)/var.zoom)
             tracered = True
-            putTracer(ship)
+            putTracer(ship,var,gameRules,uiMetrics)
     if(not tracered and ship.owner == "player1" and forced ):
-            putTracer(ship)
+            putTracer(ship,var,gameRules,uiMetrics)
     elif(ship.owner == "ai1"):
         ship.moveOrderX = 400  # insert ai controller decision
         ship.moveOrderY = 400
@@ -668,11 +495,11 @@ def killShips(ships,missles,events):
 ############################################## MISSLES ##############################################
 
 
-def manageRockets(missles,shipLookup):    # manage mid-air munitions
+def manageRockets(missles,shipLookup,var):    # manage mid-air munitions
     for missle in missles:
         if(missle.sort == 'laser'):
-            putLaser(missle)
-            dealDamage(shipLookup[missle.target], missle.damage,globalVar)
+            putLaser(missle,var,shipLookup)
+            dealDamage(shipLookup[missle.target], missle.damage,var)
             missles.remove(missle)
             continue
         scale = math.sqrt((shipLookup[missle.target].xPos-missle.xPos) *
@@ -695,106 +522,106 @@ def manageRockets(missles,shipLookup):    # manage mid-air munitions
             abs(missle.xPos - shipLookup[missle.target].xPos) +
             abs(missle.yPos - shipLookup[missle.target].yPos) *
                 abs(missle.yPos - shipLookup[missle.target].yPos)) < 25):
-            dealDamage(shipLookup[missle.target], missle.damage,globalVar)
+            dealDamage(shipLookup[missle.target], missle.damage,var)
             missles.remove(missle)
 
 
 
 
-def drawLasers():
-    for laser in globalVar.lasers:
+def drawLasers(var,canvas):
+    for laser in var.lasers:
         if laser.ttl>0:
-            drawX = (laser.xPos - globalVar.left) * \
-                globalVar.zoom
-            drawY = (laser.yPos - globalVar.top) * \
-                globalVar.zoom
-            drawX2 = (laser.targetXPos - globalVar.left) * \
-                globalVar.zoom
-            drawY2 = (laser.targetYPos - globalVar.top) * \
-                globalVar.zoom
+            drawX = (laser.xPos - var.left) * \
+                var.zoom
+            drawY = (laser.yPos - var.top) * \
+                var.zoom
+            drawX2 = (laser.targetXPos - var.left) * \
+                var.zoom
+            drawY2 = (laser.targetYPos - var.top) * \
+                var.zoom
             canvas.create_line(drawX,drawY,drawX2,drawY2, fill = laser.color)# "yellow")
         else:
-            (globalVar.lasers).remove(laser)
+            (var.lasers).remove(laser)
 
-def createRocket(ship, target,_type,offsetX=0,offsetY=0):
-    globalVar.misslesShot += 1
+def createRocket(var, ship, target,_type,offsetX=0,offsetY=0):
+    var.misslesShot += 1
     missleClass = _type
     # copy standard for ammunition. To be transformed into constructor like in c++ if needed
     missle = ammunition()
-    globalVar.currentMissles.append(missle)
-    missleName = 'missle' + str(globalVar.misslesShot)
-    setattr(globalVar.currentMissles[-1], 'name', missleName)
-    setattr(globalVar.currentMissles[-1], 'typeName', missleClass)
-    setattr(globalVar.currentMissles[-1], 'sort', missleClass.sort)
-    setattr(globalVar.currentMissles[-1], 'damage', missleClass.damage)
-    setattr(globalVar.currentMissles[-1], 'ttl', missleClass.ttl)
-    setattr(globalVar.currentMissles[-1], 'color', missleClass.color)
-    setattr(globalVar.currentMissles[-1], 'xPos', ship.xPos+offsetX)
-    setattr(globalVar.currentMissles[-1], 'yPos', ship.yPos+offsetY)
-    setattr(globalVar.currentMissles[-1], 'xDir', ship.xDir)
-    setattr(globalVar.currentMissles[-1], 'yDir', ship.yDir)
-    setattr(globalVar.currentMissles[-1], 'owner', ship.owner)
-    setattr(globalVar.currentMissles[-1], 'speed',missleClass.speed)
-    setattr(globalVar.currentMissles[-1], 'turnRate',
+    var.currentMissles.append(missle)
+    missleName = 'missle' + str(var.misslesShot)
+    setattr(var.currentMissles[-1], 'name', missleName)
+    setattr(var.currentMissles[-1], 'typeName', missleClass)
+    setattr(var.currentMissles[-1], 'sort', missleClass.sort)
+    setattr(var.currentMissles[-1], 'damage', missleClass.damage)
+    setattr(var.currentMissles[-1], 'ttl', missleClass.ttl)
+    setattr(var.currentMissles[-1], 'color', missleClass.color)
+    setattr(var.currentMissles[-1], 'xPos', ship.xPos+offsetX)
+    setattr(var.currentMissles[-1], 'yPos', ship.yPos+offsetY)
+    setattr(var.currentMissles[-1], 'xDir', ship.xDir)
+    setattr(var.currentMissles[-1], 'yDir', ship.yDir)
+    setattr(var.currentMissles[-1], 'owner', ship.owner)
+    setattr(var.currentMissles[-1], 'speed',missleClass.speed)
+    setattr(var.currentMissles[-1], 'turnRate',
             missleClass.turnRate)
-    setattr(globalVar.currentMissles[-1], 'target', target.name)
+    setattr(var.currentMissles[-1], 'target', target.name)
 
 ############################################ INPUTS #############################################
 
-def motion(event):
-    globalVar.pointerX = root.winfo_pointerx() - root.winfo_rootx()
-    globalVar.pointerY = root.winfo_pointery() - root.winfo_rooty()
+def motion(event,var,root):
+    var.pointerX = root.winfo_pointerx() - root.winfo_rootx()
+    var.pointerY = root.winfo_pointery() - root.winfo_rooty()
 
 
-def mouseButton1(event):  # get left mouse button and set it in globalvar
+def mouseButton1(event, var):  # get left mouse button and set it in globalvar
     if event:
-        globalVar.mouseButton1 = True
+        var.mouseButton1 = True
     else:
-        globalVar.mouseButton1 = False
+        var.mouseButton1 = False
 
 
-def mouseWheel(event):
+def mouseWheel(event, var,uiMetrics):
     if event.delta > 0:
-        globalVar.mouseWheelUp = True
-        if(globalVar.zoom < 7 and mouseOnCanvas()):
-            globalVar.zoom += 1
-            globalVar.zoomChange = True
+        var.mouseWheelUp = True
+        if(var.zoom < 7 and mouseOnCanvas(var,uiMetrics)):
+            var.zoom += 1
+            var.zoomChange = True
     else:
-        if(globalVar.zoom > 1 and mouseOnCanvas()):
-            globalVar.zoom -= 1
-            globalVar.zoomChange = True
-        globalVar.mouseWheelDown = True
+        if(var.zoom > 1 and mouseOnCanvas(var,uiMetrics)):
+            var.zoom -= 1
+            var.zoomChange = True
+        var.mouseWheelDown = True
 
-def mouseButton3(event):
+def mouseButton3(event, var):
     if event:
-        globalVar.mouseButton3 = True
+        var.mouseButton3 = True
 
-def mouseButton3up(event):
+def mouseButton3up(event, var):
     if event:
-        globalVar.mouseButton3 = False
+        var.mouseButton3 = False
 
 
-def trackMouse():
-    globalVar.pointerDeltaX = globalVar.pointerX - globalVar.prevPointerX
-    globalVar.pointerDeltaY = globalVar.pointerY - globalVar.prevPointerY
-    globalVar.prevPointerX = globalVar.pointerX
-    globalVar.prevPointerY = globalVar.pointerY
-    globalVar.prevPointerX = globalVar.pointerX
-    globalVar.prevPointerY = globalVar.pointerY
+def trackMouse(var):
+    var.pointerDeltaX = var.pointerX - var.prevPointerX
+    var.pointerDeltaY = var.pointerY - var.prevPointerY
+    var.prevPointerX = var.pointerX
+    var.prevPointerY = var.pointerY
+    var.prevPointerX = var.pointerX
+    var.prevPointerY = var.pointerY
 
 ##################################### IN-GAME EVENTS ################################################
 
 
-def update(globalVar,uiElements,canvas,events,shipLookup):
+def update(globalVar,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root):
     canvas.delete('all')
-    updateScales(uiElements)
-    updateEnergy(globalVar,uiElements)
+    updateScales(uiElements,globalVar,shipLookup)
+    updateEnergy(globalVar,uiElements,shipLookup)
     globalVar.gameSpeed = (uiElements.gameSpeedScale).get()
-    newWindow(uiMetrics)
+    newWindow(uiMetrics,globalVar,canvas)
     if(not globalVar.turnInProgress):
-        manageSystemActivations(globalVar.ships)
+        manageSystemActivations(globalVar.ships,globalVar,gameRules,uiMetrics)
         for ship in globalVar.ships:
-            getOrders(ship)
+            getOrders(ship,globalVar,gameRules,uiMetrics)
     ticksToEndFrame = 0
     if(globalVar.turnInProgress):
         root.title("TURN IN PROGRESS")
@@ -802,9 +629,9 @@ def update(globalVar,uiElements,canvas,events,shipLookup):
             detectionCheck(globalVar.ships)
             updateShips(globalVar,uiMetrics,gameRules,shipLookup,canvas)
             manageLandmarks(globalVar.landmarks,globalVar.ships)
-            manageShots(globalVar.ships,globalVar.turnLength,uiElements)   # check ship shot
-            manageRockets(globalVar.currentMissles,shipLookup)   # manage mid-air munitions
-            manageSystemTriggers(globalVar.ships)
+           # manageShots(globalVar.ships,globalVar.turnLength,uiElements,globalVar)   # check ship shot
+            manageRockets(globalVar.currentMissles,shipLookup,globalVar)   # manage mid-air munitions
+            manageSystemTriggers(globalVar.ships,globalVar)
             updateCooldowns(globalVar.ships)
             for laser in globalVar.lasers:
                 if globalVar.turnInProgress:
@@ -813,188 +640,188 @@ def update(globalVar,uiElements,canvas,events,shipLookup):
             ticksToEndFrame += 1
             uiElements.timeElapsedProgressBar['value'] += 1
             if(uiElements.timeElapsedProgressBar['value'] > globalVar.turnLength):
-                endTurn(uiElements)
+                endTurn(uiElements,globalVar,gameRules,uiMetrics)
                 break
     else:
         root.title(uiElements.rootTitle)
     drawShips(canvas,globalVar)
     drawGhostPoints(canvas,globalVar)
     drawLandmarks(globalVar,canvas,uiIcons)
-    drawLasers()
+    drawLasers(globalVar,canvas)
     drawRockets(globalVar,ammunitionType,canvas)
     globalVar.mouseOnUI = False
     globalVar.mouseWheelUp = False
     globalVar.mouseWheelDown = False
     globalVar.mouseButton1 = False
     globalVar.mouseButton2 = False
-    trackMouse()
+    trackMouse(globalVar)
     globalVar.zoomChange = False
-    root.after(10, partial(update,globalVar,uiElements,canvas,events,shipLookup))
+    root.after(10, partial(update,globalVar,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root))
 
 
-def newWindow(uiMetrics):
-    if(not globalVar.mouseWheelUp and not globalVar.mouseWheelDown and globalVar.mouseButton3 and globalVar.zoom != 1):
-        if(mouseOnCanvas()):
+def newWindow(uiMetrics,var,canvas):
+    if(not var.mouseWheelUp and not var.mouseWheelDown and var.mouseButton3 and var.zoom != 1):
+        if(mouseOnCanvas(var,uiMetrics)):
             im = PIL.Image.open('resized_image.png')
-            globalVar.im = ImageTk.PhotoImage(im)
+            var.im = ImageTk.PhotoImage(im)
 
-            if(globalVar.zoom == 1):
-                globalVar.mouseX = (
-                    (globalVar.pointerX + globalVar.pointerDeltaX- uiMetrics.canvasX) + globalVar.left)
-                globalVar.mouseY = (
-                    (globalVar.pointerY + globalVar.pointerDeltaY - uiMetrics.canvasY) + globalVar.top)
+            if(var.zoom == 1):
+                var.mouseX = (
+                    (var.pointerX + var.pointerDeltaX- uiMetrics.canvasX) + var.left)
+                var.mouseY = (
+                    (var.pointerY + var.pointerDeltaY - uiMetrics.canvasY) + var.top)
             else:
-                globalVar.mouseX = (
-                    (globalVar.pointerX + globalVar.pointerDeltaX - uiMetrics.canvasX)/(globalVar.zoom-1) + globalVar.left)
-                globalVar.mouseY = (
-                    (globalVar.pointerY + globalVar.pointerDeltaY - uiMetrics.canvasY) / (globalVar.zoom-1) + globalVar.top)
+                var.mouseX = (
+                    (var.pointerX + var.pointerDeltaX - uiMetrics.canvasX)/(var.zoom-1) + var.left)
+                var.mouseY = (
+                    (var.pointerY + var.pointerDeltaY - uiMetrics.canvasY) / (var.zoom-1) + var.top)
 
-            globalVar.yellowX = (
-                uiMetrics.canvasWidth/globalVar.zoom)/2
-            globalVar.yellowY = (
-                uiMetrics.canvasHeight/globalVar.zoom)/2
+            var.yellowX = (
+                uiMetrics.canvasWidth/var.zoom)/2
+            var.yellowY = (
+                uiMetrics.canvasHeight/var.zoom)/2
 
-            if(globalVar.mouseX > uiMetrics.canvasWidth - globalVar.yellowX):  # bumpers on sides
-                globalVar.mouseX = globalVar.right - globalVar.yellowX
-            if(globalVar.mouseX < globalVar.yellowX):
-                globalVar.mouseX = globalVar.left + globalVar.yellowX
-            if(globalVar.mouseY > uiMetrics.canvasHeight - globalVar.yellowY):
-                globalVar.mouseY = globalVar.bottom - globalVar.yellowY
-            if(globalVar.mouseY < globalVar.yellowY):
-                globalVar.mouseY = globalVar.top + globalVar.yellowY
+            if(var.mouseX > uiMetrics.canvasWidth - var.yellowX):  # bumpers on sides
+                var.mouseX = var.right - var.yellowX
+            if(var.mouseX < var.yellowX):
+                var.mouseX = var.left + var.yellowX
+            if(var.mouseY > uiMetrics.canvasHeight - var.yellowY):
+                var.mouseY = var.bottom - var.yellowY
+            if(var.mouseY < var.yellowY):
+                var.mouseY = var.top + var.yellowY
 
-            globalVar.left = globalVar.mouseX - globalVar.yellowX
-            globalVar.right = globalVar.mouseX + globalVar.yellowX
-            globalVar.top = globalVar.mouseY - globalVar.yellowY
-            globalVar.bottom = globalVar.mouseY + globalVar.yellowY
-            globalVar.mouseX = globalVar.right - globalVar.left
-            globalVar.mouseY = globalVar.bottom - globalVar.top
+            var.left = var.mouseX - var.yellowX
+            var.right = var.mouseX + var.yellowX
+            var.top = var.mouseY - var.yellowY
+            var.bottom = var.mouseY + var.yellowY
+            var.mouseX = var.right - var.left
+            var.mouseY = var.bottom - var.top
 
-            tmp = im.crop((globalVar.left, globalVar.top,
-                            globalVar.right, globalVar.bottom))
+            tmp = im.crop((var.left, var.top,
+                            var.right, var.bottom))
             im = tmp
             im = im.resize(
                 (uiMetrics.canvasWidth, uiMetrics.canvasHeight), PIL.Image.ANTIALIAS)
 
-            globalVar.im = ImageTk.PhotoImage(im)
+            var.im = ImageTk.PhotoImage(im)
 
-            canvas.create_image(0, 0, image=globalVar.im, anchor='nw')
+            canvas.create_image(0, 0, image=var.im, anchor='nw')
     else:
-        if((globalVar.mouseWheelUp or globalVar.mouseWheelDown) and mouseOnCanvas()):
+        if((var.mouseWheelUp or var.mouseWheelDown) and mouseOnCanvas(var,uiMetrics)):
             im = PIL.Image.open('resized_image.png')
-            globalVar.im = ImageTk.PhotoImage(im)
+            var.im = ImageTk.PhotoImage(im)
 
-            if(globalVar.mouseWheelUp and globalVar.zoomChange):
-                if(globalVar.zoom == 1):
-                    globalVar.mouseX = (
-                        (globalVar.pointerX - uiMetrics.canvasX) + globalVar.left)
-                    globalVar.mouseY = (
-                        (globalVar.pointerY - uiMetrics.canvasY) + globalVar.top)
+            if(var.mouseWheelUp and var.zoomChange):
+                if(var.zoom == 1):
+                    var.mouseX = (
+                        (var.pointerX - uiMetrics.canvasX) + var.left)
+                    var.mouseY = (
+                        (var.pointerY - uiMetrics.canvasY) + var.top)
                 else:
-                    globalVar.mouseX = (
-                        (globalVar.pointerX - uiMetrics.canvasX)/(globalVar.zoom-1) + globalVar.left)
-                    globalVar.mouseY = (
-                        (globalVar.pointerY - uiMetrics.canvasY) / (globalVar.zoom-1) + globalVar.top)
+                    var.mouseX = (
+                        (var.pointerX - uiMetrics.canvasX)/(var.zoom-1) + var.left)
+                    var.mouseY = (
+                        (var.pointerY - uiMetrics.canvasY) / (var.zoom-1) + var.top)
 
-                globalVar.yellowX = (
-                    uiMetrics.canvasWidth/globalVar.zoom)/2
-                globalVar.yellowY = (
-                    uiMetrics.canvasHeight/globalVar.zoom)/2
+                var.yellowX = (
+                    uiMetrics.canvasWidth/var.zoom)/2
+                var.yellowY = (
+                    uiMetrics.canvasHeight/var.zoom)/2
 
-                if(globalVar.mouseX > uiMetrics.canvasWidth - globalVar.yellowX):  # bumpers on sides
-                    globalVar.mouseX = globalVar.right - globalVar.yellowX
-                if(globalVar.mouseX < globalVar.yellowX):
-                    globalVar.mouseX = globalVar.left + globalVar.yellowX
-                if(globalVar.mouseY > uiMetrics.canvasHeight - globalVar.yellowY):
-                    globalVar.mouseY = globalVar.bottom - globalVar.yellowY
-                if(globalVar.mouseY < globalVar.yellowY):
-                    globalVar.mouseY = globalVar.top + globalVar.yellowY
+                if(var.mouseX > uiMetrics.canvasWidth - var.yellowX):  # bumpers on sides
+                    var.mouseX = var.right - var.yellowX
+                if(var.mouseX < var.yellowX):
+                    var.mouseX = var.left + var.yellowX
+                if(var.mouseY > uiMetrics.canvasHeight - var.yellowY):
+                    var.mouseY = var.bottom - var.yellowY
+                if(var.mouseY < var.yellowY):
+                    var.mouseY = var.top + var.yellowY
 
-                globalVar.left = globalVar.mouseX - globalVar.yellowX
-                globalVar.right = globalVar.mouseX + globalVar.yellowX
-                globalVar.top = globalVar.mouseY - globalVar.yellowY
-                globalVar.bottom = globalVar.mouseY + globalVar.yellowY
-                globalVar.mouseX = globalVar.right - globalVar.left
-                globalVar.mouseY = globalVar.bottom - globalVar.top
+                var.left = var.mouseX - var.yellowX
+                var.right = var.mouseX + var.yellowX
+                var.top = var.mouseY - var.yellowY
+                var.bottom = var.mouseY + var.yellowY
+                var.mouseX = var.right - var.left
+                var.mouseY = var.bottom - var.top
 
-            elif(globalVar.mouseWheelDown):
-                globalVar.mouseX = uiMetrics.canvasWidth/2
-                globalVar.mouseY = uiMetrics.canvasHeight/2
-                globalVar.zoom = 1
-                globalVar.left = 0
-                globalVar.top = 0
-                globalVar.right = uiMetrics.canvasWidth
-                globalVar.bottom = uiMetrics.canvasHeight
+            elif(var.mouseWheelDown):
+                var.mouseX = uiMetrics.canvasWidth/2
+                var.mouseY = uiMetrics.canvasHeight/2
+                var.zoom = 1
+                var.left = 0
+                var.top = 0
+                var.right = uiMetrics.canvasWidth
+                var.bottom = uiMetrics.canvasHeight
 
-            if(globalVar.zoom != 1):
+            if(var.zoom != 1):
 
-                tmp = im.crop((globalVar.left, globalVar.top,
-                               globalVar.right, globalVar.bottom))
+                tmp = im.crop((var.left, var.top,
+                               var.right, var.bottom))
                 im = tmp
                 im = im.resize(
                     (uiMetrics.canvasWidth, uiMetrics.canvasHeight), PIL.Image.ANTIALIAS)
 
-                globalVar.im = ImageTk.PhotoImage(im)
+                var.im = ImageTk.PhotoImage(im)
 
-            canvas.create_image(0, 0, image=globalVar.im, anchor='nw')
+            canvas.create_image(0, 0, image=var.im, anchor='nw')
 
         else:
-            canvas.create_image(0, 0, image=globalVar.im, anchor='nw')
+            canvas.create_image(0, 0, image=var.im, anchor='nw')
 
 
-def startTurn(uiElements):
+def startTurn(uiElements,var):
     print("New Round")
-    globalVar.turnInProgress = TRUE
+    var.turnInProgress = TRUE
     uiElements.timeElapsedProgressBar['value'] = 0
-    for ship1 in globalVar.ships:
+    for ship1 in var.ships:
         ship1.shotsNotTaken = 0
         ship1.shotsTaken = 0
     for object in uiElements.UIElementsList:
         object.config(state=DISABLED, background="#D0D0D0")
     for object in uiElements.RadioElementsList:
         object.config(state=DISABLED)
-    for object in globalVar.uiSystems:
+    for object in var.uiSystems:
         object.config(state = DISABLED, background="#D0D0D0")
 
 
-def endTurn(uiElements):
-    globalVar.turnInProgress = FALSE
+def endTurn(uiElements,var,gameRules,uiMetrics):
+    var.turnInProgress = FALSE
     for object in uiElements.UIElementsList:
         object.config(state=NORMAL, background="#F0F0F0")
     for object in uiElements.RadioElementsList:
         object.config(state=NORMAL)
-    for object in globalVar.uiSystems:
+    for object in var.uiSystems:
         object.config(state = NORMAL, background="#F0F0F0")
-    for ship in globalVar.ships:
+    for ship in var.ships:
         ship.ghostPoints = []
-        getOrders(ship,True)
+        getOrders(ship,var,gameRules,uiMetrics,True)
 
 
-def updateScales(uiElements):
-    uiElements.playerAPProgressBar['value'] = player.ap
-    uiElements.playerAPProgressBar2['value'] = player2.ap
-    uiElements.playerAPProgressBar3['value'] = player3.ap
-    uiElements.enemyAPProgressBar['value'] = enemy.ap
-    uiElements.enemyAPProgressBar2['value'] = enemy2.ap
-    uiElements.enemyAPProgressBar3['value'] = enemy3.ap
-    uiElements.playerHPProgressBar['value'] = player.hp
-    uiElements.playerHPProgressBar2['value'] = player2.hp
-    uiElements.playerHPProgressBar3['value'] = player3.hp
-    uiElements.enemyHPProgressBar['value'] = enemy.hp
-    uiElements.enemyHPProgressBar2['value'] = enemy2.hp
-    uiElements.enemyHPProgressBar3['value'] = enemy3.hp
+def updateScales(uiElements,var,shipLookup):
+    uiElements.playerAPProgressBar['value'] = shipLookup[var.playerName].ap
+    uiElements.playerAPProgressBar2['value'] = shipLookup[var.playerName2].ap
+    uiElements.playerAPProgressBar3['value'] = shipLookup[var.playerName3].ap
+    uiElements.enemyAPProgressBar['value'] = shipLookup[var.enemyName].ap
+    uiElements.enemyAPProgressBar2['value'] = shipLookup[var.enemyName2].ap
+    uiElements.enemyAPProgressBar3['value'] = shipLookup[var.enemyName3].ap
+    uiElements.playerHPProgressBar['value'] = shipLookup[var.playerName].hp
+    uiElements.playerHPProgressBar2['value'] = shipLookup[var.playerName2].hp
+    uiElements.playerHPProgressBar3['value'] = shipLookup[var.playerName3].hp
+    uiElements.enemyHPProgressBar['value'] = shipLookup[var.enemyName].hp
+    uiElements.enemyHPProgressBar2['value'] = shipLookup[var.enemyName2].hp
+    uiElements.enemyHPProgressBar3['value'] = shipLookup[var.enemyName3].hp
 
-    for ship1 in globalVar.ships:
-        updateShields(ship1)
+    for ship1 in var.ships:
+        updateShields(ship1,var)
 
-    globalVar.tmpCounter += 1
-    shipChosen = shipLookup[globalVar.shipChoice]
+    var.tmpCounter += 1
+    shipChosen = shipLookup[var.shipChoice]
 
-    uiElements.timeElapsedProgressBar.config(maximum=globalVar.turnLength)
+    uiElements.timeElapsedProgressBar.config(maximum=var.turnLength)
 
     i = 0 
-    for system in globalVar.uiSystemsProgressbars:
-        (shipChosen.systemSlots[i]).energy = (globalVar.uiSystems[i]).get()
+    for system in var.uiSystemsProgressbars:
+        (shipChosen.systemSlots[i]).energy = (var.uiSystems[i]).get()
         system1 = shipChosen.systemSlots[i]
         system['value'] = (system1.maxCooldown-system1.cooldown)
         i+=1
@@ -1008,7 +835,7 @@ def updateCooldowns(ships):
                 system.cooldown -= 0.1
                 energyTicks -=1
 
-def updateEnergy(var,uiElements):
+def updateEnergy(var,uiElements,shipLookup):
     shipChosen = shipLookup[var.shipChoice]
     tmpEnergy = shipChosen.tmpEnergyLimit
     for system in shipChosen.systemSlots:
@@ -1029,80 +856,171 @@ def updateEnergy(var,uiElements):
     (var.uiEnergyLabel).config(text = "Energy remaining: " + str(shipChosen.energy))
     
 
-def updateShields(ship1):
+def updateShields(ship1,var):
     for tmp, progressBar in enumerate(ship1.shieldsLabel):
-        if(globalVar.turnInProgress):
-            tmpShieldRegen = globalVar.shieldRegen
-            while(ship1.shieldsState[tmp] < globalVar.shieldMaxState and tmpShieldRegen > 0):
+        if(var.turnInProgress):
+            tmpShieldRegen = var.shieldRegen
+            while(ship1.shieldsState[tmp] < var.shieldMaxState and tmpShieldRegen > 0):
                 ship1.shieldsState[tmp] += 1
                 tmpShieldRegen -= 1
-                if(ship1.shieldsState[tmp] == globalVar.shieldMaxState):
+                if(ship1.shieldsState[tmp] == var.shieldMaxState):
                     ship1.shields += 1
         progressBar['value'] = ship1.shieldsState[tmp] * 100 \
-            / globalVar.shieldMaxState
+            / var.shieldMaxState
 ########################################## MULTIPURPOSE #########################################
 
 
-def radioBox(shipLookup,uiElements):
-    globalVar.selection = int((globalVar.radio).get())
-    if(globalVar.selection == 0):
-        globalVar.shipChoice = globalVar.playerName
-    if(globalVar.selection == 1):
-        globalVar.shipChoice = globalVar.playerName2
-    if(globalVar.selection == 2):
-        globalVar.shipChoice = globalVar.playerName3
-    shipChosen = shipLookup[globalVar.shipChoice]
-    updateUtilityChoice(shipLookup,uiMetrics)
+def radioBox(shipLookup,uiElements,var,uiMetrics,root):
+    var.selection = int((var.radio).get())
+    if(var.selection == 0):
+        var.shipChoice = var.playerName
+    if(var.selection == 1):
+        var.shipChoice = var.playerName2
+    if(var.selection == 2):
+        var.shipChoice = var.playerName3
+    shipChosen = shipLookup[var.shipChoice]
+    updateUtilityChoice(shipLookup,uiMetrics,var,root)
 
 
-def updateUtilityChoice(shipLookup,uiMetrics):
-    shipChosen = shipLookup[globalVar.shipChoice]
-    for widget in (globalVar.uiSystemsLabelFrame).winfo_children():
+def updateUtilityChoice(shipLookup,uiMetrics,var,root):
+    shipChosen = shipLookup[var.shipChoice]
+    for widget in (var.uiSystemsLabelFrame).winfo_children():
         widget.destroy()
-    (globalVar.uiSystemsLabelFrame).destroy()
-    globalVar.uiSystems = []
-    globalVar.uiSystemsProgressbars = []
-    shipChosen = shipLookup[globalVar.shipChoice]
-    globalVar.uiSystemsLabelFrame = tk.LabelFrame(root,width=uiMetrics.systemScalesLabelFrameWidth, \
+    (var.uiSystemsLabelFrame).destroy()
+    var.uiSystems = []
+    var.uiSystemsProgressbars = []
+    shipChosen = shipLookup[var.shipChoice]
+    var.uiSystemsLabelFrame = tk.LabelFrame(root,width=uiMetrics.systemScalesLabelFrameWidth, \
                                                     height = (uiMetrics.systemScalesMarginTop*1.5 + (uiMetrics.systemScalesHeightOffset)*len(shipChosen.systemSlots)), text= shipChosen.name + " systems", \
                                                     borderwidth=2, relief="groove")
-    (globalVar.uiSystemsLabelFrame).place(x = uiMetrics.leftMargin, y = uiMetrics.canvasY)
+    (var.uiSystemsLabelFrame).place(x = uiMetrics.leftMargin, y = uiMetrics.canvasY)
     i=0
-    globalVar.uiEnergyLabel = ttk.Label(globalVar.uiSystemsLabelFrame, width=20, text = "Energy remaining: " + str(shipChosen.energy), font = "16")
-    globalVar.uiEnergyLabel.place(x = 10, y = 20)
+    var.uiEnergyLabel = ttk.Label(var.uiSystemsLabelFrame, width=20, text = "Energy remaining: " + str(shipChosen.energy), font = "16")
+    var.uiEnergyLabel.place(x = 10, y = 20)
     for system in shipChosen.systemSlots:
-        scale = tk.Scale(globalVar.uiSystemsLabelFrame, orient=HORIZONTAL, length=uiMetrics.systemScalesWidth, \
+        scale = tk.Scale(var.uiSystemsLabelFrame, orient=HORIZONTAL, length=uiMetrics.systemScalesWidth, \
                             label=system.name, from_ = system.minEnergy, to=system.maxEnergy, relief=RIDGE)
         scale.set(system.energy)
-        if(globalVar.turnInProgress):
+        if(var.turnInProgress):
             scale.config(state = 'disabled', background="#D0D0D0")
-        (globalVar.uiSystems).append(scale)
-        progressBar = ttk.Progressbar(globalVar.uiSystemsLabelFrame, maximum=system.maxCooldown, length=(uiMetrics.systemScalesWidth), variable=(system.maxCooldown-system.cooldown))
-        (globalVar.uiSystemsProgressbars).append(progressBar)
+        (var.uiSystems).append(scale)
+        progressBar = ttk.Progressbar(var.uiSystemsLabelFrame, maximum=system.maxCooldown, length=(uiMetrics.systemScalesWidth), variable=(system.maxCooldown-system.cooldown))
+        (var.uiSystemsProgressbars).append(progressBar)
         scale.place(x=10,y=uiMetrics.systemScalesMarginTop+i*uiMetrics.systemScalesHeightOffset)
         progressBar.place(x=10,y=uiMetrics.systemScalesMarginTop+i*(uiMetrics.systemScalesHeightOffset)+uiMetrics.systemProgressbarsHeightOffset)
         i+=1
-
-def mouseOnCanvas():
-    if(globalVar.pointerX > ui_metrics.canvasX and globalVar.pointerX <
-       (uiMetrics.canvasX + uiMetrics.canvasWidth) and globalVar.pointerY >
-            ui_metrics.canvasY and globalVar.pointerY < (uiMetrics.canvasY + uiMetrics.canvasHeight)):
+        
+def mouseOnCanvas(var,uiMetrics):
+    if(var.pointerX > uiMetrics.canvasX and var.pointerX <
+       (uiMetrics.canvasX + uiMetrics.canvasWidth) and var.pointerY >
+            uiMetrics.canvasY and var.pointerY < (uiMetrics.canvasY + uiMetrics.canvasHeight)):
         return True
     else:
         return False
 
-
-    # move direviton into normalised vector
-    if(scale != 0):
-        object.xDir = object.xDir / scale
-        object.yDir = object.yDir / scale
 
 
 ######################################################### MAIN ####################################
 
 
 # main
-def run(uiMetrics,globalVar,gameRules,ammunitionType,uiIcons,shipLookup,events,uiElements,canvas):
+def run(config,root):
+
+    #root.withdraw()
+    """
+    rootX = root.winfo_screenwidth()
+    rootY = root.winfo_screenheight()
+    root.attributes('-fullscreen', True)
+    """
+    root.deiconify()
+    uiMetrics = ui_metrics()
+    globalVar = global_var(config,root)
+    gameRules = game_rules()
+    ammunitionType = ammunition_type()
+    uiIcons = ui_icons()
+    shipLookup = dict
+    events = _events()
+    uiElements = ui_elements()
+    canvas = Canvas(root, width=uiMetrics.canvasWidth,
+                        height=uiMetrics.canvasHeight)
+    globalVar.playerName = (config.get("Ships", "playerName"))
+    globalVar.playerName2 = (config.get("Ships", "playerName2"))
+    globalVar.playerName3 = (config.get("Ships", "playerName3"))
+
+    globalVar.enemyName =  (config.get("Ships", "enemyName"))
+    globalVar.enemyName2 = (config.get("Ships", "enemyName2"))
+    globalVar.enemyName3 = (config.get("Ships", "enemyName3"))
+
+    player = ship(globalVar, owner="player1", \
+                name=globalVar.playerName, shields=int((config.get("Player", "shields"))), xPos=int((config.get("Player", "xPos"))), yPos=int((config.get("Player", "yPos"))),
+                systemSlots=((config.get("Player", "systemSlots1")),(config.get("Player", "systemSlots2")),(config.get("Player", "systemSlots3")),(config.get("Player", "systemSlots4")), \
+                (config.get("Player", "systemSlots5")),(config.get("Player", "systemSlots6")),(config.get("Player", "systemSlots7")),(config.get("Player", "systemSlots8"))),speed = int((config.get("Player", "speed"))), \
+                 detectionRange=int(config.get("Player", "detectionRange")), turnRate = float(config.get("Player", "turnRate")),\
+                maxSpeed = int((config.get("Player", "maxSpeed"))),outlineColor = ((config.get("Player", "outlineColor"))))
+    player2 = ship(globalVar, owner="player1", \
+                name=globalVar.playerName2, shields=int((config.get("Player2", "shields"))), xPos=int((config.get("Player2", "xPos"))), yPos=int((config.get("Player2", "yPos"))),
+                systemSlots=((config.get("Player2", "systemSlots1")),(config.get("Player2", "systemSlots2")),(config.get("Player2", "systemSlots3")),(config.get("Player2", "systemSlots4")), \
+                (config.get("Player2", "systemSlots5")),(config.get("Player2", "systemSlots6")),(config.get("Player2", "systemSlots7")),\
+                (config.get("Player2", "systemSlots8"))), speed = int((config.get("Player2", "speed"))),detectionRange=int(config.get("Player2", "detectionRange")), turnRate = float(config.get("Player2", "turnRate")),\
+                maxSpeed = int((config.get("Player2", "maxSpeed"))),outlineColor = ((config.get("Player2", "outlineColor"))))
+    player3 = ship(globalVar, owner="player1", \
+                name=globalVar.playerName3, shields=int((config.get("Player3", "shields"))), xPos=int((config.get("Player3", "xPos"))), yPos=int((config.get("Player3", "yPos"))),
+                systemSlots=((config.get("Player3", "systemSlots1")),(config.get("Player3", "systemSlots2")),(config.get("Player3", "systemSlots3")),(config.get("Player3", "systemSlots4")), \
+                (config.get("Player3", "systemSlots5")),(config.get("Player3", "systemSlots6")),(config.get("Player3", "systemSlots7")),\
+                (config.get("Player3", "systemSlots8"))), speed = int((config.get("Player3", "speed"))), detectionRange=int(config.get("Player3", "detectionRange")), turnRate = float(config.get("Player3", "turnRate")), \
+                maxSpeed = int((config.get("Player3", "maxSpeed"))),outlineColor = ((config.get("Player3", "outlineColor"))))
+
+    enemy = ship(globalVar, owner="ai1", \
+                name=globalVar.enemyName, shields=int((config.get("Enemy", "shields"))), xPos=int((config.get("Enemy", "xPos"))), yPos=int((config.get("Enemy", "yPos"))),
+                systemSlots=((config.get("Enemy", "systemSlots1")),(config.get("Enemy", "systemSlots2")),(config.get("Enemy", "systemSlots3")),(config.get("Enemy", "systemSlots4")), \
+                (config.get("Enemy", "systemSlots5")),(config.get("Enemy", "systemSlots6")),(config.get("Enemy", "systemSlots7")),\
+                (config.get("Enemy", "systemSlots8"))), detectionRange=int(config.get("Enemy", "detectionRange")), turnRate = float(config.get("Enemy", "turnRate")),\
+                speed = int((config.get("Enemy", "speed"))),maxSpeed = int((config.get("Enemy", "maxSpeed"))),outlineColor = ((config.get("Enemy", "outlineColor"))))
+    enemy2 = ship(globalVar, owner="ai1", \
+                name=globalVar.enemyName2, shields=int((config.get("Enemy2", "shields"))), xPos=int((config.get("Enemy2", "xPos"))), yPos=int((config.get("Enemy2", "yPos"))),
+                systemSlots=((config.get("Enemy2", "systemSlots1")),(config.get("Enemy2", "systemSlots2")),(config.get("Enemy2", "systemSlots3")),(config.get("Enemy2", "systemSlots4")), \
+                (config.get("Enemy2", "systemSlots5")),(config.get("Enemy2", "systemSlots6")),(config.get("Enemy2", "systemSlots7")),\
+                (config.get("Enemy2", "systemSlots8"))), detectionRange=int(config.get("Enemy2", "detectionRange")), turnRate = float(config.get("Enemy2", "turnRate")),\
+                speed = int((config.get("Enemy2", "speed"))),maxSpeed = int((config.get("Enemy2", "maxSpeed"))),outlineColor = ((config.get("Enemy2", "outlineColor"))))
+    enemy3 = ship(globalVar, owner="ai1", \
+                name=globalVar.enemyName3, shields=int((config.get("Enemy3", "shields"))), xPos=int((config.get("Enemy3", "xPos"))), yPos=int((config.get("Enemy3", "yPos"))),
+                systemSlots=((config.get("Enemy3", "systemSlots1")),(config.get("Enemy3", "systemSlots2")),(config.get("Enemy3", "systemSlots3")),(config.get("Enemy3", "systemSlots4")), \
+                (config.get("Enemy3", "systemSlots5")),(config.get("Enemy3", "systemSlots2")),(config.get("Enemy3", "systemSlots6")),(config.get("Enemy3", "systemSlots7")),\
+                (config.get("Enemy3", "systemSlots8"))), detectionRange=int(config.get("Enemy3", "detectionRange")), turnRate = float(config.get("Enemy3", "turnRate")), \
+                speed = int((config.get("Enemy3", "speed"))),maxSpeed = int((config.get("Enemy3", "maxSpeed"))),outlineColor = ((config.get("Enemy3", "outlineColor"))))
+
+
+    uiIcons.armorIcon = PhotoImage(file="icons/armor.png")
+    motionCommand = partial(motion,True,globalVar,root)
+    root.bind('<Motion>', lambda e: motion(e, globalVar,root))
+    root.bind('<Button-1>', lambda e: mouseButton1(e, globalVar))
+    root.bind('<Button-2>', lambda e: mouseButton3(e, globalVar))
+    root.bind('<ButtonRelease-2>', lambda e: mouseButton3up(e, globalVar))
+    root.bind('<MouseWheel>', lambda e: mouseWheel(e, globalVar,uiMetrics))
+    root.protocol("WM_DELETE_WINDOW", on_closing)
+
+    uiElements.rootTitle = (config.get("Root", "title"))
+    root.title(uiElements.rootTitle)
+    getZoomMetrics(globalVar,uiMetrics)
+
+    # Ships
+
+    (globalVar.ships).append(player)
+    (globalVar.ships).append(player2)
+    (globalVar.ships).append(player3)
+
+    (globalVar.ships).append(enemy)
+    (globalVar.ships).append(enemy2)
+    (globalVar.ships).append(enemy3)
+
+    shipLookup = {
+    globalVar.playerName: player,
+    globalVar.enemyName: enemy,
+    globalVar.playerName2: player2,
+    globalVar.enemyName2: enemy2,
+    globalVar.playerName3: player3,
+    globalVar.enemyName3: enemy3
+    }
 
     land1 = landmark(200, 200, 200, 200, 50, 'armor')
     (globalVar.landmarks).append(land1)
@@ -1142,14 +1060,14 @@ def run(uiMetrics,globalVar,gameRules,ammunitionType,uiIcons,shipLookup,events,u
     uiElements.timeElapsedProgressBar = ttk.Progressbar(root, maximum=globalVar.turnLength, variable=1,  orient='horizontal',
                                             mode='determinate', length=ui_metrics.shipDataWidth)
 
-    startTurnCommand = partial(startTurn, uiElements)
+    startTurnCommand = partial(startTurn, uiElements,globalVar)
     uiElements.startTurnButton = tk.Button(root, text="Start turn", command=startTurnCommand, width = 20, height= 7)
     uiElements.exitButton = tk.Button(root, text="Exit", command=exit)
 
     globalVar.shipChoice = player.name
 
     # ships choice
-    radioCommand = partial(radioBox,shipLookup , uiElements)
+    radioCommand = partial(radioBox,shipLookup , uiElements,globalVar,uiMetrics,root)
     uiElements.shipChoiceRadioButton1 = ttk.Radiobutton(
         root, text='1. MMS Artemis', variable=globalVar.radio, value=0, command=radioCommand)
     uiElements.shipChoiceRadioButton2 = ttk.Radiobutton(
@@ -1157,12 +1075,12 @@ def run(uiMetrics,globalVar,gameRules,ammunitionType,uiIcons,shipLookup,events,u
     uiElements.shipChoiceRadioButton3 = ttk.Radiobutton(
         root, text='3. MMS Catalyst', variable=globalVar.radio, value=2, command=radioCommand)
 
-    radioBox(shipLookup,uiElements)
-    updateUtilityChoice(shipLookup,uiMetrics)
+    radioBox(shipLookup,uiElements,globalVar,uiMetrics,root)
+    updateUtilityChoice(shipLookup,uiMetrics,globalVar,root)
     detectionCheck(globalVar.ships)
     for ship1 in globalVar.ships:
         if(ship1.owner == "player1"):
-            putTracer(ship1)
+            putTracer(ship1,globalVar,gameRules,uiMetrics)
 
     globalVar.shipChoiceRadioButtons = []
     (globalVar.shipChoiceRadioButtons).append(uiElements.shipChoiceRadioButton1)
@@ -1398,101 +1316,7 @@ def run(uiMetrics,globalVar,gameRules,ammunitionType,uiIcons,shipLookup,events,u
     (uiElements.RadioElementsList).append(uiElements.shipChoiceRadioButton2)
     (uiElements.RadioElementsList).append(uiElements.shipChoiceRadioButton3)
     # clock
-    update(globalVar,uiElements,canvas,events,shipLookup)
+    update(globalVar,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root)
 
 
     root.mainloop()
-
-if __name__ == '__main__':
-    parameter1 = "1.Exiled-To-Make-A-Stand"
-    parameter1 = "2.Warcries-That-Shred-The-Clouds"
-    config = configparser.ConfigParser()
-    cwd = os.getcwd()
-    filePath = os.path.join(cwd, "maps",parameter1,"level info.ini")
-    config.read(filePath)
-
-    uiMetrics = ui_metrics()
-    globalVar = global_var(config)
-    gameRules = game_rules()
-    ammunitionType = ammunition_type()
-    uiIcons = ui_icons()
-    shipLookup = dict
-    events = _events()
-    uiElements = ui_elements()
-    canvas = Canvas(root, width=uiMetrics.canvasWidth,
-                        height=uiMetrics.canvasHeight)
-    globalVar.playerName = (config.get("Ships", "playerName"))
-    globalVar.playerName2 = (config.get("Ships", "playerName2"))
-    globalVar.playerName3 = (config.get("Ships", "playerName3"))
-
-    globalVar.enemyName =  (config.get("Ships", "enemyName"))
-    globalVar.enemyName2 = (config.get("Ships", "enemyName2"))
-    globalVar.enemyName3 = (config.get("Ships", "enemyName3"))
-    player = ship(owner="player1", \
-                name=globalVar.playerName, shields=int((config.get("Player", "shields"))), xPos=int((config.get("Player", "xPos"))), yPos=int((config.get("Player", "yPos"))),
-                systemSlots=((config.get("Player", "systemSlots1")),(config.get("Player", "systemSlots2")),(config.get("Player", "systemSlots3")),(config.get("Player", "systemSlots4")), \
-                (config.get("Player", "systemSlots5")),(config.get("Player", "systemSlots2")),(config.get("Player", "systemSlots6")),(config.get("Player", "systemSlots7")),\
-                (config.get("Player", "systemSlots8"))), detectionRange=int(config.get("Player", "detectionRange")), turnRate = float(config.get("Player", "turnRate")),\
-                maxSpeed = int((config.get("Player", "maxSpeed"))),outlineColor = ((config.get("Player", "outlineColor"))))
-    player2 = ship( owner="player1", \
-                name=globalVar.playerName2, shields=int((config.get("Player2", "shields"))), xPos=int((config.get("Player2", "xPos"))), yPos=int((config.get("Player2", "yPos"))),
-                systemSlots=((config.get("Player2", "systemSlots1")),(config.get("Player2", "systemSlots2")),(config.get("Player2", "systemSlots3")),(config.get("Player2", "systemSlots4")), \
-                (config.get("Player2", "systemSlots5")),(config.get("Player2", "systemSlots2")),(config.get("Player2", "systemSlots6")),(config.get("Player2", "systemSlots7")),\
-                (config.get("Player2", "systemSlots8"))), detectionRange=int(config.get("Player2", "detectionRange")), turnRate = float(config.get("Player2", "turnRate")),\
-                maxSpeed = int((config.get("Player2", "maxSpeed"))),outlineColor = ((config.get("Player2", "outlineColor"))))
-    player3 = ship( owner="player1", \
-                name=globalVar.playerName3, shields=int((config.get("Player3", "shields"))), xPos=int((config.get("Player3", "xPos"))), yPos=int((config.get("Player3", "yPos"))),
-                systemSlots=((config.get("Player3", "systemSlots1")),(config.get("Player3", "systemSlots2")),(config.get("Player3", "systemSlots3")),(config.get("Player3", "systemSlots4")), \
-                (config.get("Player3", "systemSlots5")),(config.get("Player3", "systemSlots2")),(config.get("Player3", "systemSlots6")),(config.get("Player3", "systemSlots7")),\
-                (config.get("Player3", "systemSlots8"))), detectionRange=int(config.get("Player3", "detectionRange")), turnRate = float(config.get("Player3", "turnRate")), \
-                maxSpeed = int((config.get("Player3", "maxSpeed"))),outlineColor = ((config.get("Player3", "outlineColor"))))
-
-    enemy = ship(owner="ai1", \
-                name=globalVar.enemyName, shields=int((config.get("Enemy", "shields"))), xPos=int((config.get("Enemy", "xPos"))), yPos=int((config.get("Enemy", "yPos"))),
-                systemSlots=((config.get("Enemy", "systemSlots1")),(config.get("Enemy", "systemSlots2")),(config.get("Enemy", "systemSlots3")),(config.get("Enemy", "systemSlots4")), \
-                (config.get("Enemy", "systemSlots5")),(config.get("Enemy", "systemSlots2")),(config.get("Enemy", "systemSlots6")),(config.get("Enemy", "systemSlots7")),\
-                (config.get("Enemy", "systemSlots8"))), detectionRange=int(config.get("Enemy", "detectionRange")), turnRate = float(config.get("Enemy", "turnRate")),\
-                maxSpeed = int((config.get("Enemy", "maxSpeed"))),outlineColor = ((config.get("Enemy", "outlineColor"))))
-    enemy2 = ship( owner="ai1", \
-                name=globalVar.enemyName2, shields=int((config.get("Enemy2", "shields"))), xPos=int((config.get("Enemy2", "xPos"))), yPos=int((config.get("Enemy2", "yPos"))),
-                systemSlots=((config.get("Enemy2", "systemSlots1")),(config.get("Enemy2", "systemSlots2")),(config.get("Enemy2", "systemSlots3")),(config.get("Enemy2", "systemSlots4")), \
-                (config.get("Enemy2", "systemSlots5")),(config.get("Enemy2", "systemSlots2")),(config.get("Enemy2", "systemSlots6")),(config.get("Enemy2", "systemSlots7")),\
-                (config.get("Enemy2", "systemSlots8"))), detectionRange=int(config.get("Enemy2", "detectionRange")), turnRate = float(config.get("Enemy2", "turnRate")),\
-                maxSpeed = int((config.get("Enemy2", "maxSpeed"))),outlineColor = ((config.get("Enemy2", "outlineColor"))))
-    enemy3 = ship( owner="ai1", \
-                name=globalVar.enemyName3, shields=int((config.get("Enemy3", "shields"))), xPos=int((config.get("Enemy3", "xPos"))), yPos=int((config.get("Enemy3", "yPos"))),
-                systemSlots=((config.get("Enemy3", "systemSlots1")),(config.get("Enemy3", "systemSlots2")),(config.get("Enemy3", "systemSlots3")),(config.get("Enemy3", "systemSlots4")), \
-                (config.get("Enemy3", "systemSlots5")),(config.get("Enemy3", "systemSlots2")),(config.get("Enemy3", "systemSlots6")),(config.get("Enemy3", "systemSlots7")),\
-                (config.get("Enemy3", "systemSlots8"))), detectionRange=int(config.get("Enemy3", "detectionRange")), turnRate = float(config.get("Enemy3", "turnRate")), \
-                maxSpeed = int((config.get("Enemy3", "maxSpeed"))),outlineColor = ((config.get("Enemy3", "outlineColor"))))
-
-
-    root.bind('<Motion>', motion)
-    root.bind('<Button-1>', mouseButton1)
-    root.bind('<Button-2>', mouseButton3)
-    root.bind('<ButtonRelease-2>', mouseButton3up)
-    root.bind('<MouseWheel>', mouseWheel)
-
-    uiElements.rootTitle = (config.get("Root", "title"))
-    root.title(uiElements.rootTitle)
-    getZoomMetrics()
-
-    # Ships
-
-    (globalVar.ships).append(player)
-    (globalVar.ships).append(player2)
-    (globalVar.ships).append(player3)
-
-    (globalVar.ships).append(enemy)
-    (globalVar.ships).append(enemy2)
-    (globalVar.ships).append(enemy3)
-
-
-    shipLookup = {
-    globalVar.playerName: player,
-    globalVar.enemyName: enemy,
-    globalVar.playerName2: player2,
-    globalVar.enemyName2: enemy2,
-    globalVar.playerName3: player3,
-    globalVar.enemyName3: enemy3}
-    run(uiMetrics,globalVar,gameRules,ammunitionType,uiIcons,shipLookup,events,uiElements,canvas)

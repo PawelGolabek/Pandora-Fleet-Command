@@ -1,5 +1,6 @@
 import math
 from tkinter import *
+from naglowek import *
 
 def detectionCheck(ships):
     for ship in ships:
@@ -21,6 +22,61 @@ def detectionCheck(ships):
                         ship.visible = True
                         break
        
+def createGhostPoint(ship, xPos, yPos):
+    ghost = ghostPoint()
+    ship.ghostPoints.append(ghost)
+    setattr(ship.ghostPoints[-1],'xPos',xPos)
+    setattr(ship.ghostPoints[-1],'yPos',yPos)
+
+def putTracer(ship,var,gameRules,uiMetrics): # rotate and move the chosen ship
+    if(ship.owner == 'player1'):
+        ship.ghostPoints = []
+        currentTracer = tracer()
+        currentTracer.xPos = ship.xPos
+        currentTracer.yPos = ship.yPos
+        currentTracer.xDir = ship.xDir
+        currentTracer.yDir = ship.yDir
+        currentTracer.turnRate = ship.turnRate
+        currentTracer.speed = ship.speed
+        currentTracer.moveOrderX = ship.moveOrderX
+        currentTracer.moveOrderY = ship.moveOrderY
+        currentTracer.ttl = var.turnLength
+        while(currentTracer.ttl>0):
+            # check for terrain
+            if(not 0 < currentTracer.xPos < uiMetrics.canvasWidth-5):
+                currentTracer.ttl = 0
+            if(not 0 < currentTracer.yPos < uiMetrics.canvasHeight-5):
+                currentTracer.ttl = 0
+            colors = var.imageMask.getpixel((int(currentTracer.xPos), int(currentTracer.yPos)))
+            colorWeight = (colors[0] + colors[1] + colors[2])
+            # vector normalisation
+            scale = math.sqrt((currentTracer.moveOrderX-currentTracer.xPos)*(currentTracer.moveOrderX-currentTracer.xPos) +
+                                (currentTracer.moveOrderY-currentTracer.yPos)*(currentTracer.moveOrderY-currentTracer.yPos))
+            # move order into normalised vector
+            moveDirX = -(currentTracer.xPos-currentTracer.moveOrderX) / scale
+            moveDirY = -(currentTracer.yPos-currentTracer.moveOrderY) / scale
+
+            degree = currentTracer.turnRate
+            rotateVector(degree, currentTracer, moveDirX, moveDirY)
+
+            if(colorWeight < 600 and colorWeight > 200):
+                movementPenality = gameRules.movementPenalityMedium
+            elif(colorWeight < 200):
+                movementPenality = gameRules.movementPenalityHard
+            else:
+                movementPenality = 0.000001  # change
+
+            xVector = currentTracer.xDir*currentTracer.speed/360
+            yVector = currentTracer.yDir*currentTracer.speed/360
+
+            currentTracer.xPos += xVector - xVector * movementPenality
+            currentTracer.yPos += yVector - yVector * movementPenality
+
+            if(currentTracer.ttl % 40 == 0):
+                createGhostPoint(ship, currentTracer.xPos, currentTracer.yPos)
+            currentTracer.ttl -= 1
+        del currentTracer
+
 def rotateVector(degree, object, moveDirX, moveDirY):
     if((object.xDir > moveDirX and object.yDir > -moveDirY) or object.xDir < moveDirX and object.yDir < -moveDirY):
         degree = object.turnRate
@@ -158,15 +214,15 @@ def drawShips(canvas,globalVar):  # draw ship on the map with all of its accesor
             canvas.create_text(drawX + 20, drawY + 10, anchor=W,
                                font=("Purisa", 8+math.floor(globalVar.zoom)), text=ship.name, fill = "white")  # draw name
        
-def updateShips(globalVar,uiMetrics,gameRules,shipLookup,canvas):  # rotate and move the chosen ship
-    for ship in globalVar.ships:
+def updateShips(var,uiMetrics,gameRules,shipLookup,canvas):  # rotate and move the chosen ship
+    for ship in var.ships:
         if(ship.moveOrderX):
             # check for terrain
             if(not 0 < ship.xPos < uiMetrics.canvasWidth-5):
-                globalVar.ships.remove(ship)
+                var.ships.remove(ship)
             if(not 0 < ship.yPos < uiMetrics.canvasHeight-5):
-                globalVar.ships.remove(ship)
-            colors = globalVar.imageMask.getpixel((int(ship.xPos), int(ship.yPos)
+                var.ships.remove(ship)
+            colors = var.imageMask.getpixel((int(ship.xPos), int(ship.yPos)
                                                    ))
 
             colorWeight = (colors[0] + colors[1] + colors[2])
@@ -187,7 +243,7 @@ def updateShips(globalVar,uiMetrics,gameRules,shipLookup,canvas):  # rotate and 
                 movementPenality = gameRules.movementPenalityMedium
             elif(colorWeight < 200):
                 movementPenality = gameRules.movementPenalityHard
-                dealDamage(shipLookup[ship.name], 1,globalVar)
+                dealDamage(shipLookup[ship.name], 1,var)
             else:
                 movementPenality = 0.000001  # change
 
