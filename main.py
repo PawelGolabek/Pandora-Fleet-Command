@@ -1,4 +1,3 @@
-
 import configparser
 import os
 from tkinter import *
@@ -19,11 +18,10 @@ def hideUi(uiElements):
 
 if __name__ == '__main__':
     parameter1 = "1.Exiled-To-Make-A-Stand"
-    parameter1 = "2.Warcries-That-Shred-The-Clouds"
     root = tk.Tk()
     _style = ttk.Style()
     loadStyles(root,_style)
-    rootX = 1850
+    rootX = 1600
     rootY = 1000
     """
     rootX = root.winfo_screenwidth()
@@ -65,8 +63,6 @@ if __name__ == '__main__':
     btn1.place(x=100,y=200)
     
     # button 2
-    btn2 = ttk.Progressbar(root, style = "red.Horizontal.TProgressbar", value=100)
-    btn2.place(x=200,y=200)
 ######
 
 

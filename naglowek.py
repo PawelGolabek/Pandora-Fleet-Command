@@ -123,8 +123,10 @@ class tracer():
         self.speed = speed
         self.moveOrderX = None
         self.moveOrderY = None
+        self.ttl = 0
 
 class ghostPoint():
-    def __init__(self, xPos=300, yPos=300): 
+    def __init__(self, xPos=300, yPos=300,number = 0): 
         self.xPos = xPos
         self.yPos = yPos
+        self.number = number

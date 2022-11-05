@@ -14,6 +14,7 @@ import tkinter.ttk as ttk
 from functools import partial
 import configparser
 import os
+import random
 
 from shipCombat import *
 from canvasCalls import *
@@ -327,11 +328,119 @@ class playerController():
     a = 10
 
 class aiController():
-    def ammunitionChoice(ship):
-        ship.ammunitionChoice = 0
+    def systemChoice(ship,ships):
+        basicEnergy = 0
+        for system in ship.systemSlots:
+            system.energy = system.minEnergy
+            basicEnergy += system.minEnergy
+        systemPool = []
+        energy = ship.energyLimit - basicEnergy
+        systemChecked = 0
+        for system in ship.systemSlots:         # create system pool
+            systemMaxPoints = system.maxEnergy
+            while(systemMaxPoints > 0):
+                systemPool.append(systemChecked)
+                systemMaxPoints -= 1
+            systemChecked += 1
+                                                # add modifiers to pool if neeeded
+        while(energy > 0 and len(systemPool)):
+            choiceRand = random.randrange(0,len(systemPool))
+            choiceNumber = systemPool.pop(choiceRand)
+            (ship.systemSlots[choiceNumber]).energy += 1
+            energy-=1
+                           
 
-    def accuracyChoiceScale(ship):  # virtual choice for AI Controller
-        return 3
+    def moveOrderChoice(ship,ships,var,gameRules,uiMetrics):
+        checksLeft = 40
+        bestOrderX = 100    #default if everything else fails
+        bestOrderY = 100    #default if everything else fails
+        bestOrderValue = float('-inf')
+        while(checksLeft):
+            currentOrderValue = random.randint(19000, 21000)
+            currentOrderX = ship.xPos + random.randint(-100, 100)
+            currentOrderY = ship.yPos + random.randint(-100, 100)
+           # print( "check: " + str(checksLeft) + " " + str(currentOrderX))
+            ship.ghostPoints = []
+            currentTracer = tracer()
+            currentTracer.xPos = ship.xPos
+            currentTracer.yPos = ship.yPos
+            currentTracer.xDir = ship.xDir
+            currentTracer.yDir = ship.yDir
+            currentTracer.turnRate = ship.turnRate
+            currentTracer.speed = ship.speed
+            currentTracer.moveOrderX = currentOrderX
+            currentTracer.moveOrderY = currentOrderY
+            currentTracer.ttl = var.turnLength
+            if(not 5 < currentOrderX < uiMetrics.canvasWidth-5):
+                currentOrderValue = float('-inf')  
+                checksLeft -= 1
+                continue
+            if(not 5 < currentOrderY < uiMetrics.canvasHeight-5):
+                currentOrderValue = float('-inf')  
+                checksLeft -= 1
+                continue
+            colors = var.imageMask.getpixel((int(currentTracer.xPos), int(currentTracer.yPos)))
+            colorWeight = (colors[0] + colors[1] + colors[2])
+            if(colorWeight <= 200):
+                checksLeft -= 1
+                continue
+            while(True):
+                # check for terrain
+                if(not 5 < currentTracer.xPos < uiMetrics.canvasWidth-5):
+                    currentOrderValue = float('-inf')  
+                    break
+                if(not 5 < currentTracer.yPos < uiMetrics.canvasHeight-5):
+                    currentOrderValue = float('-inf')  
+                    break
+                # to prefer staying off the edges
+                distanceToEdgeX = min(currentTracer.xPos,uiMetrics.canvasWidth -currentTracer.xPos)
+                distanceToEdgeY = min(currentTracer.yPos,uiMetrics.canvasHeight -currentTracer.yPos)
+                currentOrderValue += distanceToEdgeX / 1000
+                currentOrderValue += distanceToEdgeY / 1000
+                colors = var.imageMask.getpixel((int(currentTracer.xPos), int(currentTracer.yPos)))
+                colorWeight = (colors[0] + colors[1] + colors[2])
+                # vector normalisation
+                scale = math.sqrt((currentTracer.moveOrderX-currentTracer.xPos)*(currentTracer.moveOrderX-currentTracer.xPos) +
+                                    (currentTracer.moveOrderY-currentTracer.yPos)*(currentTracer.moveOrderY-currentTracer.yPos))
+                if(scale == 0):
+                    scale = 0.01
+                # move order into normalised vector
+                moveDirX = -(currentTracer.xPos-currentTracer.moveOrderX) / scale
+                moveDirY = -(currentTracer.yPos-currentTracer.moveOrderY) / scale
+
+                degree = currentTracer.turnRate
+                rotateVector(degree, currentTracer, moveDirX, moveDirY)
+
+                if(colorWeight < 600 and colorWeight > 400):
+                    movementPenality = gameRules.movementPenalityMedium
+                elif(colorWeight < 400 and colorWeight > 200):
+                    movementPenality = gameRules.movementPenalityMedium
+                    currentOrderValue -= 400
+                elif(colorWeight <= 200):
+                    movementPenality = gameRules.movementPenalityHard
+                    currentOrderValue -= 4000
+                else:
+                    movementPenality = 0.000001  # change
+
+                xVector = currentTracer.xDir*currentTracer.speed/360
+                yVector = currentTracer.yDir*currentTracer.speed/360
+
+                currentTracer.xPos += xVector - xVector * movementPenality
+                currentTracer.yPos += yVector - yVector * movementPenality
+                currentTracer.ttl -= 1
+                if(not currentTracer.ttl):
+                    break
+            if(currentOrderValue > bestOrderValue):
+                bestOrderX = currentOrderX
+                bestOrderY = currentOrderY
+                bestOrderValue = currentOrderValue
+            del currentTracer
+            checksLeft -= 1
+            if(not checksLeft):
+                break
+        ship.moveOrderX = bestOrderX
+        ship.moveOrderY = bestOrderY
+
 
     def ammunitionChoiceScale(ship):  # virtual choice for AI Controller
         return 1
@@ -371,7 +480,7 @@ def putLaser(missle,var,shipLookup):
 def shoot(var,system,ship1,ammunitionType,ships,offsetX=0,offsetY=0):    #newer than manageShots without strange interval system
         if(system.cooldown <= 0 and True):
             for ship2 in ships:
-                if(ship1.owner == 'player1' and ship2.owner == 'ai1'):
+                if(not ship1.owner == ship2.owner): # add teams if you want
                     distance = math.sqrt(
                         abs(pow(ship1.xPos-ship2.xPos, 2)+pow(ship1.yPos-ship2.yPos, 2)))
                     if(ship2.visible == TRUE and distance < ship1.detectionRange):
@@ -441,9 +550,6 @@ def getOrders(ship,var,gameRules,uiMetrics,forced=False):
             putTracer(ship,var,gameRules,uiMetrics)
     if(not tracered and ship.owner == "player1" and forced ):
             putTracer(ship,var,gameRules,uiMetrics)
-    elif(ship.owner == "ai1"):
-        ship.moveOrderX = 400  # insert ai controller decision
-        ship.moveOrderY = 400
 
 def manageLandmarks(landmarks, ships):
     for landmark in landmarks:
@@ -704,7 +810,6 @@ def newWindow(uiMetrics,var,canvas):
                 (uiMetrics.canvasWidth, uiMetrics.canvasHeight), PIL.Image.ANTIALIAS)
 
             var.im = ImageTk.PhotoImage(im)
-
             canvas.create_image(0, 0, image=var.im, anchor='nw')
     else:
         if((var.mouseWheelUp or var.mouseWheelDown) and mouseOnCanvas(var,uiMetrics)):
@@ -769,7 +874,7 @@ def newWindow(uiMetrics,var,canvas):
             canvas.create_image(0, 0, image=var.im, anchor='nw')
 
 
-def startTurn(uiElements,var):
+def startTurn(uiElements,var,ships,gameRules,uiMetrics):
     print("New Round")
     var.turnInProgress = TRUE
     uiElements.timeElapsedProgressBar['value'] = 0
@@ -784,7 +889,7 @@ def startTurn(uiElements,var):
         object.config(state = DISABLED, background="#D0D0D0")
 
 
-def endTurn(uiElements,var,gameRules,uiMetrics):
+def endTurn(uiElements,var,gameRules,uiMetrics): 
     var.turnInProgress = FALSE
     for object in uiElements.UIElementsList:
         object.config(state=NORMAL, background="#F0F0F0")
@@ -794,7 +899,11 @@ def endTurn(uiElements,var,gameRules,uiMetrics):
         object.config(state = NORMAL, background="#F0F0F0")
     for ship in var.ships:
         ship.ghostPoints = []
-        getOrders(ship,var,gameRules,uiMetrics,True)
+    for ship1 in var.ships:
+        if(ship1.owner == "ai1"):
+            aiController.moveOrderChoice(ship1,var.ships,var,gameRules,uiMetrics)
+            aiController.systemChoice(ship1,var.ships)
+    getOrders(ship,var,gameRules,uiMetrics,True)
 
 
 def updateScales(uiElements,var,shipLookup):
@@ -985,8 +1094,8 @@ def run(config,root):
     enemy3 = ship(globalVar, owner="ai1", \
                 name=globalVar.enemyName3, shields=int((config.get("Enemy3", "shields"))), xPos=int((config.get("Enemy3", "xPos"))), yPos=int((config.get("Enemy3", "yPos"))),
                 systemSlots=((config.get("Enemy3", "systemSlots1")),(config.get("Enemy3", "systemSlots2")),(config.get("Enemy3", "systemSlots3")),(config.get("Enemy3", "systemSlots4")), \
-                (config.get("Enemy3", "systemSlots5")),(config.get("Enemy3", "systemSlots2")),(config.get("Enemy3", "systemSlots6")),(config.get("Enemy3", "systemSlots7")),\
-                (config.get("Enemy3", "systemSlots8"))), detectionRange=int(config.get("Enemy3", "detectionRange")), turnRate = float(config.get("Enemy3", "turnRate")), \
+                (config.get("Enemy3", "systemSlots5")),(config.get("Enemy3", "systemSlots6")),(config.get("Enemy3", "systemSlots7")),\
+                (config.get("Enemy3", "systemSlots8"))), detectionRange=int(config.get("Enemy3", "detectionRange")), turnRate = float(config.get("Enemy3", "turnRate")),\
                 speed = int((config.get("Enemy3", "speed"))),maxSpeed = int((config.get("Enemy3", "maxSpeed"))),outlineColor = ((config.get("Enemy3", "outlineColor"))))
 
 
@@ -1060,7 +1169,7 @@ def run(config,root):
     uiElements.timeElapsedProgressBar = ttk.Progressbar(root, maximum=globalVar.turnLength, variable=1,  orient='horizontal',
                                             mode='determinate', length=ui_metrics.shipDataWidth)
 
-    startTurnCommand = partial(startTurn, uiElements,globalVar)
+    startTurnCommand = partial(startTurn, uiElements,globalVar,globalVar.ships,gameRules,uiMetrics)
     uiElements.startTurnButton = tk.Button(root, text="Start turn", command=startTurnCommand, width = 20, height= 7)
     uiElements.exitButton = tk.Button(root, text="Exit", command=exit)
 

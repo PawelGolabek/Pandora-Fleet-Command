@@ -22,11 +22,12 @@ def detectionCheck(ships):
                         ship.visible = True
                         break
        
-def createGhostPoint(ship, xPos, yPos):
+def createGhostPoint(ship, xPos, yPos,number = 0):
     ghost = ghostPoint()
     ship.ghostPoints.append(ghost)
     setattr(ship.ghostPoints[-1],'xPos',xPos)
     setattr(ship.ghostPoints[-1],'yPos',yPos)
+    setattr(ship.ghostPoints[-1],'number',number)
 
 def putTracer(ship,var,gameRules,uiMetrics): # rotate and move the chosen ship
     if(ship.owner == 'player1'):
@@ -76,7 +77,7 @@ def putTracer(ship,var,gameRules,uiMetrics): # rotate and move the chosen ship
                 createGhostPoint(ship, currentTracer.xPos, currentTracer.yPos)
             currentTracer.ttl -= 1
         del currentTracer
-
+        
 def rotateVector(degree, object, moveDirX, moveDirY):
     if((object.xDir > moveDirX and object.yDir > -moveDirY) or object.xDir < moveDirX and object.yDir < -moveDirY):
         degree = object.turnRate
