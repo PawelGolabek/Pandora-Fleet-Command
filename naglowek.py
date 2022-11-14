@@ -10,12 +10,12 @@ from random import randint
 import PIL.Image
 import tkinter.ttk as ttk
 
-
-def rgbtohex(r,g,b):
-    return f'#{r:02x}{g:02x}{b:02x}'
+class combat_system_info():
+    x=10
 
 class global_var():
     def __init__(self,config,root):
+        self.finished = False
         self.shipChoiceRadioButtons = []
         self.radio = IntVar(root, 999)
         self.radio2 = IntVar(root, 999)
@@ -77,7 +77,7 @@ class global_var():
         pass
 
 
-class ui_metrics():   # change to % for responsible
+class ui_metrics():
     canvasWidth = 1120
     canvasHeight = 640
     shipImageFrameHeight = 60
@@ -89,7 +89,7 @@ class ui_metrics():   # change to % for responsible
     systemScalesWidth = 160
     systemScalesMarginTop = 80
     systemScalesHeightOffset = 90
-    systemScalesLabelFrameWidth = 220 #systemScalesWidth + 60
+    systemScalesLabelFrameWidth = systemScalesWidth+60
     systemProgressbarsHeightOffset = 60
     canvasX = systemScalesLabelFrameWidth + 20
     canvasY = 100
@@ -97,16 +97,17 @@ class ui_metrics():   # change to % for responsible
     shipDataY = canvasY + 20
 
 class ui_elements():
-    x=1
+    x=10
 
 class game_rules():
     movementPenalityHard = 0.9
     movementPenalityMedium = 0.7
 
-
+class dynamic_object():
+    x=10
 
 class landmark():
-    def __init__(self, xPos=100, yPos=100, cooldown=200, defaultCooldown=200, radius=100, boost='none'):
+    def __init__(self, xPos=100, yPos=100, cooldown=800, defaultCooldown=800, radius=100, boost='none'):
         self.xPos = xPos
         self.yPos = yPos
         self.cooldown = cooldown
@@ -130,3 +131,12 @@ class ghostPoint():
         self.xPos = xPos
         self.yPos = yPos
         self.number = number
+
+def declareGlobals():
+    global  combatUiReady
+    global combatSystemInfo
+    combatSystemInfo = combat_system_info()
+    combatUiReady = False
+
+def rgbtohex(r,g,b):
+    return f'#{r:02x}{g:02x}{b:02x}'

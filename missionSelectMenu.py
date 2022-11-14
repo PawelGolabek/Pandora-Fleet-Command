@@ -44,8 +44,8 @@ def updateMissionCanvas(missionCanvas,variable,msmVar):
     missionCanvas.create_image(0,0,image=msmVar.img,anchor=NW)
     return msmVar.img
 
-def missionSelectScreen(root,config):
-    root.deiconify()
+def missionSelectScreen(root,config,uiMenuElements):
+   # root.deiconify()
     root.protocol("WM_DELETE_WINDOW", on_closing)
 
     OPTIONS = [
@@ -87,7 +87,7 @@ def missionSelectScreen(root,config):
 
     uiElements = []
 
-    startButtonCommand = partial(start,variable,root)
+    startButtonCommand = partial(start,variable,root,uiMenuElements)
     button = Button(root, text="Start", command= lambda: [hideSelectScreenUi(uiElements),startButtonCommand()])
 
     uiElements.append(button)
@@ -107,9 +107,9 @@ def missionSelectScreen(root,config):
 
     mainloop()
 
-def start(variable,root):
+def start(variable,root,uiMenuElements):
     config = configparser.ConfigParser()
     cwd = os.getcwd()
     filePath = os.path.join(cwd, "maps",variable.get(),"level info.ini")
     config.read(filePath)
-    run(config,root)
+    run(config,root,uiMenuElements)

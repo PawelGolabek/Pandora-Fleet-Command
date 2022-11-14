@@ -1,6 +1,16 @@
 import math
 from tkinter import *
 from naglowek import *
+from ammunitionType import *
+
+class laser():
+    def __init__(self, xPos=300, yPos=300, targetXPos=300, targetYPos=300, color = rgbtohex(22,22,22), ttl = 10): 
+        self.xPos = xPos
+        self.yPos = yPos
+        self.targetXPos = targetXPos
+        self.targetYPos = targetYPos
+        self.color = color
+        self.ttl = ttl
 
 def detectionCheck(ships):
     for ship in ships:
@@ -47,9 +57,9 @@ def putTracer(ship,var,gameRules,uiMetrics): # rotate and move the chosen ship
             if(not 0 < currentTracer.xPos < uiMetrics.canvasWidth-5):
                 currentTracer.ttl = 0
             if(not 0 < currentTracer.yPos < uiMetrics.canvasHeight-5):
-                currentTracer.ttl = 0
-            colors = var.imageMask.getpixel((int(currentTracer.xPos), int(currentTracer.yPos)))
-            colorWeight = (colors[0] + colors[1] + colors[2])
+                currentTracer.ttl = 0                        
+            colorWeight = var.mask[int(currentTracer.xPos)][ int(currentTracer.yPos)]
+            
             # vector normalisation
             scale = math.sqrt((currentTracer.moveOrderX-currentTracer.xPos)*(currentTracer.moveOrderX-currentTracer.xPos) +
                                 (currentTracer.moveOrderY-currentTracer.yPos)*(currentTracer.moveOrderY-currentTracer.yPos))
@@ -115,6 +125,42 @@ def dealDamage(ship, damage,globalVar):
             damage -= 1
 
 
+def putLaser(missle,var,shipLookup):
+    target = shipLookup[missle.target]
+    currentLaser = laser()
+    currentLaser.xPos = missle.xPos
+    currentLaser.yPos = missle.yPos
+    currentLaser.targetXPos = target.xPos
+    currentLaser.targetYPos = target.yPos
+    currentLaser.color = missle.color
+    currentLaser.ttl = missle.ttl
+    (var.lasers).append(currentLaser)
+    
+
+def createRocket(var, ship, target,_type,offsetX=0,offsetY=0):
+    var.misslesShot += 1
+    missleClass = _type
+    # copy standard for ammunition. To be transformed into constructor like in c++ if needed
+    missle = ammunition()
+    var.currentMissles.append(missle)
+    missleName = 'missle' + str(var.misslesShot)
+    setattr(var.currentMissles[-1], 'name', missleName)
+    setattr(var.currentMissles[-1], 'typeName', missleClass)
+    setattr(var.currentMissles[-1], 'sort', missleClass.sort)
+    setattr(var.currentMissles[-1], 'damage', missleClass.damage)
+    setattr(var.currentMissles[-1], 'ttl', missleClass.ttl)
+    setattr(var.currentMissles[-1], 'color', missleClass.color)
+    setattr(var.currentMissles[-1], 'xPos', ship.xPos+offsetX)
+    setattr(var.currentMissles[-1], 'yPos', ship.yPos+offsetY)
+    setattr(var.currentMissles[-1], 'xDir', ship.xDir)
+    setattr(var.currentMissles[-1], 'yDir', ship.yDir)
+    setattr(var.currentMissles[-1], 'owner', ship.owner)
+    setattr(var.currentMissles[-1], 'speed',missleClass.speed)
+    setattr(var.currentMissles[-1], 'turnRate',
+            missleClass.turnRate)
+    setattr(var.currentMissles[-1], 'target', target.name)
+
+
 def drawRockets(globalVar,ammunitionType,canvas):
     for missle in globalVar.currentMissles:
         color = "white"
@@ -122,6 +168,22 @@ def drawRockets(globalVar,ammunitionType,canvas):
             globalVar.zoom
         drawY = (missle.yPos - globalVar.top) * \
             globalVar.zoom
+
+        dirLineX = missle.xDir
+        dirLineY = missle.yDir
+        
+        scale = math.sqrt((dirLineX)*(dirLineX) +
+                            (dirLineY)*(dirLineY))
+        dirLineX /= scale
+        dirLineY /= scale
+
+        if(not missle.sort == "kinetic"):
+            if(missle.owner == "ai1"):
+                _fill = "red"
+            elif(missle.owner == "player1"):
+                _fill = "green"
+            canvas.create_line(drawX,drawY,drawX+dirLineX*20,drawY+dirLineY*20,fill = _fill)
+        
         if(missle.typeName == ammunitionType.type1adefault):
             canvas.create_line(drawX-2, drawY-2,
                             drawX+2, drawY+2, fill = color)
@@ -167,7 +229,7 @@ def drawLandmarks(var,canvas,uiIcons):
 
         radius = landmark.radius * var.zoom
         canvas.create_text(drawX, drawY+20,
-                           text=landmark.cooldown, fill = "white")
+                           text=math.ceil(landmark.cooldown/100), fill = "white")
         canvas.create_oval(drawX-radius, drawY-radius,
                            drawX+radius, drawY+radius, outline = "yellow", dash=(2,3))
         iconX = drawX
@@ -222,11 +284,9 @@ def updateShips(var,uiMetrics,gameRules,shipLookup,canvas):  # rotate and move t
             if(not 0 < ship.xPos < uiMetrics.canvasWidth-5):
                 var.ships.remove(ship)
             if(not 0 < ship.yPos < uiMetrics.canvasHeight-5):
-                var.ships.remove(ship)
-            colors = var.imageMask.getpixel((int(ship.xPos), int(ship.yPos)
-                                                   ))
+                var.ships.remove(ship)                            
+            colorWeight = var.mask[int(ship.xPos)][int(ship.yPos)]
 
-            colorWeight = (colors[0] + colors[1] + colors[2])
        #     canvas.create_text(ship.xPos, ship.yPos + 10, anchor=W,font=("Purisa", 8+globalVar.zoom), text=colorWeight, fill="white")  # draw name
 
             # vector normalisation

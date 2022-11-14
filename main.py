@@ -8,15 +8,15 @@ from functools import partial
 from battleSystem import run
 from missionSelectMenu import missionSelectScreen
 from myStyles import *
+from naglowek import declareGlobals
+from rootCommands import hideMenuUi,showMenuUi
 
 def resumeCommand():
     x=10
 
-def hideUi(uiElements):
-    for uiElement in uiElements:
-      uiElement.place_forget()
 
 if __name__ == '__main__':
+    declareGlobals()
     parameter1 = "1.Exiled-To-Make-A-Stand"
     root = tk.Tk()
     _style = ttk.Style()
@@ -38,12 +38,12 @@ if __name__ == '__main__':
     
     uiMenuElements = []
 
-    resumeButtonCommand =  partial(run,config,root)
+    resumeButtonCommand =  partial(run,config,root,uiMenuElements)
     resumeButton = tk.Button(text = "Resume", command = resumeButtonCommand)
-    quickBattleCommand1 =  partial(run,config,root)
+    quickBattleCommand1 =  partial(run,config,root,uiMenuElements)
     quickBattleButton = tk.Button(text = "Quick battle", command = quickBattleCommand1)
-    missionSelect1 =  partial(missionSelectScreen,root,config)
-    hideUiCommand = partial(hideUi,uiMenuElements)
+    missionSelect1 =  partial(missionSelectScreen,root,config,uiMenuElements)
+    hideUiCommand = partial(hideMenuUi,uiMenuElements)
     missionSelectButton = tk.Button(text = "Mission select", command = lambda:[hideUiCommand(),missionSelect1()])
     exitButton = tk.Button(text = "Exit", command = exit)
 
@@ -64,7 +64,5 @@ if __name__ == '__main__':
     
     # button 2
 ######
-
-
 
     root.mainloop()
