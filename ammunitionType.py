@@ -1,4 +1,4 @@
-from naglowek import rgbtohex
+from colorCommands import rgbtohex
 
 class ammunition():
     def __init__(self, name='', typeName='', sort = '', owner='', target='', xDir=0, yDir=0, turnRate=2, speed=100, \

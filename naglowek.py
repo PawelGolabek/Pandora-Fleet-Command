@@ -10,9 +10,6 @@ from random import randint
 import PIL.Image
 import tkinter.ttk as ttk
 
-class combat_system_info():
-    x=10
-
 class global_var():
     def __init__(self,config,root):
         self.finished = False
@@ -24,8 +21,6 @@ class global_var():
         # START CONDITIONS
         self.radio.set(0)
         ## DYNAMIC UI ##
-        self.uiSystemsLabelFrame = tk.LabelFrame(root,text= "" + " systems",borderwidth=2)
-        self.uiEnergyLabel =  ttk.Label(self.uiSystemsLabelFrame, width=20, text = "Energy remaining: ", font = "16")
         self.uiSystems = []
         self.uiSystemsProgressbars = []
         ## INPUT HANDLING VARIABLES ##
@@ -78,6 +73,8 @@ class global_var():
 
 
 class ui_metrics():
+    rootX = 1600
+    rootY = 1000
     canvasWidth = 1120
     canvasHeight = 640
     shipImageFrameHeight = 60
@@ -95,9 +92,17 @@ class ui_metrics():
     canvasY = 100
     shipDataX = canvasX
     shipDataY = canvasY + 20
+    #editor
+    editorSystemsFrameX = 100
+    editorSystemsFrameY = 500
+    editorSystemsX = 10
+    editorSystemsY = 20
+    editorSystemsYOffset = 50
+    editorSubsystemsXOffset = 400
+    editorsystemsWidth = 250
+    editorSaveButtonX = 1000
+    editorSaveButtonY = 500
 
-class ui_elements():
-    x=10
 
 class game_rules():
     movementPenalityHard = 0.9
@@ -114,6 +119,7 @@ class landmark():
         self.defaultCooldown = defaultCooldown
         self.radius = radius
         self.boost = boost
+
 class tracer():
     def __init__(self, xPos=300, yPos=300, xDir=0.0, yDir=1.0, turnRate=0.5, speed=40): 
         self.xPos = xPos
@@ -126,17 +132,36 @@ class tracer():
         self.moveOrderY = None
         self.ttl = 0
 
-class ghostPoint():
+class ghost_point():
     def __init__(self, xPos=300, yPos=300,number = 0): 
         self.xPos = xPos
         self.yPos = yPos
         self.number = number
 
 def declareGlobals():
-    global  combatUiReady
+    global combatUiReady
+    global editorUiReady
     global combatSystemInfo
-    combatSystemInfo = combat_system_info()
+    global editorInfo
+    global shipEditorInfo
+    global mainInfo
+    global uiMetrics
+    global allSystemsList
+    global allSubsystemsList
+    global allEnginesList
+    global allRadarsList
+    global allThrustersList
+    global allGeneratorsList
+    combatSystemInfo = dynamic_object()
+    shipEditorInfo = dynamic_object()
+    editorInfo = dynamic_object()
+    mainInfo = dynamic_object()
+    uiMetrics = ui_metrics()
+    allSystemsList = []
+    allSubsystemsList = []
+    allEnginesList = []
+    allRadarsList = []
+    allThrustersList = []
+    allGeneratorsList = []
     combatUiReady = False
-
-def rgbtohex(r,g,b):
-    return f'#{r:02x}{g:02x}{b:02x}'
+    editorUiReady = False

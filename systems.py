@@ -1,5 +1,6 @@
-from shipCombat import *
+from shipCombat import putTracer, createRocket,laser
 from ammunitionType import *
+import naglowek
 
 ############################## SYSTEMS #############################################
 class system(object):
@@ -162,16 +163,28 @@ class highEnergyLaser1(system):
         shoot(var,self,ship1,ammunition_type.highEnergyLaser1,ships)
 
 class kinetic1(system):
-    def __init__ (self,globalVar,name = "Kinetic cannon I",minEnergy=0,maxEnergy=7,energy=0, maxCooldown = 5, cooldown = 0):
+    def __init__ (self,globalVar,name = "Kinetic cannon I",minEnergy=0,maxEnergy=7,energy=0, maxCooldown =10, cooldown = 0):
         super(kinetic1,self).__init__(globalVar,name,minEnergy,maxEnergy,energy, maxCooldown, cooldown)
 
     def trigger(self,var,ship1,ships,shipLookup):
         shoot(var,self,ship1,ammunition_type.kinetic1,ships)
-        shoot(var,self,ship1,ammunition_type.kinetic1,ships,10,10)
-        shoot(var,self,ship1,ammunition_type.kinetic1,ships,-10,-10)
-        shoot(var,self,ship1,ammunition_type.kinetic1,ships,0,10)
 
 
+def shoot(var,system,ship1,ammunitionType,ships,offsetX=0,offsetY=0):    #newer than manageShots without strange interval system
+        if(system.cooldown <= 0 and True):
+            shipToShoot = 0
+            minDist2 = 999999999
+            for ship2 in ships:
+                if(not ship1.owner == ship2.owner): # add teams if needed
+                    distance2 = pow(ship1.xPos-ship2.xPos, 2)+pow(ship1.yPos-ship2.yPos, 2)
+                    if(ship2.visible == True and distance2 < (ship1.detectionRange*ship1.detectionRange) and distance2 < minDist2):
+                        minDist2 = distance2
+                        shipToShoot = ship2
+            if(shipToShoot):
+                createRocket(var,ship1,shipToShoot,ammunitionType,offsetX,offsetY)
+                system.cooldown = system.maxCooldown
+                    #     print(ship1.name + " fired " +
+                    #           str(ship1.typesOfAmmunition[ship1.ammunitionChoice].name))
 system_lookup = {
     "throttleBrake1": throttleBrake1,
     "type1aCannon1": type1aCannon1,
@@ -185,18 +198,19 @@ system_lookup = {
     "kinetic1": kinetic1,
     "system": system,
     }
-def shoot(var,system,ship1,ammunitionType,ships,offsetX=0,offsetY=0):    #newer than manageShots without strange interval system
-        if(system.cooldown <= 0 and True):
-            shipToShoot = 0
-            minDist2 = 999999999
-            for ship2 in ships:
-                if(not ship1.owner == ship2.owner): # add teams if needed
-                    distance2 = pow(ship1.xPos-ship2.xPos, 2)+pow(ship1.yPos-ship2.yPos, 2)
-                    if(ship2.visible == TRUE and distance2 < (ship1.detectionRange*ship1.detectionRange) and distance2 < minDist2):
-                        minDist2 = distance2
-                        shipToShoot = ship2
-            if(shipToShoot):
-                createRocket(var,ship1,shipToShoot,ammunitionType,offsetX,offsetY)
-                system.cooldown = system.maxCooldown
-                    #     print(ship1.name + " fired " +
-                    #           str(ship1.typesOfAmmunition[ship1.ammunitionChoice].name))
+
+def declareGlobalSystems():
+    naglowek.allSystemsList = [
+        'none',
+        "throttleBrake1",
+        "type1aCannon1",
+        "type2aCannon1",
+        "type3aCannon1",
+        "antiMissleSystem1",
+        "antiMissleSystem2",
+        "gattlingLaser1",
+        "gattlingLaser2",
+        "highEnergyLaser1",
+        "kinetic1",
+        "system"
+        ]

@@ -2,6 +2,7 @@ import math
 from tkinter import *
 from naglowek import *
 from ammunitionType import *
+from colorCommands import rgbtohex
 
 class laser():
     def __init__(self, xPos=300, yPos=300, targetXPos=300, targetYPos=300, color = rgbtohex(22,22,22), ttl = 10): 
@@ -33,7 +34,7 @@ def detectionCheck(ships):
                         break
        
 def createGhostPoint(ship, xPos, yPos,number = 0):
-    ghost = ghostPoint()
+    ghost = ghost_point()
     ship.ghostPoints.append(ghost)
     setattr(ship.ghostPoints[-1],'xPos',xPos)
     setattr(ship.ghostPoints[-1],'yPos',yPos)

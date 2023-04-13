@@ -12,8 +12,6 @@ from PIL import Image, ImageTk
 import PIL.Image
 import tkinter.ttk as ttk
 from functools import partial
-import configparser
-import os
 import random
 
 from shipCombat import *
@@ -47,7 +45,7 @@ class _events():
 
 class ship():
     def __init__(self,globalVar, name="MSS Artemis", owner="ai2", target='MSS Artemis',
-                 hp=200, maxHp=None, ap=200, maxAp=None, shields=3, xPos=300, yPos=300,energyLimit = 20,
+                 hp=200, maxHp=None, ap=200, maxAp=None, shields=3, maxShields = 3, xPos=300, yPos=300,energyLimit = 20,
                  ammunitionChoice=0, ammunitionNumberChoice=0, systemSlots = [],
                  detectionRange=200, xDir=0.0, yDir=1, turnRate=0.5, ghostPoints = [], speed=40, maxSpeed = 40,
                  outlineColor="red"):  # replace shot handler
@@ -89,10 +87,11 @@ class ship():
         else:
             self.maxAp = maxAp
         self.shields = shields
+        self.maxShields = maxShields
         self.shieldsState = []
         self.alreadyShot = FALSE
         tmp = 0
-        while(tmp < shields):
+        while(tmp < maxShields):
             self.shieldsState.append(globalVar.shieldMaxState)
             tmp += 1
         # Mid-round info
@@ -148,7 +147,6 @@ class aiController():
             currentOrderValue = random.randint(19000, 21000)
             currentOrderX = ship.xPos + random.randint(-100, 100)
             currentOrderY = ship.yPos + random.randint(-100, 100)
-           # print( "check: " + str(checksLeft) + " " + str(currentOrderX))
             ship.ghostPoints = []
             currentTracer = tracer()
             currentTracer.xPos = ship.xPos
@@ -465,7 +463,6 @@ def update(globalVar,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameR
     trackMouse(globalVar)
     globalVar.zoomChange = False
     if(globalVar.finished):
-        print("exiting")
         return
     root.after(10, partial(update,globalVar,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root))
 
@@ -590,7 +587,7 @@ def startTurn(uiElements,var,ships,gameRules,uiMetrics):
         object.config(state=DISABLED, background="#D0D0D0")
     for object in uiElements.RadioElementsList:
         object.config(state=DISABLED)
-    for object in var.uiSystems:
+    for object in uiElements.uiSystems:
         object.config(state = DISABLED, background="#D0D0D0")
 
 
@@ -600,7 +597,7 @@ def endTurn(uiElements,var,gameRules,uiMetrics):
         object.config(state=NORMAL, background="#F0F0F0")
     for object in uiElements.RadioElementsList:
         object.config(state=NORMAL)
-    for object in var.uiSystems:
+    for object in uiElements.uiSystems:
         object.config(state = NORMAL, background="#F0F0F0")
     for ship in var.ships:
         ship.ghostPoints = []
@@ -634,8 +631,10 @@ def updateScales(uiElements,var,shipLookup):
     uiElements.timeElapsedProgressBar.config(maximum=var.turnLength)
 
     i = 0 
-    for system in var.uiSystemsProgressbars:
-        (shipChosen.systemSlots[i]).energy = (var.uiSystems[i]).get()
+    for system in uiElements.uiSystemsProgressbars:
+        if(i>=len(shipChosen.systemSlots)):
+            break
+        (shipChosen.systemSlots[i]).energy = (uiElements.uiSystems[i]).get()
         system1 = shipChosen.systemSlots[i]
         system['value'] = (system1.maxCooldown-system1.cooldown)
         i+=1
@@ -684,7 +683,7 @@ def updateShields(ship1,var):
 ########################################## MULTIPURPOSE #########################################
 
 
-def radioBox(shipLookup,uiElements,var,uiMetrics,root):
+def radioBox(shipLookup,uiElements,var,uiMetrics,root,canvas):
     var.selection = int((var.radio).get())
     if(var.selection == 0):
         var.shipChoice = var.playerName
@@ -692,37 +691,27 @@ def radioBox(shipLookup,uiElements,var,uiMetrics,root):
         var.shipChoice = var.playerName2
     if(var.selection == 2):
         var.shipChoice = var.playerName3
-    shipChosen = shipLookup[var.shipChoice]
-    updateUtilityChoice(shipLookup,uiMetrics,var,root)
+    updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas)
 
 
-def updateUtilityChoice(shipLookup,uiMetrics,var,root):
-    shipChosen = shipLookup[var.shipChoice]
-    for widget in (var.uiSystemsLabelFrame).winfo_children():
+def clearUtilityChoice(uiElements,var):
+    for widget in (uiElements.systemsLabelFrame).winfo_children():
         widget.destroy()
-    (var.uiSystemsLabelFrame).destroy()
-    var.uiSystems = []
-    var.uiSystemsProgressbars = []
+    (uiElements.systemsLabelFrame).destroy()
+    uiElements.uiSystems = []
+    uiElements.uiSystemsProgressbars = []
+
+
+def updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas):
+    clearUtilityChoice(uiElements,var)
     shipChosen = shipLookup[var.shipChoice]
-    var.uiSystemsLabelFrame = tk.LabelFrame(root,width=uiMetrics.systemScalesLabelFrameWidth, \
+    uiElements.systemsLabelFrame = tk.LabelFrame(root,width=uiMetrics.systemScalesLabelFrameWidth, \
                                                     height = (uiMetrics.systemScalesMarginTop*1.5 + (uiMetrics.systemScalesHeightOffset)*len(shipChosen.systemSlots)), text= shipChosen.name + " systems", \
                                                     borderwidth=2, relief="groove")
-    (var.uiSystemsLabelFrame).place(x = uiMetrics.leftMargin, y = uiMetrics.canvasY)
-    i=0
-    var.uiEnergyLabel = ttk.Label(var.uiSystemsLabelFrame, width=20, text = "Energy remaining: " + str(shipChosen.energy), font = "16")
-    var.uiEnergyLabel.place(x = 10, y = 20)
-    for system in shipChosen.systemSlots:
-        scale = tk.Scale(var.uiSystemsLabelFrame, orient=HORIZONTAL, length=uiMetrics.systemScalesWidth, \
-                            label=system.name, from_ = system.minEnergy, to=system.maxEnergy, relief=RIDGE)
-        scale.set(system.energy)
-        if(var.turnInProgress):
-            scale.config(state = 'disabled', background="#D0D0D0")
-        (var.uiSystems).append(scale)
-        progressBar = ttk.Progressbar(var.uiSystemsLabelFrame, maximum=system.maxCooldown, length=(uiMetrics.systemScalesWidth), variable=(system.maxCooldown-system.cooldown))
-        (var.uiSystemsProgressbars).append(progressBar)
-        scale.place(x=10,y=uiMetrics.systemScalesMarginTop+i*uiMetrics.systemScalesHeightOffset)
-        progressBar.place(x=10,y=uiMetrics.systemScalesMarginTop+i*(uiMetrics.systemScalesHeightOffset)+uiMetrics.systemProgressbarsHeightOffset)
-        i+=1
+
+    var.uiEnergyLabel = ttk.Label(uiElements.systemsLabelFrame, width=20, text = "Energy remaining: " + str(shipChosen.energy), font = "16")
+    hideBattleUi(uiElements.staticUi,uiElements)
+    placeBattleUi(uiElements,uiMetrics,canvas,var,shipLookup)
         
 def mouseOnCanvas(var,uiMetrics):
     if(var.pointerX > uiMetrics.canvasX and var.pointerX <
@@ -739,21 +728,20 @@ def mouseOnCanvas(var,uiMetrics):
 # main
 def run(config,root,menuUiElements):
     if(not naglowek.combatUiReady):
-        print("loading ui")
         """
         rootX = root.winfo_screenwidth()
         rootY = root.winfo_screenheight()
         root.attributes('-fullscreen', True)
         """
         #root.deiconify()
-        uiMetrics = ui_metrics()
+        uiMetrics = naglowek.uiMetrics
         globalVar = global_var(config,root)
         gameRules = game_rules()
         ammunitionType = ammunition_type()
         uiIcons = ui_icons()
         shipLookup = dict
         events = _events()
-        uiElements = ui_elements()
+        uiElements = dynamic_object()
         canvas = Canvas(root, width=uiMetrics.canvasWidth,
                             height=uiMetrics.canvasHeight)
         globalVar.playerName = (config.get("Ships", "playerName"))
@@ -763,40 +751,42 @@ def run(config,root,menuUiElements):
         globalVar.enemyName =  (config.get("Ships", "enemyName"))
         globalVar.enemyName2 = (config.get("Ships", "enemyName2"))
         globalVar.enemyName3 = (config.get("Ships", "enemyName3"))
+        uiElements.systemsLabelFrame = tk.LabelFrame(root,text= "" + " systems",borderwidth=2)
+        uiElements.uiEnergyLabel =  ttk.Label(uiElements.systemsLabelFrame, width=20, text = "Energy remaining: ", font = "16")
 
         player = ship(globalVar, owner="player1", \
-                    name=globalVar.playerName, shields=int((config.get("Player", "shields"))), xPos=int((config.get("Player", "xPos"))), yPos=int((config.get("Player", "yPos"))),
+                    name=globalVar.playerName, maxShields = int((config.get("Player", "maxShields"))),shields=int((config.get("Player", "shields"))), xPos=int((config.get("Player", "xPos"))), yPos=int((config.get("Player", "yPos"))),
                     systemSlots=((config.get("Player", "systemSlots1")),(config.get("Player", "systemSlots2")),(config.get("Player", "systemSlots3")),(config.get("Player", "systemSlots4")), \
                     (config.get("Player", "systemSlots5")),(config.get("Player", "systemSlots6")),(config.get("Player", "systemSlots7")),(config.get("Player", "systemSlots8"))),speed = int((config.get("Player", "speed"))), \
                     detectionRange=int(config.get("Player", "detectionRange")), turnRate = float(config.get("Player", "turnRate")),\
                     maxSpeed = int((config.get("Player", "maxSpeed"))),outlineColor = ((config.get("Player", "outlineColor"))))
         player2 = ship(globalVar, owner="player1", \
-                    name=globalVar.playerName2, shields=int((config.get("Player2", "shields"))), xPos=int((config.get("Player2", "xPos"))), yPos=int((config.get("Player2", "yPos"))),
+                    name=globalVar.playerName2,maxShields = int((config.get("Player2", "maxShields"))), shields=int((config.get("Player2", "shields"))), xPos=int((config.get("Player2", "xPos"))), yPos=int((config.get("Player2", "yPos"))),
                     systemSlots=((config.get("Player2", "systemSlots1")),(config.get("Player2", "systemSlots2")),(config.get("Player2", "systemSlots3")),(config.get("Player2", "systemSlots4")), \
                     (config.get("Player2", "systemSlots5")),(config.get("Player2", "systemSlots6")),(config.get("Player2", "systemSlots7")),\
                     (config.get("Player2", "systemSlots8"))), speed = int((config.get("Player2", "speed"))),detectionRange=int(config.get("Player2", "detectionRange")), turnRate = float(config.get("Player2", "turnRate")),\
                     maxSpeed = int((config.get("Player2", "maxSpeed"))),outlineColor = ((config.get("Player2", "outlineColor"))))
         player3 = ship(globalVar, owner="player1", \
-                    name=globalVar.playerName3, shields=int((config.get("Player3", "shields"))), xPos=int((config.get("Player3", "xPos"))), yPos=int((config.get("Player3", "yPos"))),
+                    name=globalVar.playerName3, maxShields = int((config.get("Player3", "maxShields"))),shields=int((config.get("Player3", "shields"))), xPos=int((config.get("Player3", "xPos"))), yPos=int((config.get("Player3", "yPos"))),
                     systemSlots=((config.get("Player3", "systemSlots1")),(config.get("Player3", "systemSlots2")),(config.get("Player3", "systemSlots3")),(config.get("Player3", "systemSlots4")), \
                     (config.get("Player3", "systemSlots5")),(config.get("Player3", "systemSlots6")),(config.get("Player3", "systemSlots7")),\
                     (config.get("Player3", "systemSlots8"))), speed = int((config.get("Player3", "speed"))), detectionRange=int(config.get("Player3", "detectionRange")), turnRate = float(config.get("Player3", "turnRate")), \
                     maxSpeed = int((config.get("Player3", "maxSpeed"))),outlineColor = ((config.get("Player3", "outlineColor"))))
 
         enemy = ship(globalVar, owner="ai1", \
-                    name=globalVar.enemyName, shields=int((config.get("Enemy", "shields"))), xPos=int((config.get("Enemy", "xPos"))), yPos=int((config.get("Enemy", "yPos"))),
+                    name=globalVar.enemyName, maxShields = int((config.get("Enemy", "maxShields"))), shields=int((config.get("Enemy", "shields"))), xPos=int((config.get("Enemy", "xPos"))), yPos=int((config.get("Enemy", "yPos"))),
                     systemSlots=((config.get("Enemy", "systemSlots1")),(config.get("Enemy", "systemSlots2")),(config.get("Enemy", "systemSlots3")),(config.get("Enemy", "systemSlots4")), \
                     (config.get("Enemy", "systemSlots5")),(config.get("Enemy", "systemSlots6")),(config.get("Enemy", "systemSlots7")),\
                     (config.get("Enemy", "systemSlots8"))), detectionRange=int(config.get("Enemy", "detectionRange")), turnRate = float(config.get("Enemy", "turnRate")),\
                     speed = int((config.get("Enemy", "speed"))),maxSpeed = int((config.get("Enemy", "maxSpeed"))),outlineColor = ((config.get("Enemy", "outlineColor"))))
         enemy2 = ship(globalVar, owner="ai1", \
-                    name=globalVar.enemyName2, shields=int((config.get("Enemy2", "shields"))), xPos=int((config.get("Enemy2", "xPos"))), yPos=int((config.get("Enemy2", "yPos"))),
+                    name=globalVar.enemyName2, maxShields = int((config.get("Enemy2", "maxShields"))), shields=int((config.get("Enemy2", "shields"))), xPos=int((config.get("Enemy2", "xPos"))), yPos=int((config.get("Enemy2", "yPos"))),
                     systemSlots=((config.get("Enemy2", "systemSlots1")),(config.get("Enemy2", "systemSlots2")),(config.get("Enemy2", "systemSlots3")),(config.get("Enemy2", "systemSlots4")), \
                     (config.get("Enemy2", "systemSlots5")),(config.get("Enemy2", "systemSlots6")),(config.get("Enemy2", "systemSlots7")),\
                     (config.get("Enemy2", "systemSlots8"))), detectionRange=int(config.get("Enemy2", "detectionRange")), turnRate = float(config.get("Enemy2", "turnRate")),\
                     speed = int((config.get("Enemy2", "speed"))),maxSpeed = int((config.get("Enemy2", "maxSpeed"))),outlineColor = ((config.get("Enemy2", "outlineColor"))))
         enemy3 = ship(globalVar, owner="ai1", \
-                    name=globalVar.enemyName3, shields=int((config.get("Enemy3", "shields"))), xPos=int((config.get("Enemy3", "xPos"))), yPos=int((config.get("Enemy3", "yPos"))),
+                    name=globalVar.enemyName3,maxShields = int((config.get("Enemy3", "maxShields"))), shields=int((config.get("Enemy3", "shields"))), xPos=int((config.get("Enemy3", "xPos"))), yPos=int((config.get("Enemy3", "yPos"))),
                     systemSlots=((config.get("Enemy3", "systemSlots1")),(config.get("Enemy3", "systemSlots2")),(config.get("Enemy3", "systemSlots3")),(config.get("Enemy3", "systemSlots4")), \
                     (config.get("Enemy3", "systemSlots5")),(config.get("Enemy3", "systemSlots6")),(config.get("Enemy3", "systemSlots7")),\
                     (config.get("Enemy3", "systemSlots8"))), detectionRange=int(config.get("Enemy3", "detectionRange")), turnRate = float(config.get("Enemy3", "turnRate")),\
@@ -805,13 +795,12 @@ def run(config,root,menuUiElements):
         uiElements.staticUi = []
         (uiElements.staticUi).append(canvas)
         uiIcons.armorIcon = PhotoImage(file="icons/armor.png")
-        motionCommand = partial(motion,True,globalVar,root)
+
         root.bind('<Motion>', lambda e: motion(e, globalVar,root))
         root.bind('<Button-1>', lambda e: mouseButton1(e, globalVar))
         root.bind('<Button-2>', lambda e: mouseButton3(e, globalVar))
         root.bind('<ButtonRelease-2>', lambda e: mouseButton3up(e, globalVar))
         root.bind('<MouseWheel>', lambda e: mouseWheel(e, globalVar,uiMetrics))
-        root.protocol("WM_DELETE_WINDOW", on_closing)
 
         uiElements.rootTitle = (config.get("Root", "title"))
         root.title(uiElements.rootTitle)
@@ -873,9 +862,10 @@ def run(config,root,menuUiElements):
                                                 mode='determinate', length=uiMetrics.shipDataWidth)
 
         startTurnCommand = partial(startTurn, uiElements,globalVar,globalVar.ships,gameRules,uiMetrics)
+
         uiElements.startTurnButton = tk.Button(root, text="Start turn", command=startTurnCommand, width = 20, height= 7)
         uiElements.exitButton = tk.Button(root, text="Exit", command=exit)
-        uiElements.exitToMenuButton = tk.Button(root, text="Exit to menu", command=lambda:[showMenuUi(menuUiElements), hideBattleUi(uiElements.staticUi,root), finishSetTrue(globalVar)], width = 20, height= 7)
+        uiElements.exitToMenuButton = tk.Button(root, text="Exit to menu", command=lambda:[placeMenuUi(menuUiElements,uiMetrics), hideBattleUi(uiElements.staticUi,uiElements), finishSetTrue(globalVar)], width = 20, height= 7)
 
 
         (uiElements.staticUi).append(uiElements.gameSpeedScale)
@@ -885,96 +875,69 @@ def run(config,root,menuUiElements):
         (uiElements.staticUi).append(uiElements.exitButton)
         (uiElements.staticUi).append(uiElements.exitToMenuButton)
 
-        # ships choice
-        globalVar.shipChoice = player.name
-        radioCommand = partial(radioBox,shipLookup , uiElements,globalVar,uiMetrics,root)
-        uiElements.shipChoiceRadioButton1 = ttk.Radiobutton(
-            root, text='1. MMS Artemis', variable=globalVar.radio, value=0, command=radioCommand)
-        uiElements.shipChoiceRadioButton2 = ttk.Radiobutton(
-            root, text='2. MMS Scout', variable=globalVar.radio, value=1, command=radioCommand)
-        uiElements.shipChoiceRadioButton3 = ttk.Radiobutton(
-            root, text='3. MMS Catalyst', variable=globalVar.radio, value=2, command=radioCommand)
 
-        (uiElements.staticUi).append(uiElements.shipChoiceRadioButton1)
-        (uiElements.staticUi).append(uiElements.shipChoiceRadioButton2)
-        (uiElements.staticUi).append(uiElements.shipChoiceRadioButton3)
-
-        radioBox(shipLookup,uiElements,globalVar,uiMetrics,root)
-        updateUtilityChoice(shipLookup,uiMetrics,globalVar,root)
-        detectionCheck(globalVar.ships)
         for ship1 in globalVar.ships:
             if(ship1.owner == "player1"):
                 putTracer(ship1,globalVar,gameRules,uiMetrics)
 
-        globalVar.shipChoiceRadioButtons = []
-        (globalVar.shipChoiceRadioButtons).append(uiElements.shipChoiceRadioButton1)
-        (globalVar.shipChoiceRadioButtons).append(uiElements.shipChoiceRadioButton2)
-        (globalVar.shipChoiceRadioButtons).append(uiElements.shipChoiceRadioButton3)
-
         # ship shields
-        playerSPLabelFrame = tk.LabelFrame(root, text= globalVar.playerName + " Shields",
+        uiElements.playerSPLabelFrame = tk.LabelFrame(root, text= globalVar.playerName + " Shields",
                                             borderwidth=2, relief="groove")
-        playerSPLabelFrame2 = tk.LabelFrame(root, text= globalVar.playerName2 + " Shields",
+        uiElements.playerSPLabelFrame2 = tk.LabelFrame(root, text= globalVar.playerName2 + " Shields",
                                             borderwidth=2, relief="groove")
-        playerSPLabelFrame3 = tk.LabelFrame(root, text= globalVar.playerName3 + " Shields",
+        uiElements.playerSPLabelFrame3 = tk.LabelFrame(root, text= globalVar.playerName3 + " Shields",
                                             borderwidth=2, relief="groove")
-        enemySPLabelFrame = tk.LabelFrame(root, text=globalVar.enemyName + " Shields",
+        uiElements.enemySPLabelFrame = tk.LabelFrame(root, text=globalVar.enemyName + " Shields",
                                         borderwidth=2, relief="groove")
-        enemySPLabelFrame2 = tk.LabelFrame(root, text=globalVar.enemyName2 + " Shields",
+        uiElements.enemySPLabelFrame2 = tk.LabelFrame(root, text=globalVar.enemyName2 + " Shields",
                                             borderwidth=2, relief="groove")
-        enemySPLabelFrame3 = tk.LabelFrame(root, text= globalVar.enemyName3 + " Shields",
+        uiElements.enemySPLabelFrame3 = tk.LabelFrame(root, text= globalVar.enemyName3 + " Shields",
                                             borderwidth=2, relief="groove")
         
-        (uiElements.staticUi).append(playerSPLabelFrame)
-        (uiElements.staticUi).append(playerSPLabelFrame2)
-        (uiElements.staticUi).append(playerSPLabelFrame3)
-        (uiElements.staticUi).append(enemySPLabelFrame)
-        (uiElements.staticUi).append(enemySPLabelFrame2)
-        (uiElements.staticUi).append(enemySPLabelFrame3)
 
-        playerShields = []
-        playerShields2 = []
-        playerShields3 = []
-        enemyShields = []
-        enemyShields2 = []
-        enemyShields3 = []
+        globalVar.playerShields = []
+        globalVar.playerShields2 = []
+        globalVar.playerShields3 = []
+        globalVar.enemyShields = []
+        globalVar.enemyShields2 = []
+        globalVar.enemyShields3 = []
 
-        x = player.shields
+        x = player.maxShields
         n = 0
         while(n < x):
-            playerShields.append(ttk.Progressbar(
-                playerSPLabelFrame, maximum=100, length=math.floor((uiMetrics.shipDataWidth-10)/x * 4/5), variable=100))
+            globalVar.playerShields.append(ttk.Progressbar(
+                uiElements.playerSPLabelFrame, maximum=100, length=math.floor((uiMetrics.shipDataWidth-10)/x * 4/5), variable=100))
             n += 1
-        x = player2.shields
+        x = player2.maxShields
         n = 0
         while(n < x):
-            playerShields2.append(ttk.Progressbar(
-                playerSPLabelFrame2, maximum=100, length=math.floor((uiMetrics.shipDataWidth-10)/x * 4/5), variable=100))
+            globalVar.playerShields2.append(ttk.Progressbar(
+                uiElements.playerSPLabelFrame2, maximum=100, length=math.floor((uiMetrics.shipDataWidth-10)/x * 4/5), variable=100))
             n += 1
-        x = player3.shields
+        x = player3.maxShields
         n = 0
         while(n < x):
-            playerShields3.append(ttk.Progressbar(
-                playerSPLabelFrame3, maximum=100, length=math.floor((uiMetrics.shipDataWidth-10)/x * 4/5), variable=100))
+            globalVar.playerShields3.append(ttk.Progressbar(
+                uiElements.playerSPLabelFrame3, maximum=100, length=math.floor((uiMetrics.shipDataWidth-10)/x * 4/5), variable=100))
             n += 1
 
-        x = enemy.shields
+        x = enemy.maxShields
         n = 0
         while(n < x):
-            enemyShields.append(ttk.Progressbar(
-                enemySPLabelFrame, maximum=100, length=math.floor((uiMetrics.shipDataWidth-10)/x * 4/5), variable=100))
+            globalVar.enemyShields.append(ttk.Progressbar(
+                uiElements.enemySPLabelFrame, maximum=100, length=math.floor((uiMetrics.shipDataWidth-10)/x * 4/5), variable=100))
             n += 1
-        x = enemy2.shields
+        x = enemy2.maxShields
         n = 0
         while(n < x):
-            enemyShields2.append(ttk.Progressbar(
-                enemySPLabelFrame2, maximum=100, length=math.floor((uiMetrics.shipDataWidth-10)/x * 4/5), variable=100))
+            globalVar.enemyShields2.append(ttk.Progressbar(
+                uiElements.enemySPLabelFrame2, maximum=100, length=math.floor((uiMetrics.shipDataWidth-10)/x * 4/5), variable=100))
             n += 1
-        x = enemy3.shields
+        x = enemy3.maxShields
         n = 0
         while(n < x):
-            enemyShields3.append(ttk.Progressbar(
-                enemySPLabelFrame3, maximum=100, length=math.floor((uiMetrics.shipDataWidth-10)/x * 4/5), variable=100))
+            globalVar.enemyShields3.append(ttk.Progressbar(
+                uiElements.enemySPLabelFrame3, maximum=100, length=math.floor((uiMetrics.shipDataWidth-10)/x * 4/5), variable=100))
             n += 1
 
         # ship armor
@@ -1049,40 +1012,67 @@ def run(config,root,menuUiElements):
 
         ######################################################### PROGRESSBAR ASSIGNMENT ####################################
 
-        player.shieldsLabel = playerShields
-        player2.shieldsLabel = playerShields2
-        player3.shieldsLabel = playerShields3
-        enemy.shieldsLabel = enemyShields
-        enemy2.shieldsLabel = enemyShields2
-        enemy3.shieldsLabel = enemyShields3
+        player.shieldsLabel = globalVar.playerShields
+        player2.shieldsLabel = globalVar.playerShields2
+        player3.shieldsLabel = globalVar.playerShields3
+        enemy.shieldsLabel = globalVar.enemyShields
+        enemy2.shieldsLabel = globalVar.enemyShields2
+        enemy3.shieldsLabel = globalVar.enemyShields3
 
         (uiElements.tmpShieldsLabel) = []
-        (uiElements.tmpShieldsLabel).append(playerShields)
-        (uiElements.tmpShieldsLabel).append(playerShields2)
-        (uiElements.tmpShieldsLabel).append(playerShields3)
-        (uiElements.tmpShieldsLabel).append(enemyShields)
-        (uiElements.tmpShieldsLabel).append(enemyShields2)
-        (uiElements.tmpShieldsLabel).append(enemyShields3)        # create list of elements to disable if round is in progress
+        (uiElements.tmpShieldsLabel).append(globalVar.playerShields)
+        (uiElements.tmpShieldsLabel).append(globalVar.playerShields2)
+        (uiElements.tmpShieldsLabel).append(globalVar.playerShields3)
+        (uiElements.tmpShieldsLabel).append(globalVar.enemyShields)
+        (uiElements.tmpShieldsLabel).append(globalVar.enemyShields2)
+        (uiElements.tmpShieldsLabel).append(globalVar.enemyShields3)        # create list of elements to disable if round is in progress
         uiElements.UIElementsList.append(uiElements.gameSpeedScale)
         uiElements.UIElementsList.append(uiElements.startTurnButton)
+        uiElements.UIElementsList.append(uiElements.exitToMenuButton)
+
+      #  (uiElements.staticUi).append(uiElements.systemsLabelFrame)
+
+        uiElementsToPlace = uiElements
+        
+        (uiElements.staticUi).append(uiElements.playerSPLabelFrame)
+        (uiElements.staticUi).append(uiElements.playerSPLabelFrame2)
+        (uiElements.staticUi).append(uiElements.playerSPLabelFrame3)
+        (uiElements.staticUi).append(uiElements.enemySPLabelFrame)
+        (uiElements.staticUi).append(uiElements.enemySPLabelFrame2)
+        (uiElements.staticUi).append(uiElements.enemySPLabelFrame3)
+
+        globalVar.shipChoiceRadioButtons = []
+        radioCommand = partial(radioBox,shipLookup , uiElements,globalVar,uiMetrics,root,canvas)
+        # ships choice
+        globalVar.shipChoice = player.name
+        uiElements.shipChoiceRadioButton1 = ttk.Radiobutton(
+            root, text='1. MMS Artemis', variable=globalVar.radio, value=0, command=radioCommand)
+        uiElements.shipChoiceRadioButton2 = ttk.Radiobutton(
+            root, text='2. MMS Scout', variable=globalVar.radio, value=1, command=radioCommand)
+        uiElements.shipChoiceRadioButton3 = ttk.Radiobutton(
+            root, text='3. MMS Catalyst', variable=globalVar.radio, value=2, command=radioCommand)
 
         (uiElements.RadioElementsList).append(uiElements.shipChoiceRadioButton1)
         (uiElements.RadioElementsList).append(uiElements.shipChoiceRadioButton2)
         (uiElements.RadioElementsList).append(uiElements.shipChoiceRadioButton3)
-        (uiElements.staticUi).append(globalVar.uiSystemsLabelFrame)
 
-        uiElementsToPlace = uiElements
-        uiElements.playerSPLabelFrame = playerSPLabelFrame
-        uiElements.playerSPLabelFrame2 = playerSPLabelFrame2
-        uiElements.playerSPLabelFrame3 = playerSPLabelFrame3
-        uiElements.enemySPLabelFrame = enemySPLabelFrame
-        uiElements.enemySPLabelFrame2 = enemySPLabelFrame2
-        uiElements.enemySPLabelFrame3 = enemySPLabelFrame3
+        (globalVar.shipChoiceRadioButtons).append(uiElements.shipChoiceRadioButton1)
+        (globalVar.shipChoiceRadioButtons).append(uiElements.shipChoiceRadioButton2)
+        (globalVar.shipChoiceRadioButtons).append(uiElements.shipChoiceRadioButton3)
+        
+        (uiElements.staticUi).append(uiElements.shipChoiceRadioButton1)
+        (uiElements.staticUi).append(uiElements.shipChoiceRadioButton2)
+        (uiElements.staticUi).append(uiElements.shipChoiceRadioButton3)
 
-        placeBattleUi(uiElementsToPlace,uiMetrics,canvas,globalVar)
+        radioBox(shipLookup,uiElements,globalVar,uiMetrics,root,canvas)
+        detectionCheck(globalVar.ships)
+
+        
+        #placeBattleUi(uiElementsToPlace,uiMetrics,canvas,globalVar,shipLookup)
+        updateBattleUi(shipLookup,uiMetrics,globalVar,root,uiElements,canvas)
 
         (naglowek.combatSystemInfo).canvas = canvas
-        (naglowek.combatSystemInfo).uiMetrics =uiMetrics
+        (naglowek.combatSystemInfo).uiMetrics = uiMetrics
         (naglowek.combatSystemInfo).globalVar = globalVar
         (naglowek.combatSystemInfo).gameRules = gameRules
         (naglowek.combatSystemInfo).ammunitionType = ammunitionType
@@ -1093,9 +1083,10 @@ def run(config,root,menuUiElements):
         (naglowek.combatSystemInfo).canvas = canvas
         (naglowek.combatSystemInfo).uiElementsToPlace = uiElementsToPlace
         naglowek.combatUiReady = True
-        # clock
+        # clock       
+   
     else:
         ((naglowek.combatSystemInfo).globalVar).finished = False
-        placeBattleUi((naglowek.combatSystemInfo).uiElementsToPlace,(naglowek.combatSystemInfo).uiMetrics,(naglowek.combatSystemInfo).canvas,(naglowek.combatSystemInfo).globalVar)
+        ((naglowek.combatSystemInfo).uiElements).systemsLabelFrame = tk.LabelFrame(root,text= "" + " systems",borderwidth=2)
+        updateBattleUi((naglowek.combatSystemInfo).shipLookup,(naglowek.combatSystemInfo).uiMetrics,(naglowek.combatSystemInfo).globalVar,root,(naglowek.combatSystemInfo).uiElements,(naglowek.combatSystemInfo).canvas)
     update((naglowek.combatSystemInfo).globalVar,(naglowek.combatSystemInfo).uiElements,(naglowek.combatSystemInfo).uiMetrics,(naglowek.combatSystemInfo).uiIcons,(naglowek.combatSystemInfo).canvas,(naglowek.combatSystemInfo).events,(naglowek.combatSystemInfo).shipLookup,(naglowek.combatSystemInfo).gameRules,(naglowek.combatSystemInfo).ammunitionType,root)
-    root.mainloop()

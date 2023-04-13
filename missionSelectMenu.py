@@ -8,9 +8,8 @@ from PIL import Image, ImageTk
 import PIL.Image
 
 from battleSystem import run
+from naglowek import dynamic_object
 
-class tmpobject():  #class only to save images from this menu from beng trash collected
-    x=10
 
 def hideSelectScreenUi(uiElements):
     for uiElement in uiElements:
@@ -45,8 +44,6 @@ def updateMissionCanvas(missionCanvas,variable,msmVar):
     return msmVar.img
 
 def missionSelectScreen(root,config,uiMenuElements):
-   # root.deiconify()
-    root.protocol("WM_DELETE_WINDOW", on_closing)
 
     OPTIONS = [
     "1.Exiled-To-Make-A-Stand",
@@ -70,7 +67,7 @@ def missionSelectScreen(root,config,uiMenuElements):
 
     missionCanvas = Canvas(root,width = 800, height = 500)
    # """
-    msmVar = tmpobject()
+    msmVar = dynamic_object()
     cwd = os.getcwd()
     a = str((variable.get()))
     c = os.path.join(cwd, "maps",a,"mapMiniature.png")
