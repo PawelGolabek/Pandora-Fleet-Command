@@ -8,7 +8,7 @@ from PIL import Image, ImageTk
 import PIL.Image
 
 from battleSystem import run
-from naglowek import dynamic_object
+import naglowek
 
 
 def hideSelectScreenUi(uiElements):
@@ -19,7 +19,7 @@ def optionCommand(variable,desLabelVar,objLabelVar,missionCanvas,msmVar):
     cwd = os.getcwd()
     a = str((variable.get()))
     des = configparser.ConfigParser()
-    filePath = os.path.join(cwd, "maps",a,"map description.ini")
+    filePath = os.path.join(cwd, "maps\\",a,"\\map description.ini")
     des.read(filePath)
     updateText(desLabelVar,objLabelVar,des)
     updateMissionCanvas(missionCanvas,variable,msmVar)
@@ -36,7 +36,12 @@ def updateMissionCanvas(missionCanvas,variable,msmVar):
     missionCanvas.delete("all")
     cwd = os.getcwd()
     a = str((variable.get()))
-    c = os.path.join(cwd, "maps",a,"mapMiniature.png")
+    config1 = configparser.ConfigParser()
+    filePath = os.path.join(cwd, "campaignMissions\\" + a + "\\level info.ini")
+    print(filePath)
+    config1.read(filePath)
+
+    c = os.path.join(cwd, "maps\\" + config1.get("Images","map")+"\\mapMiniature.png")
     b = PIL.Image.open(c)
     b = b.resize((800, 500), PIL.Image.ANTIALIAS)
     msmVar.img = ImageTk.PhotoImage(b)
@@ -45,11 +50,6 @@ def updateMissionCanvas(missionCanvas,variable,msmVar):
 
 def missionSelectScreen(root,config,uiMenuElements):
 
-    OPTIONS = [
-    "1.Exiled-To-Make-A-Stand",
-    "2.Warcries-That-Shred-The-Clouds",
-    "3.Destination-For-The-Homeworld-To-Regain"
-    ]
     desLabelVar = StringVar(root)
     desLabelFrame = LabelFrame(width = 800,height = 300)
     desLabelVar.set("Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
@@ -63,21 +63,26 @@ def missionSelectScreen(root,config,uiMenuElements):
     objLabel.place(x=0,y=0)
 
     variable = StringVar(root)
-    variable.set(OPTIONS[0])
+    variable.set(naglowek.campaignOptions[0])
 
     missionCanvas = Canvas(root,width = 800, height = 500)
    # """
-    msmVar = dynamic_object()
+    msmVar = naglowek.dynamic_object()
+
     cwd = os.getcwd()
     a = str((variable.get()))
-    c = os.path.join(cwd, "maps",a,"mapMiniature.png")
+    config1 = configparser.ConfigParser()
+    filePath = os.path.join(cwd, "campaignMissions\\" + a + "\\level info.ini")
+    print(filePath)
+    config1.read(filePath)
+    c = os.path.join(cwd, "maps\\" + config1.get("Images","map")+"\\mapMiniature.png")
     b = PIL.Image.open(c)
     img = ImageTk.PhotoImage(b)
     missionCanvas.create_image(0,0,anchor=NW,image=img)
     missionCanvas.config(bg="green")
-
+ 
     imageToAvoidTrashCollecting = updateMissionCanvas(missionCanvas,variable,msmVar)
-    levelOptionMenu = OptionMenu(root, variable, *OPTIONS, command=lambda _: optionCommand(variable,desLabelVar,objLabelVar,missionCanvas,msmVar))
+    levelOptionMenu = OptionMenu(root, variable, *naglowek.campaignOptions, command=lambda _: optionCommand(variable,desLabelVar,objLabelVar,missionCanvas,msmVar))
     optionCommand(variable,desLabelVar,objLabelVar,missionCanvas,msmVar)
 
     a = imageToAvoidTrashCollecting
@@ -107,6 +112,7 @@ def missionSelectScreen(root,config,uiMenuElements):
 def start(variable,root,uiMenuElements):
     config = configparser.ConfigParser()
     cwd = os.getcwd()
-    filePath = os.path.join(cwd, "maps",variable.get(),"level info.ini")
+    a = str((variable.get()))
+    filePath = os.path.join(cwd, "campaignMissions\\" + a + "\\level info.ini")
     config.read(filePath)
     run(config,root,uiMenuElements)

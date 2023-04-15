@@ -1,6 +1,7 @@
 from dis import dis
 from email.policy import default
 from faulthandler import disable
+from platform import system_alias
 from tabnanny import check
 import tkinter as tk
 from tkinter import *
@@ -40,12 +41,12 @@ class global_var():
         self.pointerDeltaX = 0.0
         self.pointerDeltaY = 0.0
         ## GAME OPTIONS ##
-        self.fogOfWar = TRUE
+        self.fogOfWar = True
         self.gameSpeed = 1
         self.turnLength = 1080
         self.zoom = 1
         self.shieldRegen = 1
-        self.shieldMaxState = 400
+        self.shieldMaxState = 1000
         # GAME DATA
         self.choices = StringVar()
         self.options = []
@@ -56,6 +57,9 @@ class global_var():
         self.misslesShot = 0
         self.currentMissles = []
         self.lasers = []
+        self.radio0hidden = False
+        self.radio1hidden = False
+        self.radio2hidden = False
         # ZOOM
         self.mouseX = 0
         self.mouseY = 0
@@ -66,7 +70,6 @@ class global_var():
         self.yellowX = 0
         self.yellowY = 0
         self.zoomChange = 0
-        self.img = PhotoImage((config.get("Images", "img")))
         self.image = PIL.Image.open((config.get("Images", "image")))
         self.imageMask = PIL.Image.open(config.get("Images", "imageMask"))
         pass
@@ -98,11 +101,24 @@ class ui_metrics():
     editorSystemsX = 10
     editorSystemsY = 20
     editorSystemsYOffset = 50
+    editorSystemsLOffsetX = 150
     editorSubsystemsXOffset = 400
-    editorsystemsWidth = 250
+    editorSystemsWidth = 350
     editorSaveButtonX = 1000
-    editorSaveButtonY = 500
-
+    editorSaveButtonY = 700
+    editorChoiceMenuLFWidth = editorSystemsWidth
+    editorChoiceMenuLFHeight = 80
+    editorChoiceMenuOffset = 80
+    editorChoiceMenuY = 150
+    shipStatsLFHeight = 430
+    shipStatsLFWidth = 350
+    customRedShipX = 1000
+    customBlueShipX = 200
+    customBlueShipY = 600
+    cgShipYoffset = 100
+    cgStartButton = customBlueShipY + cgShipYoffset *2
+    cgMapChoiceY = cgStartButton - cgShipYoffset *1.5
+    
 
 class game_rules():
     movementPenalityHard = 0.9
@@ -140,11 +156,15 @@ class ghost_point():
 
 def declareGlobals():
     global combatUiReady
+    global missionSelectUiReady
     global editorUiReady
+    global customGameUiReady
     global combatSystemInfo
+    global customGameInfo
     global editorInfo
     global shipEditorInfo
     global mainInfo
+    global gameMenuInfo
     global uiMetrics
     global allSystemsList
     global allSubsystemsList
@@ -152,16 +172,50 @@ def declareGlobals():
     global allRadarsList
     global allThrustersList
     global allGeneratorsList
+    global systemStats 
+    global engineStats 
+    global thrustersStats
+    global radarStats
+    global generatorStats
+    global subsystemStats
+    global systemStatsBlueprints
+    global subsystemStatsBlueprints
+    global engineStatsBlueprints
+    global thrustersStatsBlueprints
+    global radarStatsBlueprints
+    global generatorStatsBlueprints
+    global systemLookup
+    global mapOptions
+    global campaignOptions
     combatSystemInfo = dynamic_object()
     shipEditorInfo = dynamic_object()
     editorInfo = dynamic_object()
     mainInfo = dynamic_object()
+    gameMenuInfo = dynamic_object()
     uiMetrics = ui_metrics()
+    systemStats = dynamic_object()
+    systemStatsBlueprints = dynamic_object()
+    engineStats = dynamic_object()
+    thrustersStats = dynamic_object()
+    radarStats = dynamic_object()
+    generatorStats = dynamic_object()
+    subsystemStats = dynamic_object()
+    engineStatsBlueprints = dynamic_object()
+    subsystemStatsBlueprints = dynamic_object()
+    thrustersStatsBlueprints = dynamic_object()
+    radarStatsBlueprints = dynamic_object()
+    generatorStatsBlueprints = dynamic_object()
+    systemLookup = dynamic_object()
+    customGameInfo = dynamic_object()
+    campaignOptions = dynamic_object()
     allSystemsList = []
     allSubsystemsList = []
     allEnginesList = []
     allRadarsList = []
     allThrustersList = []
     allGeneratorsList = []
+    mapOptions = []
     combatUiReady = False
     editorUiReady = False
+    missionSelectUiReady = False
+    customGameUiReady = False
