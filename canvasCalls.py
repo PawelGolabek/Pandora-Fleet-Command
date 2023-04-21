@@ -3,16 +3,29 @@ from tkinter import W
 from array import *
 
 
-def drawGhostPoints(canvas,globalVar):
-    for ship in globalVar.ships:
+
+
+def drawGhostPoints(canvas,var):
+    for ship in var.ships:
         for ghost in ship.ghostPoints:
-            drawX = (ghost.xPos - globalVar.left) * \
-                globalVar.zoom
-            drawY = (ghost.yPos - globalVar.top) * globalVar.zoom 
-            canvas.create_line(drawX-1*globalVar.zoom, drawY, drawX, drawY, width=globalVar.zoom,  fill='orange')  
-            number1 = floor(ghost.number)
-            if(not number1 == 0):
-                canvas.create_text(drawX-1*globalVar.zoom, drawY,  anchor=W,font=("Purisa", 8+globalVar.zoom), text=number1, fill="white")  # draw name
+            drawX = int((ghost.xPos - var.left) * var.zoom)
+            drawY = int((ghost.yPos - var.top) * var.zoom )
+            line = canvas.create_line(int(drawX-1*var.zoom), drawY, drawX, drawY, width=int(var.zoom),  fill='orange')    # draw name
+            canvas.elements.append(line)
+
+def drawSignatures(canvas,var):
+    for ship in var.ships:
+        for signature in ship.signatures:
+            drawX = int((signature.xPos - var.left) * var.zoom)
+            drawY = int((signature.yPos - var.top) * var.zoom )
+            line = canvas.create_line(int(drawX-4*var.zoom), int(drawY-10*var.zoom), int(drawX-8*var.zoom), int(drawY-8*var.zoom), width=int(var.zoom),  fill='white')  
+            line = canvas.create_line(int(drawX-8*var.zoom), int(drawY-8*var.zoom), int(drawX-8*var.zoom), int(drawY+8*var.zoom), width=int(var.zoom),  fill='white')  
+            line = canvas.create_line(int(drawX-8*var.zoom), int(drawY+8*var.zoom), int(drawX-4*var.zoom), int(drawY+10*var.zoom), width=int(var.zoom),  fill='white') 
+            line = canvas.create_line(int(drawX+4*var.zoom), int(drawY-10*var.zoom), int(drawX+8*var.zoom), int(drawY-8*var.zoom), width=int(var.zoom),  fill='white')  
+            line = canvas.create_line(int(drawX+8*var.zoom), int(drawY-8*var.zoom), int(drawX+8*var.zoom), int(drawY+8*var.zoom), width=int(var.zoom),  fill='white')  
+            line = canvas.create_line(int(drawX+8*var.zoom), int(drawY+8*var.zoom), int(drawX+4*var.zoom), int(drawY+10*var.zoom), width=int(var.zoom),  fill='white')  
+            canvas.elements.append(line)
+
 
 def createMask(var,uiMetrics):
     i = j = 0

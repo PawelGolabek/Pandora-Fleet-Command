@@ -1,6 +1,7 @@
 from tkinter import *
 import tkinter.ttk as ttk
 import tkinter as tk
+import sys,os
 
 def on_closing():
    quit()
@@ -16,12 +17,23 @@ def hideBattleUi(uiElementsList,uiElements):
     (uiElements.systemsLabelFrame).place_forget()
 
 def placeBattleUi(staticUi,uiMetrics,canvas,globalVar,shipLookup):
-    staticUi.shipChoiceRadioButton0.place(
-        x=uiMetrics.canvasX + 540, y=uiMetrics.canvasY - 60)
-    staticUi.shipChoiceRadioButton1.place(
-        x=uiMetrics.canvasX + 700, y=uiMetrics.canvasY - 60)
-    staticUi.shipChoiceRadioButton2.place(
-        x=uiMetrics.canvasX + 860, y=uiMetrics.canvasY - 60)
+    staticUi.playerShipsLF.place
+    staticUi.enemyShipsLF.place
+
+    
+    staticUi.playerShipsLF.place(x=uiMetrics.canvasX + 480, y=uiMetrics.canvasY - 95)
+    staticUi.enemyShipsLF.place(x=uiMetrics.canvasX + 800, y=uiMetrics.canvasY - 95)
+
+    staticUi.shipChoiceRadioButton0.place(x=uiMetrics.canvasX + 540, y=uiMetrics.canvasY - 30)
+    staticUi.shipChoiceRadioButton1.place(x=uiMetrics.canvasX + 700, y=uiMetrics.canvasY - 30)
+    staticUi.shipChoiceRadioButton2.place(x=uiMetrics.canvasX + 860, y=uiMetrics.canvasY - 30)
+
+    staticUi.shipButton0.place(x=10,y=10)
+    staticUi.shipButton1.place(x=90,y=10)
+    staticUi.shipButton2.place(x=170,y=10)
+    staticUi.shipButton3.place(x=10,y=10)
+    staticUi.shipButton4.place(x=90,y=10)
+    staticUi.shipButton5.place(x=170,y=10)
 
     (staticUi.gameSpeedScale).place(x=uiMetrics.canvasX, y=uiMetrics.canvasY - 80)
     canvas.place(x=uiMetrics.canvasX, y=uiMetrics.canvasY)

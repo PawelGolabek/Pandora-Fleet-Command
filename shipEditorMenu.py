@@ -4,11 +4,9 @@ from rootCommands import *
 from tkinter import *
 import configparser
 from functools import partial
-import math
-import os
+import sys,os
 from decimal import *
 
-import systems 
 import naglowek
 
 
@@ -164,7 +162,7 @@ def closeWindow(window):
 def saveShip(info,uiElements,filePath, cp):
     shipName = str((uiElements.shipNameInput).get())
 
-    if(not(len(shipName) == 0 or shipName == "Ship must have a name. Insert the name to continue.")):
+    if(not(len(shipName) == 0) and len(shipName) < 13):
         if(not cp.has_section(shipName)):
             cp.add_section(shipName)
 
@@ -217,9 +215,13 @@ def saveShip(info,uiElements,filePath, cp):
         button = tk.Button(window, text = "Ok", width = 5, height = 1,command=closeWindowCommand)
         label.place(relx=0.5, rely=0.2,anchor=CENTER)
         button.place(relx=0.5, rely=0.5,anchor=CENTER)
-    else:
+    elif(len(shipName) < 13):
         (uiElements.shipNameInput).delete(0, END)
         (uiElements.shipNameInput).insert(0, "Ship must have a name. Insert the name to continue.") 
+    else:
+        (uiElements.shipNameInput).delete(0, END)
+        (uiElements.shipNameInput).insert(0, "Ship name must be shorter than 13 characters") 
+
 
     """
     file = open(filePath)
@@ -271,7 +273,8 @@ def shipEditor(root,config,uiMenuElements,uiMetrics,menuUiElements):
     root.title("Ship Editor")
     if(not naglowek.editorUiReady):
         config = configparser.ConfigParser()
-        cwd = os.getcwd()
+        cwd = str(sys.argv[0]).removesuffix("/main.py")
+        cwd = str(sys.argv[0]).removesuffix("/main.py")
         filePath = os.path.join(cwd, "gameData/customShips.ini")
         config.read(filePath)
         

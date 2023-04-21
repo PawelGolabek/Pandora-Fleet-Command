@@ -10,6 +10,9 @@ from tkinter import Tk, Canvas, Frame, BOTH
 from random import randint
 import PIL.Image
 import tkinter.ttk as ttk
+import sys,os
+
+import maps
 
 class global_var():
     def __init__(self,config,root):
@@ -29,6 +32,7 @@ class global_var():
         self.mouseWheelUp = FALSE
         self.mouseWheelDown = FALSE
         self.mouseButton1 = FALSE
+        self.updateTimer = -1
         self.mouseButton2 = FALSE
         self.mouseButton3 = FALSE
         self.mouseButton3justPressed = FALSE
@@ -70,7 +74,7 @@ class global_var():
         self.yellowX = 0
         self.yellowY = 0
         self.zoomChange = 0
-        self.image = PIL.Image.open((config.get("Images", "image")))
+        self.image = PIL.Image.open(config.get("Images", "image"))
         self.imageMask = PIL.Image.open(config.get("Images", "imageMask"))
         pass
 
@@ -153,7 +157,7 @@ class ghost_point():
         self.xPos = xPos
         self.yPos = yPos
         self.number = number
-
+        
 def declareGlobals():
     global combatUiReady
     global missionSelectUiReady

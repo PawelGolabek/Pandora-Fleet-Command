@@ -1,5 +1,4 @@
 import math
-from os import kill
 from tkinter import *
 from naglowek import *
 from ammunitionType import *
@@ -70,6 +69,25 @@ def createGhostPoint(ship, xPos, yPos,number = 0):
     setattr(ship.ghostPoints[-1],'xPos',xPos)
     setattr(ship.ghostPoints[-1],'yPos',yPos)
     setattr(ship.ghostPoints[-1],'number',number)
+
+def createSignature(ship, xPos, yPos,ttl = 1200,number = 0):
+    signature = ghost_point()
+    ship.signatures.append(signature)
+    setattr(ship.signatures[-1],'xPos',xPos)
+    setattr(ship.signatures[-1],'yPos',yPos)
+    setattr(ship.signatures[-1],'number',number)
+    setattr(ship.signatures[-1],'ttl',ttl)
+
+def updateSignatures(ships):
+    for ship in ships:
+        if(ship.visible):
+            for signature in ship.signatures:
+                ship.signatures.remove(signature)
+        for signature in ship.signatures:
+            if(signature.ttl):
+                signature.ttl -= 1
+            else:
+                ship.signatures.remove(signature)
 
 def putTracer(ship,var,gameRules,uiMetrics): # rotate and move the chosen ship
     if(ship.owner == 'player1'):
@@ -218,43 +236,57 @@ def drawRockets(globalVar,ammunitionType,canvas):
                 _fill = "red"
             elif(missle.owner == "player1"):
                 _fill = "green"
-            canvas.create_line(drawX,drawY,drawX+dirLineX*20,drawY+dirLineY*20,fill = _fill)
+            line = canvas.create_line(drawX,drawY,drawX+dirLineX*20,drawY+dirLineY*20,fill = _fill)
+            canvas.elements.append(line)
         
         if(missle.typeName == ammunitionType.type1adefault):
-            canvas.create_line(drawX-2, drawY-2,
+            line = canvas.create_line(drawX-2, drawY-2,
                             drawX+2, drawY+2, fill = color)
+            canvas.elements.append(line)
         elif(missle.typeName == ammunitionType.type2adefault):
-            canvas.create_line(drawX-5, drawY-5,
+            line = canvas.create_line(drawX-5, drawY-5,
                             drawX+5, drawY+5, fill = color)
+            canvas.elements.append(line)
         elif(missle.typeName == ammunitionType.kinetic1):
-            canvas.create_line(drawX-1, drawY-1,
+            line = canvas.create_line(drawX-1, drawY-1,
                             drawX+1, drawY+1, fill = color)
+            canvas.elements.append(line)
 
         else:
-            canvas.create_line(drawX-5, drawY-5,
+            line = canvas.create_line(drawX-5, drawY-5,
                             drawX-7, drawY-5, fill = color)
-            canvas.create_line(drawX-5, drawY-5,
+            canvas.elements.append(line)
+            line = canvas.create_line(drawX-5, drawY-5,
                             drawX-7, drawY-5, fill = color)
+            canvas.elements.append(line)
 
-            canvas.create_line(drawX+5, drawY+5,
+            line = canvas.create_line(drawX+5, drawY+5,
                             drawX+7, drawY+5)
-            canvas.create_line(drawX+5, drawY+5,
+            canvas.elements.append(line)
+            line = canvas.create_line(drawX+5, drawY+5,
                             drawX+5, drawY+7, fill = color)
+            canvas.elements.append(line)
 
-            canvas.create_line(drawX+5, drawY-5,
+            line = canvas.create_line(drawX+5, drawY-5,
                             drawX+7, drawY-5, fill = color)
-            canvas.create_line(drawX+5, drawY-5,
+            canvas.elements.append(line)
+            line = canvas.create_line(drawX+5, drawY-5,
                             drawX+5, drawY-7, fill = color)
+            canvas.elements.append(line)
 
-            canvas.create_line(drawX-5, drawY+5,
+            line = canvas.create_line(drawX-5, drawY+5,
                             drawX-7, drawY+5, fill = color)
-            canvas.create_line(drawX-5, drawY+5,
+            canvas.elements.append(line)
+            line = canvas.create_line(drawX-5, drawY+5,
                             drawX-5, drawY+7, fill = color)
+            canvas.elements.append(line)
 
-            canvas.create_line(drawX+1, drawY,
+            line = canvas.create_line(drawX+1, drawY,
                             drawX-1, drawY, fill = color)
-            canvas.create_line(drawX, drawY+1,
+            canvas.elements.append(line)
+            line = canvas.create_line(drawX, drawY+1,
                             drawX, drawY-1, fill = color)
+            canvas.elements.append(line)
 
 def drawLandmarks(var,canvas,uiIcons):
     for landmark in var.landmarks:
@@ -264,14 +296,17 @@ def drawLandmarks(var,canvas,uiIcons):
             var.zoom    # change ###
 
         radius = landmark.radius * var.zoom
-        canvas.create_text(drawX, drawY+20,
-                           text=math.ceil(landmark.cooldown/100), fill = "white")
-        canvas.create_oval(drawX-radius, drawY-radius,
+        text = canvas.create_text(drawX, drawY+20,
+                           text=math.ceil(landmark.cooldown/100), fill = "white")              
+        canvas.elements.append(text)
+        oval = canvas.create_oval(drawX-radius, drawY-radius,
                            drawX+radius, drawY+radius, outline = "yellow", dash=(2,3))
+        canvas.elements.append(oval)            
         iconX = drawX
         iconY = drawY
         if(landmark.boost == 'armor'):
-            canvas.create_image(iconX, iconY, image=uiIcons.armorIcon)
+            image = canvas.create_image(iconX, iconY, image=uiIcons.armorIcon)
+            canvas.elements.append(image)
 
 
 def drawShips(canvas,globalVar,uiMetrics):  # draw ship on the map with all of its accesories
@@ -289,36 +324,50 @@ def drawShips(canvas,globalVar,uiMetrics):  # draw ship on the map with all of i
                 drawOrderX = (ship.moveOrderX - globalVar.left) * \
                     globalVar.zoom    # get order relative to window
                 drawOrderY = (ship.moveOrderY - globalVar.top) * globalVar.zoom
-                canvas.create_line(drawOrderX+2, drawOrderY+2, drawOrderX,
+                line = canvas.create_line(drawOrderX+2, drawOrderY+2, drawOrderX,
                                    drawOrderY,   fill=fillColor)
-                canvas.create_line(drawOrderX-2, drawOrderY-2, drawOrderX,
+                canvas.elements.append(line)
+                line = canvas.create_line(drawOrderX-2, drawOrderY-2, drawOrderX,
                                    drawOrderY,   fill=fillColor)
-                canvas.create_line(drawOrderX+2, drawOrderY-2, drawOrderX,
+                canvas.elements.append(line)
+                line = canvas.create_line(drawOrderX+2, drawOrderY-2, drawOrderX,
                                    drawOrderY,   fill=fillColor)
-                canvas.create_line(drawOrderX-2, drawOrderY+2, drawOrderX,
+                canvas.elements.append(line)
+                line = canvas.create_line(drawOrderX-2, drawOrderY+2, drawOrderX,
                                    drawOrderY,   fill=fillColor)
+                canvas.elements.append(line)
 
-            canvas.create_line(drawX-5*globalVar.zoom, drawY-5*globalVar.zoom, drawX +
-                                   5*globalVar.zoom, drawY+5*globalVar.zoom, width=1+2*globalVar.zoom,  fill=fillColor)
+            line = canvas.create_line(int(drawX-5*globalVar.zoom), 
+                                int(drawY-5*globalVar.zoom), 
+                                int(drawX +5*globalVar.zoom), 
+                                int(drawY+5*globalVar.zoom),
+                                width=int(1+2*globalVar.zoom), 
+                                fill=fillColor)
+            canvas.elements.append(line)
                                    
             if(ship.owner == "player1" or (not globalVar.fogOfWar)):
-                canvas.create_line(drawX, drawY,   drawX+(ship.xDir*20*globalVar.zoom),
+                line = canvas.create_line(drawX, drawY,   drawX+(ship.xDir*20*globalVar.zoom),
                                    drawY+(ship.yDir*20*globalVar.zoom), fill="green")
+                canvas.elements.append(line)
             if(ship.owner == "player1"):
                 if(drawX < uiMetrics.canvasWidth - 50 * globalVar.zoom):
-                    canvas.create_text(drawX + 12 * globalVar.zoom, drawY + 10, anchor=W,
+                    line = canvas.create_text(drawX + 12 * globalVar.zoom, drawY + 10, anchor=W,
                                 font=("Purisa", 8 + math.floor(globalVar.zoom)), text=ship.name, fill = fillColor)
+                    canvas.elements.append(line)
                 else:
-                    canvas.create_text(drawX - (20 + 12 * globalVar.zoom), drawY + 10, anchor=W,
+                    line = canvas.create_text(drawX - (20 + 12 * globalVar.zoom), drawY + 10, anchor=W,
                                 font=("Purisa", 8 + math.floor(globalVar.zoom)), text=ship.name, fill = fillColor)
+                    canvas.elements.append(line)
 
             else:
                 if(drawX < uiMetrics.canvasWidth - 50 * globalVar.zoom):
-                    canvas.create_text(drawX + 12 * globalVar.zoom, drawY + 10, anchor=W,
+                    line = canvas.create_text(drawX + 12 * globalVar.zoom, drawY + 10, anchor=W,
                                 font=("Purisa", 8 + math.floor(globalVar.zoom)), text=ship.name, fill = "white")
+                    canvas.elements.append(line)
                 else:
-                    canvas.create_text(drawX - (20 + 12 * globalVar.zoom), drawY + 10, anchor=W,
+                    line = canvas.create_text(drawX - (20 + 12 * globalVar.zoom), drawY + 10, anchor=W,
                                 font=("Purisa", 8 + math.floor(globalVar.zoom)), text=ship.name, fill = "white")
+                    canvas.elements.append(line)
             
             if(ship.owner == "player1"):
                 fillColor = "white"
@@ -365,8 +414,9 @@ def drawShips(canvas,globalVar,uiMetrics):  # draw ship on the map with all of i
             list.append(ghostShip)
             
             for element in list:
-                canvas.create_oval(element.x-ship.detectionRange*globalVar.zoom, element.y - ship.detectionRange*globalVar.zoom,
+                oval = canvas.create_oval(element.x-ship.detectionRange*globalVar.zoom, element.y - ship.detectionRange*globalVar.zoom,
                                     element.x + ship.detectionRange*globalVar.zoom, element.y+ship.detectionRange*globalVar.zoom, outline=ship.outlineColor, dash = (1,3))
+                canvas.elements.append(oval)
  
 
        
@@ -458,3 +508,8 @@ def updateShips(var,uiMetrics,gameRules,shipLookup,events,uiElements):  # rotate
 
         ship.xPos += xVector - xVector * movementPenality
         ship.yPos += yVector - yVector * movementPenality
+        if(ship.signatureCounter >= 1200 and not ship.visible and not ship.owner == "player1"):
+            createSignature(ship, ship.xPos, ship.yPos)
+            ship.signatureCounter = 0
+        else:
+            ship.signatureCounter += 1

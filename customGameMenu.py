@@ -11,7 +11,7 @@ from PIL import Image, ImageTk
 import PIL.Image
 
 import naglowek
-import battleSystem
+from src import battleSystem
 
 def shipChoiceCommand():
     x=10
@@ -35,7 +35,8 @@ def runGame(info,configIn,root,menuUiElements):
     shipName5 = (info.redShip2).get()
 
     configIn1 = configparser.ConfigParser()
-    cwd = os.getcwd()
+    cwd = str(sys.argv[0]).removesuffix("\main.py")
+    cwd = str(sys.argv[0]).removesuffix("/main.py")
     a = ("maps\\" + info.mapChoice.get() +"\mapInfo.ini")
     filePath = os.path.join(cwd, a)
     print(filePath)
@@ -49,7 +50,8 @@ def runGame(info,configIn,root,menuUiElements):
     ship5 = readShip(configIn,shipName5,x=configIn1.get("spawnLocations","teamRed3X"),y=configIn1.get("spawnLocations","teamRed3Y"),outline="red",owner = "ai1",id = "5")
 
     configOut = configparser.ConfigParser()
-    cwd = os.getcwd()
+    cwd = str(sys.argv[0]).removesuffix("\main.py")
+    cwd = str(sys.argv[0]).removesuffix("/main.py")
     filePath = os.path.join(cwd, "gameData/customGame.ini")
     print(filePath)
     configOut.read(filePath)
@@ -163,7 +165,8 @@ def writeShip(ship,target,configOut):
     
 def updateMissionCanvas(missionCanvas,info,msmVar):
     missionCanvas.delete("all")
-    cwd = os.getcwd()
+    cwd = str(sys.argv[0]).removesuffix("\main.py")
+    cwd = str(sys.argv[0]).removesuffix("/main.py")
     c = os.path.join(cwd, "maps\\" + (info.mapChoice).get() +"\\mapMiniature.png")
     print(c)
     b = PIL.Image.open(c)
@@ -177,7 +180,8 @@ def customGame(root,config,uiMenuElements,uiMetrics):
     root.title("Custom Game Menu")
     if(not naglowek.customGameUiReady):
         configIn = configparser.ConfigParser()
-        cwd = os.getcwd()
+        cwd = str(sys.argv[0]).removesuffix("\main.py") 
+        cwd = str(sys.argv[0]).removesuffix("/main.py")
         filePath = os.path.join(cwd, "gameData/customShips.ini")
         configIn.read(filePath)
 
@@ -185,7 +189,8 @@ def customGame(root,config,uiMenuElements,uiMetrics):
         uiElementsList = []
         info = naglowek.customGameInfo   
             
-        cwd = os.getcwd()
+        cwd = str(sys.argv[0]).removesuffix("\main.py")
+        cwd = str(sys.argv[0]).removesuffix("/main.py")
 
         mapOptions = naglowek.mapOptions
         info.mapChoice = StringVar(root)

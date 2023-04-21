@@ -1,13 +1,14 @@
 import configparser
-import os
+import sys,os
 from tkinter import *
 import tkinter.ttk as ttk
 import tkinter as tk
 from functools import partial
+from pathlib import Path
 
-from battleSystem import run, resume
-from missionSelectMenu import missionSelectScreen
-from myStyles import *
+from src.myStyles import loadStyles,ttk
+from src.missionSelectMenu import missionSelectScreen
+from src.battleSystem import run,resume
 from naglowek import declareGlobals, dynamic_object, ui_metrics
 from rootCommands import hideMenuUi, placeMenuUi
 from customGameMenu import customGame
@@ -33,7 +34,9 @@ if __name__ == '__main__':
     declareGlobalGenerators()
     declareGlobalMaps()
     parameter1 = "2.Warcries-That-Shred-The-Clouds"
-    root = tk.Tk()
+    #root = ThemedTk(theme="yaru")
+    #root = tk.Tk()
+    root = ttk.Window(themename="cyborg")
     _style = ttk.Style()
     uiMetrics = ui_metrics()
     loadStyles(root,_style)
@@ -46,8 +49,11 @@ if __name__ == '__main__':
     root.title("Main Menu")
     
     config = configparser.ConfigParser()
-    cwd = os.getcwd()
+    cwd = Path(sys.argv[0])
+    cwd = str(cwd.parent)
+    print(cwd)
     filePath = os.path.join(cwd, "campaignMissions",parameter1,"level info.ini")
+    print(filePath)
     config.read(filePath)
     
     uiMenuElements = dynamic_object()
@@ -59,12 +65,12 @@ if __name__ == '__main__':
     missionSelect1 =  partial(missionSelectScreen,root,config,uiMenuElements)
     customGameCommand =  partial(customGame,root,config,uiMenuElements,uiMetrics)
 
-    resumeButton = tk.Button(text = "Resume", command = lambda:[resumeButtonCommand(),hideUiCommand()])
-    quickBattleButton = tk.Button(text = "Quick battle", command = lambda:[hideUiCommand(),quickBattleCommand1()])
-    missionSelectButton = tk.Button(text = "Mission select", command = lambda:[hideUiCommand(),missionSelect1()])
-    shipEditorButton = tk.Button(text = "Ships Editor", command = lambda:[hideUiCommand(),shipEditorCommand()])
-    customGameButton = tk.Button(text = "Custom Game", command = lambda:[hideUiCommand(),customGameCommand()])
-    exitButton = tk.Button(text = "Exit", command = exit)
+    resumeButton = ttk.Button(text = "Resume", command = lambda:[resumeButtonCommand(),hideUiCommand()])
+    quickBattleButton = ttk.Button(text = "Quick battle", command = lambda:[hideUiCommand(),quickBattleCommand1()])
+    missionSelectButton = ttk.Button(text = "Mission select", command = lambda:[hideUiCommand(),missionSelect1()])
+    shipEditorButton = ttk.Button(text = "Ships Editor", command = lambda:[hideUiCommand(),shipEditorCommand()])
+    customGameButton = ttk.Button(text = "Custom Game", command = lambda:[hideUiCommand(),customGameCommand()])
+    exitButton = ttk.Button(text = "Exit", command = exit)
 
     uiMenuElements.resumeButton = resumeButton
     uiMenuElements.quickBattleButton = quickBattleButton
