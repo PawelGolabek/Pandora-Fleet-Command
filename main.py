@@ -9,17 +9,17 @@ from pathlib import Path
 from src.myStyles import loadStyles,ttk
 from src.missionSelectMenu import missionSelectScreen
 from src.battleSystem import run,resume
-from naglowek import declareGlobals, dynamic_object, ui_metrics
-from rootCommands import hideMenuUi, placeMenuUi
-from customGameMenu import customGame
-from shipEditorMenu import shipEditor
-from systems import declareGlobalSystems
-from subSystems import declareGlobalSubsystems
-from engines import declareGlobalEngines
-from thrusters import declareGlobalThrusters
-from radars import declareGlobalRadars
-from generators import declareGlobalGenerators
-from mapInfo import declareGlobalMaps
+from src.naglowek import declareGlobals, dynamic_object, ui_metrics
+from src.rootCommands import hideMenuUi, placeMenuUi
+from src.customGameMenu import customGame
+from src.shipEditorMenu import shipEditor
+from src.systems import declareGlobalSystems
+from src.subSystems import declareGlobalSubsystems
+from src.engines import declareGlobalEngines
+from src.thrusters import declareGlobalThrusters
+from src.radars import declareGlobalRadars
+from src.generators import declareGlobalGenerators
+from src.mapInfo import declareGlobalMaps
 
 def resumeCommand():
     x=10
@@ -35,11 +35,12 @@ if __name__ == '__main__':
     declareGlobalMaps()
     parameter1 = "2.Warcries-That-Shred-The-Clouds"
     #root = ThemedTk(theme="yaru")
-    #root = tk.Tk()
-    root = ttk.Window(themename="cyborg")
+    root = tk.Tk()
+    #root = ttk.Window(themename="cyborg")
     _style = ttk.Style()
     uiMetrics = ui_metrics()
     loadStyles(root,_style)
+    #root.attributes('-alpha',0.5)
     """
     rootX = root.winfo_screenwidth()
     rootY = root.winfo_screenheight()
@@ -52,7 +53,7 @@ if __name__ == '__main__':
     cwd = Path(sys.argv[0])
     cwd = str(cwd.parent)
     print(cwd)
-    filePath = os.path.join(cwd, "campaignMissions",parameter1,"level info.ini")
+    filePath = os.path.join(cwd, "campaignMissions"+ "\\" + parameter1 + "\\" +  "level info.ini")
     print(filePath)
     config.read(filePath)
     
@@ -65,12 +66,12 @@ if __name__ == '__main__':
     missionSelect1 =  partial(missionSelectScreen,root,config,uiMenuElements)
     customGameCommand =  partial(customGame,root,config,uiMenuElements,uiMetrics)
 
-    resumeButton = ttk.Button(text = "Resume", command = lambda:[resumeButtonCommand(),hideUiCommand()])
-    quickBattleButton = ttk.Button(text = "Quick battle", command = lambda:[hideUiCommand(),quickBattleCommand1()])
-    missionSelectButton = ttk.Button(text = "Mission select", command = lambda:[hideUiCommand(),missionSelect1()])
-    shipEditorButton = ttk.Button(text = "Ships Editor", command = lambda:[hideUiCommand(),shipEditorCommand()])
-    customGameButton = ttk.Button(text = "Custom Game", command = lambda:[hideUiCommand(),customGameCommand()])
-    exitButton = ttk.Button(text = "Exit", command = exit)
+    resumeButton = tk.Button(text = "Resume", state = DISABLED, command = lambda:[resumeButtonCommand(),hideUiCommand()])
+    quickBattleButton = tk.Button(text = "Quick battle", command = lambda:[hideUiCommand(),quickBattleCommand1()])
+    missionSelectButton = tk.Button(text = "Mission select", command = lambda:[hideUiCommand(),missionSelect1()])
+    shipEditorButton = tk.Button(text = "Ships Editor", command = lambda:[hideUiCommand(),shipEditorCommand()])
+    customGameButton = tk.Button(text = "Custom Game", command = lambda:[hideUiCommand(),customGameCommand()])
+    exitButton = tk.Button(text = "Exit", command = exit)
 
     uiMenuElements.resumeButton = resumeButton
     uiMenuElements.quickBattleButton = quickBattleButton

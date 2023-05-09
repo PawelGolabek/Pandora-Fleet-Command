@@ -1,5 +1,4 @@
 from functools import partial
-from rootCommands import *
 from tkinter import *
 import sys,os
 import configparser
@@ -9,7 +8,8 @@ import PIL.Image
 from pathlib import Path
 
 from src.battleSystem import run
-import naglowek
+import src.naglowek as naglowek
+from src.rootCommands import *
 
 
 def hideSelectScreenUi(uiElements):
@@ -19,9 +19,11 @@ def hideSelectScreenUi(uiElements):
 def optionCommand(variable,desLabelVar,objLabelVar,missionCanvas,msmVar):
     cwd = Path(sys.argv[0])
     cwd = str(cwd.parent)
+    print ( "cwd " + cwd)
     a = str((variable.get()))
     des = configparser.ConfigParser()
-    filePath = os.path.join(cwd, "maps\\",a,"\\map description.ini")
+    filePath = os.path.join(cwd, "maps",a,"map description.ini")
+    print("des : " + filePath)
     des.read(filePath)
     updateText(desLabelVar,objLabelVar,des)
     updateMissionCanvas(missionCanvas,variable,msmVar)
@@ -40,10 +42,12 @@ def updateMissionCanvas(missionCanvas,variable,msmVar):
     cwd = str(cwd.parent)
     a = str((variable.get()))
     config1 = configparser.ConfigParser()
-    filePath = os.path.join(cwd, "campaignMissions\\" + a + "\\level info.ini")
-    print(filePath)
+    filePath = os.path.join(cwd, "campaignMissions" + "\\" + a + "\\" +  "level info.ini")
+    print("info : " + filePath)
     config1.read(filePath)
-    miniaturePath = os.path.join(cwd, "maps\\" + config1.get("Images","map") + "\\mapMiniature.png")
+    a1 = config1.get("Images","map")
+    miniaturePath = os.path.join(cwd, "maps" + "\\" + a1 + "\\" + "mapMiniature.png")
+    print("miniature : " + filePath)
     b = PIL.Image.open(miniaturePath)
     b = b.resize((800, 500), PIL.Image.ANTIALIAS)
     msmVar.img = ImageTk.PhotoImage(b)
@@ -75,10 +79,11 @@ def missionSelectScreen(root,config,uiMenuElements):
     cwd = str(cwd.parent)
     a = str((variable.get()))
     config1 = configparser.ConfigParser()
-    filePath = os.path.join(cwd, "campaignMissions\\" + a + "\\level info.ini")
-    print(filePath)
+    filePath = os.path.join(cwd, "campaignMissions" + "\\" + a + "\\" + "level info.ini")
     config1.read(filePath)
-    c = os.path.join(cwd, "maps\\" + config1.get("Images","map")+"\\mapMiniature.png")
+    a1 = config1.get("Images","map")
+    c = os.path.join(cwd, "maps" + "\\" + a1 + "\\" + "mapMiniature.png")
+    print(c)
     b = PIL.Image.open(c)
     img = ImageTk.PhotoImage(b)
     missionCanvas.create_image(0,0,anchor=NW,image=img)

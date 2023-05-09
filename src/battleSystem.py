@@ -1,6 +1,7 @@
 import configparser
 from ctypes import pointer
 from dis import dis
+from ensurepip import bootstrap
 from faulthandler import disable
 from tabnanny import check
 import tkinter as tk
@@ -16,13 +17,14 @@ from functools import partial
 import random
 import sys,os
 from pathlib import Path
+import time
 
-from shipCombat import *
-from canvasCalls import *
-import naglowek
-from rootCommands import *
-from systems import *
-from ammunitionType import *
+from src.shipCombat import *
+from src.canvasCalls import *
+import src.naglowek as naglowek
+from src.rootCommands import *
+from src.systems import *
+from src.ammunitionType import *
 
 #   Artemis 2021
 #   Project by Pawel Golabek
@@ -150,7 +152,7 @@ class aiController():
                            
 
     def moveOrderChoice(ship,ships,var,gameRules,uiMetrics):
-        checksLeft = 400
+        checksLeft = 40
         bestOrderX = 100    #default if everything else fails
         bestOrderY = 100    #default if everything else fails
         bestOrderValue = float('-inf')
@@ -168,7 +170,7 @@ class aiController():
             currentTracer.speed = ship.speed
             currentTracer.moveOrderX = currentOrderX
             currentTracer.moveOrderY = currentOrderY
-            currentTracer.ttl = var.turnLength + 200 # +200 to avoid unavoidable collisions next turn
+            currentTracer.ttl = var.turnLength + 800 # +200 to avoid unavoidable collisions next turn
             
             while(True):
                 # check for terrain
@@ -266,7 +268,7 @@ def openShip1Menu(ship,var,shipLookup,uiMetrics):
     for system in shipChosen.systemSlots:
         if(i>=len(shipChosen.systemSlots)):
             break
-        scale = ttk.Scale(systemsLabelFrame, orient=HORIZONTAL, length=uiMetrics.systemScalesWidth, \
+        scale = tk.Scale(systemsLabelFrame, orient=HORIZONTAL, length=uiMetrics.systemScalesWidth, \
                             label=system.name, from_ = system.minEnergy, to=system.maxEnergy, relief=RIDGE)
         scale.set(system.energy)
         if(var.turnInProgress or disable):
@@ -279,12 +281,12 @@ def openShip1Menu(ship,var,shipLookup,uiMetrics):
         i+=1
     (systemsLabelFrame).place(x = 0, y = 0)
 
-    label = ttk.Label(window, text=("'" + ship.name + "' \n \n" + " test") )
+    label = tk.Label(window, text=("'" + ship.name + "' \n \n" + " test") )
     window.protocol("WM_DELETE_WINDOW", lambda: closeWindow(window))
 
     window.config(width = len(ship.name) * 6 + 200,height = 200)
     closeWindowCommand = partial(closeWindow,window)
-    button = ttk.Button(window, text = "Ok", width = 5, height = 1,command=closeWindowCommand)
+    button = tk.Button(window, text = "Ok", width = 5, height = 1,command=closeWindowCommand)
     label.place(relx=0.5, rely=0.2,anchor=CENTER)
     button.place(relx=0.5, rely=0.5,anchor=CENTER)
     updateWindow(shipLookup,uiSystemsProgressbars,uiSystems,var,window)
@@ -295,7 +297,7 @@ def updateWindow(shipLookup,progressbars,uiSystems,var,window):
         for system in uiSystems:
             if(i>=len(shipChosen.systemSlots)):
                 break
-            (shipChosen.systemSlots[i]).energy = (uiSystems[i]).get()       ### wip
+            (shipChosen.systemSlots[i]).energy = (uiSystems[i]).get()
             system1 = shipChosen.systemSlots[i]
             system['value'] = (system1.maxCooldown-system1.cooldown)
             i+=1
@@ -402,14 +404,14 @@ def manageRockets(missles,shipLookup,var,events,uiElements,uiMetrics):    # mana
 
         if (straightDistance < aroundDistance):
             if(missleCloserToDown):
-                minDistY = (targetShipY - missle.yPos)
+                minDistY = missle.yPos - targetShipY
             else:
-                minDistY = - (missle.yPos - targetShipY )                
+                minDistY = targetShipY - missle.yPos                
         else:
             if(missleCloserToDown):
-                minDistY = (missle.yPos - targetShipY)
+                minDistY = uiMetrics.canvasHeight - missle.yPos + targetShipY
             else:
-                minDistY = - (targetShipY - missle.yPos )     
+                minDistY = uiMetrics.canvasHeight + missle.yPos - targetShipY  
 
         scale = math.sqrt((minDistX) * (minDistX) + minDistY * minDistY)
         if scale == 0:
@@ -518,118 +520,84 @@ def drawLasers(var,canvas,uiMetrics):
         else:
             (var.lasers).remove(laser)
 
-############################################ INPUTS #############################################
-
-def motion(event,var,root):
-    var.pointerX = root.winfo_pointerx() - root.winfo_rootx()
-    var.pointerY = root.winfo_pointery() - root.winfo_rooty()
-
-
-def mouseButton1(event, var):  # get left mouse button and set it in var
-    if event:
-        var.mouseButton1 = True
-        var.updateTimer = 2
-    else:
-        var.mouseButton1 = False
-
-
-def mouseWheel(event, var,uiMetrics):
-    if event.delta > 0:
-        var.mouseWheelUp = True
-        if(var.zoom < 4 and mouseOnCanvas(var,uiMetrics)):
-            var.zoom += 0.2
-            var.zoomChange = True
-    else:
-        if(var.zoom > 1 and mouseOnCanvas(var,uiMetrics)):
-            var.zoom -= 0.2
-            var.zoomChange = True
-        var.mouseWheelDown = True
-
-def mouseButton3(event, var):
-    if event:
-        var.mouseButton3 = True
-
-def mouseButton3up(event, var):
-    if event:
-        var.mouseButton3 = False
-
-
-def trackMouse(var):
-    var.pointerDeltaX = var.pointerX - var.prevPointerX
-    var.pointerDeltaY = var.pointerY - var.prevPointerY
-    var.prevPointerX = var.pointerX
-    var.prevPointerY = var.pointerY
-    var.prevPointerX = var.pointerX
-    var.prevPointerY = var.pointerY
 def deleteCanvasElements(canvas):
     for element in canvas.elements:
         canvas.delete(element)
+        # add element to dispenser list
 ##################################### IN-GAME EVENTS ################################################
+#   1. def for create_x to make a demand of writting a specific line/oval/image
+#   2. list to give demands
+#   3. def to create element if needed
+#   4. add element to list if destroyed
 
 
-def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root):
-   # canvas.delete('all')
-    updateScales(uiElements,var,shipLookup)
-    updateEnergy(var,uiElements,shipLookup)
-    var.gameSpeed = float((uiElements.gameSpeedScale).get())
-    if(not var.turnInProgress):
-        manageSystemActivations(var.ships,var,gameRules,uiMetrics,shipLookup)
-        for ship in var.ships:
-            getOrders(ship,var,gameRules,uiMetrics)
-    ticksToEndFrame = 0
-    if(var.turnInProgress):
-        root.title("TURN IN PROGRESS")
-        while(ticksToEndFrame < var.gameSpeed):
-            detectionCheck(var,uiMetrics)
-            updateShips(var,uiMetrics,gameRules,shipLookup,events,uiElements)
-            checkForKilledShips(events,shipLookup,var,uiElements)
-            manageLandmarks(var.landmarks,var.ships)
-           # manageShots(var.ships,var.turnLength,uiElements,var)   # check ship shot
-            manageRockets(var.currentMissles,shipLookup,var,events,uiElements,uiMetrics)   # manage mid-air munitions
-            manageSystemTriggers(var.ships,var,shipLookup,uiMetrics)
-            updateCooldowns(var.ships,var,shipLookup,uiMetrics)
-            updateSignatures(var.ships)
-            for laser in var.lasers:
-                if var.turnInProgress:
-                    laser.ttl -= 1
-            ticksToEndFrame += 1
-            uiElements.timeElapsedProgressBar['value'] += 1
-            if(uiElements.timeElapsedProgressBar['value'] > var.turnLength):
-                root.title("AI IS THINKING")
-                endTurn(uiElements,var,gameRules,uiMetrics)
-                break
-    else:
-        root.title(uiElements.rootTitle)
-    var.input = (var.mouseWheelUp or var.mouseWheelDown or (var.mouseButton3 and var.zoom != 1 and mouseOnCanvas(var,uiMetrics)) or var.mouseButton1 )
-    if(var.input):
-        newWindow(uiMetrics,var,canvas)
-    if(var.turnInProgress or var.input or var.updateTimer == 0):
-        deleteCanvasElements(canvas)
+def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root):        ### sprawdz co zamula
+    if(var.drag==''):    
+       # canvas.delete('all')
+        updateScales(uiElements,var,shipLookup)
+        updateEnergy(var,uiElements,shipLookup)
+        var.gameSpeed = float((uiElements.gameSpeedScale).get())
+        if(not var.turnInProgress):
+            manageSystemActivations(var.ships,var,gameRules,uiMetrics,shipLookup)
+            for ship in var.ships:
+                getOrders(ship,var,gameRules,uiMetrics)
+        ticksToEndFrame = 0
+        if(var.turnInProgress):
+            root.title("TURN IN PROGRESS")
+            var.systemTime = time.time()
+            while(ticksToEndFrame < var.gameSpeed):
+                detectionCheck(var,uiMetrics)
+                updateShips(var,uiMetrics,gameRules,shipLookup,events,uiElements)
+                checkForKilledShips(events,shipLookup,var,uiElements)
+                manageLandmarks(var.landmarks,var.ships)
+                manageRockets(var.currentMissles,shipLookup,var,events,uiElements,uiMetrics) 
+                manageSystemTriggers(var.ships,var,shipLookup,uiMetrics)
+                updateCooldowns(var.ships,var,shipLookup,uiMetrics)
+                updateSignatures(var.ships)
+                for laser in var.lasers:
+                    if var.turnInProgress:
+                        laser.ttl -= 1
+                ticksToEndFrame += 1
+                uiElements.timeElapsedProgressBar['value'] += 1
+                if(uiElements.timeElapsedProgressBar['value'] > var.turnLength):
+                    root.title("AI IS THINKING")
+                    endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons)
+                    break
+        else:
+            root.title(uiElements.rootTitle)
+        var.input = (var.mouseWheelUp or var.mouseWheelDown or (var.mouseButton3 and var.zoom != 1 and mouseOnCanvas(var,uiMetrics)) or var.mouseButton1 )
+        if(var.input):
+            newWindow(uiMetrics,var,canvas)
+        if(var.turnInProgress or var.input or var.updateTimer == 0):
+            deleteCanvasElements(canvas)
+          #  print(str(canvas.ovalList) + "no ovals")
+            drawGhostPoints(canvas,var)
+            drawSignatures(canvas,var)
+            drawLandmarks(var,canvas,uiIcons)
+            drawLasers(var,canvas,uiMetrics)
+            drawRockets(var,ammunitionType,canvas)
+            var.mouseOnUI = False
+            var.mouseWheelUp = False
+            var.mouseWheelDown = False
+            var.mouseButton1 = False
+            var.mouseButton2 = False
+            var.zoomChange = False
         drawShips(canvas,var,uiMetrics)
-        drawGhostPoints(canvas,var)
-        drawSignatures(canvas,var)
-        drawLandmarks(var,canvas,uiIcons)
-        drawLasers(var,canvas,uiMetrics)
-        drawRockets(var,ammunitionType,canvas)
-        var.mouseOnUI = False
-        var.mouseWheelUp = False
-        var.mouseWheelDown = False
-        var.mouseButton1 = False
-        var.mouseButton2 = False
-        var.zoomChange = False
-    trackMouse(var)
-    if(var.finished):
-        return
-    if(var.updateTimer>0):
-        var.updateTimer -= 1
-    if(var.turnInProgress or var.mouseButton3):
-        root.after(20, partial(update,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root))
-    else:
-        root.after(20, partial(update,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root))
+     #   print("aaa")
+        trackMouse(var)
+        if(var.finished):
+            return
+        if(var.updateTimer>0):
+            var.updateTimer -= 1
+        if(var.turnInProgress or var.mouseButton3):
+            root.after(20, partial(update,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root))
+        else:
+            root.after(20, partial(update,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root))
+     #   print("Time total: " + str(time.time() - var.startTime) + " systems : " + str(var.systemStopTime))
 
 
 def newWindow(uiMetrics,var,canvas):
-    canvas.delete("all")
+    canvas.delete(canvas.imageID)
     canPoiX = var.pointerX - uiMetrics.canvasX
     canPoiY = var.pointerY - uiMetrics.canvasY
     var.imgg = ImageTk.PhotoImage(var.resizedImage)
@@ -663,7 +631,7 @@ def newWindow(uiMetrics,var,canvas):
         var.resizedImage = (var.resizedImage).resize((uiMetrics.canvasWidth, uiMetrics.canvasHeight), PIL.Image.ANTIALIAS)
 
         var.imgg = ImageTk.PhotoImage(var.resizedImage)
-        canvas.create_image(0, 0, image=var.imgg, anchor='nw')
+        canvas.imageID = canvas.create_image(0, 0, image=var.imgg, anchor='nw')
 
 
     if((var.mouseWheelUp or var.mouseWheelDown) and mouseOnCanvas(var,uiMetrics) and var.zoomChange):
@@ -705,10 +673,10 @@ def newWindow(uiMetrics,var,canvas):
         var.resizedImage = (var.resizedImage).resize((uiMetrics.canvasWidth, uiMetrics.canvasHeight), PIL.Image.ANTIALIAS)
 
         var.imgg = ImageTk.PhotoImage(var.resizedImage)
-        canvas.create_image(0, 0, image=var.imgg, anchor='nw')
+        canvas.imageID = canvas.create_image(0, 0, image=var.imgg, anchor='nw')
     else:
         var.imgg = ImageTk.PhotoImage(var.resizedImage)
-        canvas.create_image(0, 0, image=var.imgg, anchor='nw')
+        canvas.imageID = canvas.create_image(0, 0, image=var.imgg, anchor='nw')
 
 # + var.pointerDeltaX 
 # + var.pointerDeltaY 
@@ -729,22 +697,31 @@ def startTurn(uiElements,var,ships,gameRules,uiMetrics):
         object.config(state = DISABLED, background="#D0D0D0")
 
 
-def endTurn(uiElements,var,gameRules,uiMetrics): 
+def endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons): 
     var.turnInProgress = FALSE
     for object in uiElements.UIElementsList:
-        object.config(state=NORMAL, background="#F0F0F0")
+        object.config(state = NORMAL, bg="#4582ec",highlightcolor = "white",fg = "white",highlightbackground = "#bfbfbf")
     for object in uiElements.RadioElementsList:
-        object.config(state=NORMAL)
+        object.config(state = NORMAL)
     for object in uiElements.uiSystems:
-        object.config(state = NORMAL, background="#F0F0F0")
+        object.config(state = NORMAL, bg="#4582ec",highlightcolor = "white")
+    uiElements.gameSpeedScale.config(bg="#4582ec",highlightcolor = "white",fg = "white")
     for ship in var.ships:
         ship.ghostPoints = []
     for ship1 in var.ships:
         if(ship1.owner == "ai1"):
             aiController.moveOrderChoice(ship1,var.ships,var,gameRules,uiMetrics)
+
             aiController.systemChoice(ship1,var.ships)
         getOrders(ship1,var,gameRules,uiMetrics,True)
     var.updateTimer = 3
+    deleteCanvasElements(canvas)
+    drawShips(canvas,var,uiMetrics)
+    drawGhostPoints(canvas,var)
+    drawSignatures(canvas,var)
+    drawLandmarks(var,canvas,uiIcons)
+    drawLasers(var,canvas,uiMetrics)
+    drawRockets(var,ammunitionType,canvas)
 
 
 def updateScales(uiElements,var,shipLookup):
@@ -776,6 +753,10 @@ def updateScales(uiElements,var,shipLookup):
         (shipChosen.systemSlots[i]).energy = (uiElements.uiSystems[i]).get()
         system1 = shipChosen.systemSlots[i]
         system['value'] = (system1.maxCooldown-system1.cooldown)
+        if(system1.cooldown <= 0 ):
+            system.config(bootstyle = "success")
+        else:
+            system.config(bootstyle = "danger")
         i+=1
 
 def updateCooldowns(ships,var,shipLookup,uiMetrics):
@@ -784,7 +765,7 @@ def updateCooldowns(ships,var,shipLookup,uiMetrics):
             #change if needed
             energyTicks = system.energy
             while(system.cooldown >= 0 and energyTicks):
-                system.cooldown -= 0.1
+                system.cooldown -= 1
                 energyTicks -= 1
                 system.trigger(var,ship,ships,shipLookup,uiMetrics)
 
@@ -845,11 +826,11 @@ def clearUtilityChoice(uiElements,var):
 def updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas):
     clearUtilityChoice(uiElements,var)
     shipChosen = shipLookup[var.shipChoice]
-    uiElements.systemsLabelFrame = ttk.LabelFrame(root,width=uiMetrics.systemScalesLabelFrameWidth, \
+    uiElements.systemsLabelFrame = tk.LabelFrame(root,width=uiMetrics.systemScalesLabelFrameWidth, \
                                                     height = (uiMetrics.systemScalesMarginTop*1.5 + (uiMetrics.systemScalesHeightOffset)*len(shipChosen.systemSlots)), text= shipChosen.name + " systems", \
                                                     borderwidth=2, relief="groove")
 
-    var.uiEnergyLabel = ttk.Label(uiElements.systemsLabelFrame, width=20, text = "Energy remaining: " + str(shipChosen.energy), font = "16")
+    var.uiEnergyLabel = tk.Label(uiElements.systemsLabelFrame, width=20, text = "Energy remaining: " + str(shipChosen.energy), font = "16")
     hideBattleUi(uiElements.staticUi,uiElements)
     placeBattleUi(uiElements,uiMetrics,canvas,var,shipLookup)
         
@@ -934,13 +915,71 @@ def declareShips(var,config):
         (var.ships).append(var.enemy2)
         (var.ships).append(var.enemy3)
 
-def bindInputs(root,var,uiMetrics):
+############################################ INPUTS #############################################
+
+def bindInputs(root,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType):
     root.bind('<Motion>', lambda e: motion(e, var,root))
     root.bind('<Button-1>', lambda e: mouseButton1(e, var))
     root.bind('<Button-2>', lambda e: mouseButton3(e, var))
     root.bind('<ButtonRelease-2>', lambda e: mouseButton3up(e, var))
     root.bind('<MouseWheel>', lambda e: mouseWheel(e, var,uiMetrics))
+    root.bind('<Configure>', lambda e: dragging(e,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root))
 
+
+def motion(event,var,root):
+    var.pointerX = root.winfo_pointerx() - root.winfo_rootx()
+    var.pointerY = root.winfo_pointery() - root.winfo_rooty()
+
+
+def mouseButton1(event, var):  # get left mouse button and set it in var
+    if event:
+        var.mouseButton1 = True
+        var.updateTimer = 2
+    else:
+        var.mouseButton1 = False
+
+
+def mouseWheel(event, var,uiMetrics):
+    if event.delta > 0:
+        var.mouseWheelUp = True
+        if(var.zoom < 4 and mouseOnCanvas(var,uiMetrics)):
+            var.zoom += 0.2
+            var.zoomChange = True
+    else:
+        if(var.zoom > 1 and mouseOnCanvas(var,uiMetrics)):
+            var.zoom -= 0.2
+            var.zoomChange = True
+        var.mouseWheelDown = True
+
+def mouseButton3(event, var):
+    if event:
+        var.mouseButton3 = True
+
+def mouseButton3up(event, var):
+    if event:
+        var.mouseButton3 = False
+
+
+def dragging(event,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root):
+    if event.widget is root:
+        if not var.drag == '':
+            root.after_cancel(var.drag)
+        var.drag = root.after(100, partial(stop_drag,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root))
+
+
+def stop_drag(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root):
+    var.drag = ''
+    root.after(1, partial(update,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root))
+
+
+
+def trackMouse(var):
+    var.pointerDeltaX = var.pointerX - var.prevPointerX
+    var.pointerDeltaY = var.pointerY - var.prevPointerY
+    var.prevPointerX = var.pointerX
+    var.prevPointerY = var.pointerY
+    var.prevPointerX = var.pointerX
+    var.prevPointerY = var.pointerY
 
 ######################################################### MAIN ####################################
 
@@ -1050,15 +1089,15 @@ def resume(config,root,menuUiElements):
         """
         #root.deiconify()
         uiMetrics = naglowek.uiMetrics
-        var = global_var(config,root)
-        gameRules = game_rules()
+        var = naglowek.global_var(config,root)
+        gameRules = naglowek.game_rules()
         ammunitionType = ammunition_type()
         uiIcons = ui_icons()
         shipLookup = dict
         events = _events()
-        uiElements = dynamic_object()
-        uiElements.systemsLabelFrame = ttk.LabelFrame(root,text= "" + " systems",borderwidth=2)
-        uiElements.uiEnergyLabel =  ttk.Label(uiElements.systemsLabelFrame, width=20, text = "Energy remaining: ", font = "16")
+        uiElements = naglowek.dynamic_object()
+        uiElements.systemsLabelFrame = tk.LabelFrame(root,text= "" + " systems",borderwidth=2)
+        uiElements.uiEnergyLabel =  tk.Label(uiElements.systemsLabelFrame, width=20, text = "Energy remaining: ", font = "16")
 
         uiElements.staticUi = []
         uiIcons.armorIcon = PhotoImage(file=os.path.join(cwd, "icons","armor.png"))
@@ -1086,10 +1125,13 @@ def resume(config,root,menuUiElements):
         
         canvas = Canvas(root, width=uiMetrics.canvasWidth,
                             height=uiMetrics.canvasHeight,border=1, relief="groove")
+        canvas.ovalList = []
+        canvas.availableOvalList = []
+        tmp = uiIcons.armorIcon 
+        canvas.imageID = canvas.create_image(0,0,image = tmp)
         getZoomMetrics(var,uiMetrics)
         (uiElements.staticUi).append(canvas)
         declareShips(var,config)
-        bindInputs(root,var,uiMetrics)
 
         uiElements.rootTitle = (config.get("Root", "title"))
         root.title(uiElements.rootTitle)
@@ -1153,17 +1195,17 @@ def resume(config,root,menuUiElements):
                 putTracer(ship1,var,gameRules,uiMetrics)
 
         # ship shields
-        uiElements.playerSPLabelFrame = ttk.LabelFrame(root, text= var.playerName + " Shields",
+        uiElements.playerSPLabelFrame = tk.LabelFrame(root, text= var.playerName + " Shields",
                                             borderwidth=2, relief="groove")
-        uiElements.playerSPLabelFrame2 = ttk.LabelFrame(root, text= var.playerName2 + " Shields",
+        uiElements.playerSPLabelFrame2 = tk.LabelFrame(root, text= var.playerName2 + " Shields",
                                             borderwidth=2, relief="groove")
-        uiElements.playerSPLabelFrame3 = ttk.LabelFrame(root, text= var.playerName3 + " Shields",
+        uiElements.playerSPLabelFrame3 = tk.LabelFrame(root, text= var.playerName3 + " Shields",
                                             borderwidth=2, relief="groove")
-        uiElements.enemySPLabelFrame = ttk.LabelFrame(root, text=var.enemyName + " Shields",
+        uiElements.enemySPLabelFrame = tk.LabelFrame(root, text=var.enemyName + " Shields",
                                         borderwidth=2, relief="groove")
-        uiElements.enemySPLabelFrame2 = ttk.LabelFrame(root, text=var.enemyName2 + " Shields",
+        uiElements.enemySPLabelFrame2 = tk.LabelFrame(root, text=var.enemyName2 + " Shields",
                                             borderwidth=2, relief="groove")
-        uiElements.enemySPLabelFrame3 = ttk.LabelFrame(root, text= var.enemyName3 + " Shields",
+        uiElements.enemySPLabelFrame3 = tk.LabelFrame(root, text= var.enemyName3 + " Shields",
                                             borderwidth=2, relief="groove")
         
 
@@ -1213,28 +1255,28 @@ def resume(config,root,menuUiElements):
             n += 1
 
         # ship armor
-        uiElements.playerAPLabelFrame = ttk.LabelFrame(root, text=var.playerName + " Armor Effectivness",
+        uiElements.playerAPLabelFrame = tk.LabelFrame(root, text=var.playerName + " Armor Effectivness",
                                             borderwidth=2, relief="groove")
         uiElements.playerAPProgressBar = ttk.Progressbar(
             uiElements.playerAPLabelFrame, maximum=(var.player).maxAp, length=(uiMetrics.shipDataWidth-10), variable=100)
-        uiElements.playerAPLabelFrame2 = ttk.LabelFrame(root, text=var.playerName2 + " Armor Effectivness",
+        uiElements.playerAPLabelFrame2 = tk.LabelFrame(root, text=var.playerName2 + " Armor Effectivness",
                                             borderwidth=2, relief="groove")
         uiElements.playerAPProgressBar2 = ttk.Progressbar(
             uiElements.playerAPLabelFrame2, maximum=(var.player2).maxAp, length=(uiMetrics.shipDataWidth-10), variable=100)
-        uiElements.playerAPLabelFrame3 = ttk.LabelFrame(root, text=var.playerName3 + " Armor Effectivness",
+        uiElements.playerAPLabelFrame3 = tk.LabelFrame(root, text=var.playerName3 + " Armor Effectivness",
                                             borderwidth=2, relief="groove")
         uiElements.playerAPProgressBar3 = ttk.Progressbar(
             uiElements.playerAPLabelFrame3, maximum=(var.player3).maxAp, length=(uiMetrics.shipDataWidth-10), variable=100)
-        uiElements.enemyAPLabelFrame = ttk.LabelFrame(root, text=var.enemyName + " Armor Effectivness",
+        uiElements.enemyAPLabelFrame = tk.LabelFrame(root, text=var.enemyName + " Armor Effectivness",
                                         borderwidth=2, relief="groove")
         uiElements.enemyAPProgressBar = ttk.Progressbar(
             uiElements.enemyAPLabelFrame, maximum=(var.enemy).maxAp, length=(uiMetrics.shipDataWidth-10), variable=100)
-        uiElements.enemyAPLabelFrame2 = ttk.LabelFrame(root, text= var.enemyName2 + " Armor Effectivness",
+        uiElements.enemyAPLabelFrame2 = tk.LabelFrame(root, text= var.enemyName2 + " Armor Effectivness",
                                             borderwidth=2, relief="groove")
         uiElements.enemyAPProgressBar2 = ttk.Progressbar(
             uiElements.enemyAPLabelFrame2, maximum=(var.enemy).maxAp, length=(uiMetrics.shipDataWidth-10), variable=100)
 
-        uiElements.enemyAPLabelFrame3 = ttk.LabelFrame(root, text=var.enemyName3 + " Armor Effectivness",
+        uiElements.enemyAPLabelFrame3 = tk.LabelFrame(root, text=var.enemyName3 + " Armor Effectivness",
                                             borderwidth=2, relief="groove")
         uiElements.enemyAPProgressBar3 = ttk.Progressbar(
             uiElements.enemyAPLabelFrame3, maximum=(var.enemy).maxAp, length=(uiMetrics.shipDataWidth-10), variable=100)
@@ -1248,29 +1290,29 @@ def resume(config,root,menuUiElements):
         (uiElements.staticUi).append(uiElements.enemyAPLabelFrame3)
 
         # ship hp
-        uiElements.playerHPLabelFrame = ttk.LabelFrame(root, text= var.playerName + " Hull Integrity",
+        uiElements.playerHPLabelFrame = tk.LabelFrame(root, text= var.playerName + " Hull Integrity",
                                             borderwidth=2, relief="groove")
         uiElements.playerHPProgressBar = ttk.Progressbar(
             uiElements.playerHPLabelFrame, maximum=(var.player).maxHp, length=(uiMetrics.shipDataWidth-10), variable=100)
-        uiElements.playerHPLabelFrame2 = ttk.LabelFrame(root, text= var.playerName2 + " Hull Integrity",
+        uiElements.playerHPLabelFrame2 = tk.LabelFrame(root, text= var.playerName2 + " Hull Integrity",
                                             borderwidth=2, relief="groove")
         uiElements.playerHPProgressBar2 = ttk.Progressbar(
             uiElements.playerHPLabelFrame2, maximum=(var.player2).maxHp, length=(uiMetrics.shipDataWidth-10), variable=100)
 
-        uiElements.playerHPLabelFrame3 = ttk.LabelFrame(root, text=var.playerName3 + " Hull Integrity",
+        uiElements.playerHPLabelFrame3 = tk.LabelFrame(root, text=var.playerName3 + " Hull Integrity",
                                             borderwidth=2, relief="groove")
         uiElements.playerHPProgressBar3 = ttk.Progressbar(
             uiElements.playerHPLabelFrame3, maximum=(var.player3).maxHp, length=(uiMetrics.shipDataWidth-10), variable=100)
 
-        uiElements.enemyHPLabelFrame = ttk.LabelFrame(root, text=var.enemyName + " Hull Integrity",
+        uiElements.enemyHPLabelFrame = tk.LabelFrame(root, text=var.enemyName + " Hull Integrity",
                                         borderwidth=2, relief="groove")
         uiElements.enemyHPProgressBar = ttk.Progressbar(
             uiElements.enemyHPLabelFrame, maximum=(var.enemy).maxHp, length=(uiMetrics.shipDataWidth-10), variable=100)
-        uiElements.enemyHPLabelFrame2 = ttk.LabelFrame(root, text= var.enemyName2 + " Hull Integrity",
+        uiElements.enemyHPLabelFrame2 = tk.LabelFrame(root, text= var.enemyName2 + " Hull Integrity",
                                             borderwidth=2, relief="groove")
         uiElements.enemyHPProgressBar2 = ttk.Progressbar(
             uiElements.enemyHPLabelFrame2, maximum=(var.enemy2).maxHp, length=(uiMetrics.shipDataWidth-10), variable=100)
-        uiElements.enemyHPLabelFrame3 = ttk.LabelFrame(root, text= var.enemyName3 +" Hull Integrity",
+        uiElements.enemyHPLabelFrame3 = tk.LabelFrame(root, text= var.enemyName3 +" Hull Integrity",
                                             borderwidth=2, relief="groove")
         uiElements.enemyHPProgressBar3 = ttk.Progressbar(
             uiElements.enemyHPLabelFrame3,style = 'red.Horizontal.TProgressbar', orient = HORIZONTAL, maximum=(var.enemy3).maxHp, length=(uiMetrics.shipDataWidth-10), variable=100)
@@ -1318,14 +1360,14 @@ def resume(config,root,menuUiElements):
 
         var.shipChoiceRadioButtons = []
         radioCommand = partial(radioBox,shipLookup , uiElements,var,uiMetrics,root,canvas)
-        uiElements.playerShipsLF = ttk.LabelFrame(root,width = 280, height = 60,text = "Player ships")
-        uiElements.enemyShipsLF = ttk.LabelFrame(root,width = 280, height = 60,text = "Enemy ships")
-        uiElements.shipButton0 = ttk.Button(uiElements.playerShipsLF,bootstyle="success" ,text = var.playerName,command = lambda:openShip1Menu(shipLookup[0],var,shipLookup,uiMetrics),width=10)
-        uiElements.shipButton1 = ttk.Button(uiElements.playerShipsLF ,text = var.playerName2,command = lambda:openShip1Menu(shipLookup[1],var,shipLookup,uiMetrics),width=10)
-        uiElements.shipButton2 = ttk.Button(uiElements.playerShipsLF ,text = var.playerName3,command = lambda:openShip1Menu(shipLookup[2],var,shipLookup,uiMetrics),width=10)
-        uiElements.shipButton3 = ttk.Button(uiElements.enemyShipsLF ,text = var.enemyName,command = lambda:openShip1Menu(shipLookup[3],var,shipLookup,uiMetrics),width=10)
-        uiElements.shipButton4 = ttk.Button(uiElements.enemyShipsLF ,text = var.enemyName2,command = lambda:openShip1Menu(shipLookup[4],var,shipLookup,uiMetrics),width=10)
-        uiElements.shipButton5 = ttk.Button(uiElements.enemyShipsLF ,text = var.enemyName3,command = lambda:openShip1Menu(shipLookup[5],var,shipLookup,uiMetrics),width=10)
+        uiElements.playerShipsLF = tk.LabelFrame(root,width = 280, height = 60,text = "Player ships")
+        uiElements.enemyShipsLF = tk.LabelFrame(root,width = 280, height = 60,text = "Enemy ships")
+        uiElements.shipButton0 = tk.Button(uiElements.playerShipsLF ,text = var.playerName,command = lambda:openShip1Menu(shipLookup[0],var,shipLookup,uiMetrics),width=10)
+        uiElements.shipButton1 = tk.Button(uiElements.playerShipsLF ,text = var.playerName2,command = lambda:openShip1Menu(shipLookup[1],var,shipLookup,uiMetrics),width=10)
+        uiElements.shipButton2 = tk.Button(uiElements.playerShipsLF ,text = var.playerName3,command = lambda:openShip1Menu(shipLookup[2],var,shipLookup,uiMetrics),width=10)
+        uiElements.shipButton3 = tk.Button(uiElements.enemyShipsLF ,text = var.enemyName,command = lambda:openShip1Menu(shipLookup[3],var,shipLookup,uiMetrics),width=10)
+        uiElements.shipButton4 = tk.Button(uiElements.enemyShipsLF ,text = var.enemyName2,command = lambda:openShip1Menu(shipLookup[4],var,shipLookup,uiMetrics),width=10)
+        uiElements.shipButton5 = tk.Button(uiElements.enemyShipsLF ,text = var.enemyName3,command = lambda:openShip1Menu(shipLookup[5],var,shipLookup,uiMetrics),width=10)
 
         (uiElements.staticUi).append(uiElements.shipButton0)
         (uiElements.staticUi).append(uiElements.shipButton1)
@@ -1357,13 +1399,14 @@ def resume(config,root,menuUiElements):
         (uiElements.staticUi).append(uiElements.shipChoiceRadioButton2)
 
         radioBox(shipLookup,uiElements,var,uiMetrics,root,canvas)
-        detectionCheck(var,uiMetrics)
+
+        bindInputs(root,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType)
         
         #placeBattleUi(uiElementsToPlace,uiMetrics,canvas,var,shipLookup)
+        detectionCheck(var,uiMetrics)
         updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas)
         deleteCanvasElements(canvas)                                    # first update 
         newWindow(uiMetrics,var,canvas)
-        drawShips(canvas,var,uiMetrics)
         drawGhostPoints(canvas,var)
         drawSignatures(canvas,var)
         drawLandmarks(var,canvas,uiIcons)
@@ -1386,6 +1429,6 @@ def resume(config,root,menuUiElements):
    
     else:
         ((naglowek.combatSystemInfo).var).finished = False
-        ((naglowek.combatSystemInfo).uiElements).systemsLabelFrame = ttk.LabelFrame(root,text= "" + " systems",borderwidth=2)
+        ((naglowek.combatSystemInfo).uiElements).systemsLabelFrame = tk.LabelFrame(root,text= "" + " systems",borderwidth=2)
         updateBattleUi((naglowek.combatSystemInfo).shipLookup,(naglowek.combatSystemInfo).uiMetrics,(naglowek.combatSystemInfo).var,root,(naglowek.combatSystemInfo).uiElements,(naglowek.combatSystemInfo).canvas)
     update((naglowek.combatSystemInfo).var,(naglowek.combatSystemInfo).uiElements,(naglowek.combatSystemInfo).uiMetrics,(naglowek.combatSystemInfo).uiIcons,(naglowek.combatSystemInfo).canvas,(naglowek.combatSystemInfo).events,(naglowek.combatSystemInfo).shipLookup,(naglowek.combatSystemInfo).gameRules,(naglowek.combatSystemInfo).ammunitionType,root)
