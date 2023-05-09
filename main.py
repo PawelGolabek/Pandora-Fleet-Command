@@ -34,9 +34,8 @@ if __name__ == '__main__':
     declareGlobalGenerators()
     declareGlobalMaps()
     parameter1 = "2.Warcries-That-Shred-The-Clouds"
-    #root = ThemedTk(theme="yaru")
     root = tk.Tk()
-    #root = ttk.Window(themename="cyborg")
+  #  root = ttk.Window(themename="cyborg")
     _style = ttk.Style()
     uiMetrics = ui_metrics()
     loadStyles(root,_style)

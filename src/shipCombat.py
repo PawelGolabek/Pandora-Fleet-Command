@@ -5,20 +5,6 @@ import src.naglowek as naglowek
 from src.ammunitionType import *
 from src.colorCommands import rgbtohex
 
-def ovalCreator(var,canvas,drawX,drawY,drawX2,drawY2,outline = "yellow", dash=(0)):
-    if(canvas.availableOvalList == []):
-        oval = canvas.create_oval(drawX,drawY,drawX2,drawY2, state = 'normal', outline = outline, dash = dash)
-        canvas.ovalList.append(oval)
-    else:
-        canvas.coords(canvas.availableOvalList[-1], drawX,drawY,drawX2,drawY2)
-        canvas.itemconfig(canvas.availableOvalList[-1], state = 'normal', outline = outline, dash = dash)
-        canvas.ovalList.append(canvas.availableOvalList.pop())
-
-def releaseOval(canvas,oval):
-    #canvas.itemconfig(oval,state = "hidden")
-    canvas.coords(oval, 0,0,-1,-1)
-    canvas.availableOvalList.append(oval)
-    canvas.ovalList.remove(oval)
     
 class laser():
     def __init__(self, xPos=300, yPos=300, targetXPos=300, targetYPos=300, color = rgbtohex(22,22,22), ttl = 10): 
@@ -29,8 +15,31 @@ class laser():
         self.color = color
         self.ttl = ttl
 
+def closeWindow(window):
+    window.destroy()
+
+def getZoomMetrics(var,uiMetrics):
+    var.mouseX = uiMetrics.canvasWidth/2
+    var.mouseY = uiMetrics.canvasHeight/2
+    var.left = 0
+    var.right = uiMetrics.canvasWidth
+    var.top = 0
+    var.bottom = uiMetrics.canvasHeight
+    var.yellowX = 0
+    var.yellowY = 0
+    var.zoomChange = False
+
+def finishSetTrue(var):
+    var.finished = True
+
 def detectionCheck(globalVar,uiMetrics):
     for ship in globalVar.ships:
+        if(ship.visible):
+            ship.wasVisible = True
+        else:
+            ship.wasVisible = False
+            if(ship.wasVisible):
+                createSignature(ship, ship.xPos, ship.yPos)
         ship.visible = False
         for ship2 in globalVar.ships:
             if(not ship2.owner == ship.owner):
@@ -78,6 +87,7 @@ def detectionCheck(globalVar,uiMetrics):
                    #     print(str(element.x) + " " + str(element.y) + " " + str(ship.id) + " " + str(ship2.id) + " " + str(distance))
                         ship.visible = True
                         break
+
        
 def createGhostPoint(ship, xPos, yPos,number = 0):
     ghost = naglowek.ghost_point()
@@ -315,7 +325,7 @@ def drawLandmarks(var,canvas,uiIcons):
         text = canvas.create_text(drawX, drawY+20,
                            text=math.ceil(landmark.cooldown/100), fill = "white")              
         canvas.elements.append(text)
-        ovalCreator(drawX-radius, drawY-radius, drawX+radius, drawY+radius, outline = "yellow", dash=(2,3))       
+        canvas.create_oval(drawX-radius, drawY-radius, drawX+radius, drawY+radius, outline = "yellow", dash=(2,3))       
         iconX = drawX
         iconY = drawY
         if(landmark.boost == 'armor'):
@@ -432,7 +442,7 @@ def drawShips(canvas,var,uiMetrics):  # draw ship on the map with all of its acc
                 x2 = element.x + ship.detectionRange*var.zoom
                 y1 = element.y - ship.detectionRange*var.zoom
                 y2 = element.y+ship.detectionRange*var.zoom
-                ovalCreator(var,canvas,x1, y1, x2, y2, outline=ship.outlineColor, dash = (1,3))
+                canvas.create_oval(x1, y1, x2, y2, outline=ship.outlineColor, dash = (1,3))
 
  
 

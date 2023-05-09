@@ -8,12 +8,8 @@ from ttkbootstrap.constants import *
 
 def loadStyles(root,s):
   x=10
- # sv_ttk.set_theme("dark")  # Set dark theme
- #   sv_ttk.set_theme("light")  # Set dark theme
-
- # sv_ttk.use_dark_theme()  # Set dark theme
- #   sv_ttk.use_light_theme()  # Set dark theme
-
+  root.config(bg="#202020")
+  s.configure('Grey.TLabelframe.Label', background='#202020',fg="red",relief="ridge")
 
    # print(sv_ttk.get_theme())  # Get what theme the app uses (either 'light' or 'dark')
 

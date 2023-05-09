@@ -15,6 +15,7 @@ def systemChoiceCommand(systemChoice,uiElements,label,info,slot):
     oldSystemName = (info.ship).systemSlots[slot]
     oldSystem = (naglowek.systemStats)[oldSystemName]
     tmpText = "Mass: " + str(newSystem.mass)
+    tmpText += ", Cost: " + str(newSystem.cost)
     label.config(text = tmpText)
     (oldSystem).onRemoving(info.ship)
     (info.ship).systemSlots[slot] = a
@@ -28,6 +29,7 @@ def subsystemChoiceCommand(subsystemChoice,uiElements,label,info,slot):
     oldSubsystemName = (info.ship).subsystemSlots[slot]
     oldSubsystem = (naglowek.subsystemStats)[oldSubsystemName]
     tmpText = "Mass: " + str(newSubsystem.mass)
+    tmpText += ", Cost: " + str(newSubsystem.cost)
     label.config(text = tmpText)
     (oldSubsystem).onRemoving(info.ship)
     (info.ship).subsystemSlots[slot] = a
@@ -45,7 +47,6 @@ def sign(number):
 
 def updateShipStats(uiElements,info):
     ship = info.ship
-
     # insert some clever formula with mass speed rotation etc
     ship.maxSpeed = round((ship.mainThrust + ship.directionalThrust)/(ship.mass*0.005),2)
 
@@ -54,6 +55,7 @@ def updateShipStats(uiElements,info):
     (info.shipDiff).shields = ship.shields - info.oldShip.shields
     (info.shipDiff).maxShields = ship.maxShields - info.oldShip.maxShields
     (info.shipDiff).mass = ship.mass - info.oldShip.mass
+    (info.shipDiff).cost = ship.cost - info.oldShip.cost
     (info.shipDiff).detectionRange = ship.detectionRange - info.oldShip.detectionRange
     (info.shipDiff).maxSpeed  = ship.maxSpeed - info.oldShip.maxSpeed
     (info.shipDiff).turnRate = ship.turnRate - info.oldShip.turnRate
@@ -66,7 +68,7 @@ def updateShipStats(uiElements,info):
     getcontext().prec = 2  
     getcontext().rounding = ROUND_UP
     (uiElements.shipStatsL).config(text = "Hull: {}{} \n Armor: {}{} \n Shields: {}{}\n Maximum shields: {}{}\n\
- Sensors Range: {}{} \n Mass: {}{}t  \n Forward Thrust: {}{}  \n Directional Thrust: {}{} \n RotationSpeed: {}{}/s \n Max Speed: {}{} \n Max Energy: {}{} \n Minimum Energy Consumption: {}{} \n Maximum Energy Consumption: {}{}".format(
+ Sensors Range: {}{} \n Mass: {}{}t  \n Forward Thrust: {}{}  \n Directional Thrust: {}{} \n RotationSpeed: {}{}/s \n Max Speed: {}{} \n Max Energy: {}{} \n Minimum Energy Consumption: {}{} \n Maximum Energy Consumption: {}{}\n Cost total: {}{}".format(
     round(ship.hp, 2), sign(round((info.shipDiff).hp, 2)),
     round(ship.ap, 2), sign(round((info.shipDiff).ap, 2)),
     round(ship.shields, 2), sign(round((info.shipDiff).shields, 2)),
@@ -80,6 +82,7 @@ def updateShipStats(uiElements,info):
     round(ship.maxEnergy, 2), sign(round((info.shipDiff).maxEnergy, 2)),
     round(ship.minEnergyConsumption, 2), sign(round((info.shipDiff).minEnergyConsumption, 2)),
     round(ship.maxEnergyConsumption, 2), sign(round((info.shipDiff).maxEnergyConsumption, 2)),
+    round(ship.cost, 2), sign(round((info.shipDiff).cost, 2)),
     ))
 
     (info.oldShip).hp = ship.hp
@@ -87,6 +90,7 @@ def updateShipStats(uiElements,info):
     (info.oldShip).shields = ship.shields
     (info.oldShip).maxShields = ship.shields # change if needed
     (info.oldShip).mass = ship.mass
+    (info.oldShip).cost = ship.cost
     (info.oldShip).detectionRange = ship.detectionRange
     (info.oldShip).maxSpeed = ship.maxSpeed
     (info.oldShip).turnRate = ship.turnRate
@@ -98,6 +102,7 @@ def updateShipStats(uiElements,info):
 
 def updateSystemStats(uiElements,subsystem):
     (uiElements.systemStatsL).config(text = "Mass: {}".format(subsystem.mass,))
+    (uiElements.systemStatsL).config(text = "Cost: {}".format(subsystem.cost,))
 
 def engineChoiceCommand(engineChoice,uiElements,label,info):
     a = engineChoice.get()
@@ -105,6 +110,7 @@ def engineChoiceCommand(engineChoice,uiElements,label,info):
     oldEngine = (naglowek.engineStats)[oldEngineName]
     newEngine = (naglowek.engineStats)[a]
     tmpText = "Mass: " + str(newEngine.mass)
+    tmpText += "Cost: " + str(newEngine.cost)
     label.config(text = tmpText)
     (info.ship).engine = newEngine.name
     (oldEngine).onRemoving(info.ship)
@@ -119,6 +125,7 @@ def thrustersChoiceCommand(thrustersChoice,uiElements,label,info):
     oldThrusters = (naglowek.thrustersStats)[oldThrustersName]
     newThrusters = (naglowek.thrustersStats)[a]
     tmpText = "Mass: " + str(newThrusters.mass)
+    tmpText += ", Cost: " + str(newThrusters.cost)
     label.config(text = tmpText)
     (info.ship).thrusters = newThrusters.name
     (oldThrusters).onRemoving(info.ship)
@@ -133,6 +140,7 @@ def radarChoiceCommand(radarChoice,uiElements,label,info):
     oldRadar = (naglowek.radarStats)[oldRadarName]
     newRadar = (naglowek.radarStats)[a]
     tmpText = "Mass: " + str(newRadar.mass)
+    tmpText = ", Cost: " + str(newRadar.cost)
     label.config(text = tmpText)
     (info.ship).radar = newRadar.name
     (oldRadar).onRemoving(info.ship)
@@ -147,6 +155,7 @@ def generatorChoiceCommand(generatorChoice,uiElements,label,info):
     oldGenerator = (naglowek.generatorStats)[oldGeneratorName]
     newGenerator = (naglowek.generatorStats)[a]
     tmpText = "Mass: " + str(newGenerator.mass)
+    tmpText += ", Cost: " + str(newGenerator.cost)
     label.config(text = tmpText)
     (info.ship).generator = newGenerator.name
     (oldGenerator).onRemoving(info.ship)
@@ -291,7 +300,7 @@ def shipEditor(root,config,uiMenuElements,uiMetrics,menuUiElements):
         uiElements.systemStatsLF = tk.LabelFrame(root,text = "Recently changed element statistics:",width = uiMetrics.shipStatsLFWidth,height = uiMetrics.shipStatsLFHeight)
         uiElements.systemStatsL = tk.Label(uiElements.systemStatsLF,text = "Choose any ship element")
         uiElements.shipStatsLF = tk.LabelFrame(root,text = "Ship statistics:",width = uiMetrics.shipStatsLFWidth,height = uiMetrics.shipStatsLFHeight)
-        uiElements.shipStatsL = tk.Label(uiElements.shipStatsLF, text = "Hull: 100 \n Armor: 100 \n Mass: 200t\
+        uiElements.shipStatsL = tk.Label(uiElements.shipStatsLF, text = "Hull: 100 \n Armor: 100 \n Mass: 200t \n Cost: 0\
 \n Sensors Range: 200 \n Max Speed: 70 \n RotationSpeed: 0.3/s \n Max Energy: 20 \n Minimum Energy Consumption: 5 \n Maximum Energy Consumption: 35", 
 justify = "left")
         uiElements.shipNameInput = tk.Entry(root,width = 50)
@@ -315,6 +324,7 @@ justify = "left")
             ((info.ship).subsystemSlots).append("none")
             tmp-=1     
         (info.ship).mass = 100
+        (info.ship).cost = 0
         (info.ship).hp = 100
         (info.ship).ap = 100
         (info.ship).shields = 1
@@ -333,6 +343,7 @@ justify = "left")
         (info.ship).directionalThrust = 0
 
         (info.oldShip).mass = 100
+        (info.oldShip).cost = 0
         (info.oldShip).hp = 100
         (info.oldShip).ap = 100
         (info.oldShip).shields = 1
@@ -360,10 +371,10 @@ justify = "left")
         uiElements.radarChoiceMenuLF = tk.LabelFrame(root, text = "Sensors", width = uiMetrics.editorChoiceMenuLFWidth, height = uiMetrics.editorChoiceMenuLFHeight)
         uiElements.generatorChoiceMenuLF = tk.LabelFrame(root, text = "Power Generator", width = uiMetrics.editorChoiceMenuLFWidth, height = uiMetrics.editorChoiceMenuLFHeight)
 
-        uiElements.engineChoiceMenuL = tk.Label(uiElements.engineChoiceMenuLF, text = "Mass: 0",)
-        uiElements.thrustersChoiceMenuL = tk.Label(uiElements.thrustersChoiceMenuLF, text = "Mass: 0")
-        uiElements.radarChoiceMenuL = tk.Label(uiElements.radarChoiceMenuLF, text = "Mass: 0")
-        uiElements.generatorChoiceMenuL = tk.Label(uiElements.generatorChoiceMenuLF, text = "Mass: 0")
+        uiElements.engineChoiceMenuL = tk.Label(uiElements.engineChoiceMenuLF, text = "Mass: 0, Cost: 0",)
+        uiElements.thrustersChoiceMenuL = tk.Label(uiElements.thrustersChoiceMenuLF, text = "Mass: 0, Cost: 0")
+        uiElements.radarChoiceMenuL = tk.Label(uiElements.radarChoiceMenuLF, text = "Mass: 0, Cost: 0")
+        uiElements.generatorChoiceMenuL = tk.Label(uiElements.generatorChoiceMenuLF, text = "Mass: 0, Cost: 0")
 
         uiElementsList.append(uiElements.engineChoiceMenuLF)
         uiElementsList.append(uiElements.thrustersChoiceMenuLF)
@@ -446,14 +457,14 @@ justify = "left")
         uiElements.systemChoiceMenu6 = OptionMenu(uiElements.systemChoiceLF, info.systemChoice6, *systemOptions, command=lambda _: systemChoiceCommand(info.systemChoice6,uiElements,uiElements.systemChoiceL6,info,6))
         uiElements.systemChoiceMenu7 = OptionMenu(uiElements.systemChoiceLF, info.systemChoice7, *systemOptions, command=lambda _: systemChoiceCommand(info.systemChoice7,uiElements,uiElements.systemChoiceL7,info,7))
 
-        uiElements.systemChoiceL0 = Label(uiElements.systemChoiceLF,text = "Mass: 0")
-        uiElements.systemChoiceL1 = Label(uiElements.systemChoiceLF,text = "Mass: 0")
-        uiElements.systemChoiceL2 = Label(uiElements.systemChoiceLF,text = "Mass: 0")
-        uiElements.systemChoiceL3 = Label(uiElements.systemChoiceLF,text = "Mass: 0")
-        uiElements.systemChoiceL4 = Label(uiElements.systemChoiceLF,text = "Mass: 0")
-        uiElements.systemChoiceL5 = Label(uiElements.systemChoiceLF,text = "Mass: 0")
-        uiElements.systemChoiceL6 = Label(uiElements.systemChoiceLF,text = "Mass: 0")
-        uiElements.systemChoiceL7 = Label(uiElements.systemChoiceLF,text = "Mass: 0")
+        uiElements.systemChoiceL0 = Label(uiElements.systemChoiceLF,text = "Mass: 0, Cost: 0")
+        uiElements.systemChoiceL1 = Label(uiElements.systemChoiceLF,text = "Mass: 0, Cost: 0")
+        uiElements.systemChoiceL2 = Label(uiElements.systemChoiceLF,text = "Mass: 0, Cost: 0")
+        uiElements.systemChoiceL3 = Label(uiElements.systemChoiceLF,text = "Mass: 0, Cost: 0")
+        uiElements.systemChoiceL4 = Label(uiElements.systemChoiceLF,text = "Mass: 0, Cost: 0")
+        uiElements.systemChoiceL5 = Label(uiElements.systemChoiceLF,text = "Mass: 0, Cost: 0")
+        uiElements.systemChoiceL6 = Label(uiElements.systemChoiceLF,text = "Mass: 0, Cost: 0")
+        uiElements.systemChoiceL7 = Label(uiElements.systemChoiceLF,text = "Mass: 0, Cost: 0")
 
         systemChoiceCommand(info.systemChoice0,uiElements,uiElements.systemChoiceL0,info,0) 
         systemChoiceCommand(info.systemChoice1,uiElements,uiElements.systemChoiceL1,info,1)
@@ -485,14 +496,14 @@ justify = "left")
         uiElements.subsystemChoiceLF = tk.LabelFrame(root,width = uiMetrics.editorSystemsWidth,text = "Subsystems (optional)", height = 450)
         uiElementsList.append(uiElements.subsystemChoiceLF)
 
-        uiElements.subsystemChoiceL0 = Label(uiElements.subsystemChoiceLF,text = "Mass: 0")
-        uiElements.subsystemChoiceL1 = Label(uiElements.subsystemChoiceLF,text = "Mass: 0")
-        uiElements.subsystemChoiceL2 = Label(uiElements.subsystemChoiceLF,text = "Mass: 0")
-        uiElements.subsystemChoiceL3 = Label(uiElements.subsystemChoiceLF,text = "Mass: 0")
-        uiElements.subsystemChoiceL4 = Label(uiElements.subsystemChoiceLF,text = "Mass: 0")
-        uiElements.subsystemChoiceL5 = Label(uiElements.subsystemChoiceLF,text = "Mass: 0")
-        uiElements.subsystemChoiceL6 = Label(uiElements.subsystemChoiceLF,text = "Mass: 0")
-        uiElements.subsystemChoiceL7 = Label(uiElements.subsystemChoiceLF,text = "Mass: 0")
+        uiElements.subsystemChoiceL0 = Label(uiElements.subsystemChoiceLF,text = "Mass: 0, Cost: 0")
+        uiElements.subsystemChoiceL1 = Label(uiElements.subsystemChoiceLF,text = "Mass: 0, Cost: 0")
+        uiElements.subsystemChoiceL2 = Label(uiElements.subsystemChoiceLF,text = "Mass: 0, Cost: 0")
+        uiElements.subsystemChoiceL3 = Label(uiElements.subsystemChoiceLF,text = "Mass: 0, Cost: 0")
+        uiElements.subsystemChoiceL4 = Label(uiElements.subsystemChoiceLF,text = "Mass: 0, Cost: 0")
+        uiElements.subsystemChoiceL5 = Label(uiElements.subsystemChoiceLF,text = "Mass: 0, Cost: 0")
+        uiElements.subsystemChoiceL6 = Label(uiElements.subsystemChoiceLF,text = "Mass: 0, Cost: 0")
+        uiElements.subsystemChoiceL7 = Label(uiElements.subsystemChoiceLF,text = "Mass: 0, Cost: 0")
 
         subsystemChoiceCommand(info.subsystemChoice0,uiElements,uiElements.subsystemChoiceL0,info,0)
         subsystemChoiceCommand(info.subsystemChoice1,uiElements,uiElements.subsystemChoiceL1,info,1)

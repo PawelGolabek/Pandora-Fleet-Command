@@ -12,6 +12,7 @@ from random import randint
 import PIL.Image
 import tkinter.ttk as ttk
 import sys,os
+from pathlib import Path
 
 class global_var():
     def __init__(self,config,root):
@@ -77,8 +78,10 @@ class global_var():
         self.yellowX = 0
         self.yellowY = 0
         self.zoomChange = 0
-        self.image = PIL.Image.open(config.get("Images", "image"))
-        self.imageMask = PIL.Image.open(config.get("Images", "imageMask"))
+        cwd = Path(sys.argv[0])
+        cwd = str(cwd.parent)
+        self.image = PIL.Image.open(os.path.join(cwd, config.get("Images", "image")))
+        self.imageMask = PIL.Image.open(os.path.join(cwd, config.get("Images", "imageMask")))
         pass
 
 

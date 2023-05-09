@@ -3,45 +3,67 @@ import src.naglowek as naglowek
 def declareGlobalThrusters():
     naglowek.allThrustersList = [
         'none',
-        "lightThrusters1",
+        "lightThrusters",
         ]
 class thrusters(object):
-    def __init__(self,name = "thrusters", mass = 10):
+    def __init__(self,name = "thrusters", mass = 10, cost = 10):
         self.mass = mass
         self.name = name
+        self.cost = cost
     def onAdding(self,ship):
         ship.mass += self.mass
+        ship.cost += self.cost
     def onRemoving(self,ship):
         ship.mass -= self.mass
+        ship.cost -= self.cost
 
 class none(thrusters):
-    def __init__ (self,name = "none", mass = 0):
-        super(none,self).__init__(name,mass)
+    def __init__ (self,name = "none", mass = 0, cost = 10):
+        super(none,self).__init__(name,mass,cost)
     def onAdding(self,ship):
         ship.mass += self.mass
+        ship.cost += self.cost
     def onRemoving(self,ship):
         ship.mass -= self.mass
+        ship.cost -= self.cost
 
-class lightThrusters1(thrusters):
-    def __init__ (self,name = "lightThrusters1", mass = 10):
-        super(lightThrusters1,self).__init__(name,mass)
+class lightThrusters(thrusters):
+    def __init__ (self,name = "lightThrusters", mass = 10, cost = 60):
+        super(lightThrusters,self).__init__(name,mass,cost)
     def onAdding(self,ship):
         ship.mass += self.mass
+        ship.cost += self.cost
         ship.directionalThrust += 40
     def onRemoving(self,ship):
         ship.mass -= self.mass
+        ship.cost -= self.cost
+        ship.directionalThrust -= 40
+
+class mediumThrusters(thrusters):
+    def __init__ (self,name = "mediumThrusters", mass = 10, cost = 80):
+        super(mediumThrusters,self).__init__(name,mass,cost)
+    def onAdding(self,ship):
+        ship.mass += self.mass
+        ship.cost += self.cost
+        ship.directionalThrust += 40
+    def onRemoving(self,ship):
+        ship.mass -= self.mass
+        ship.cost -= self.cost
         ship.directionalThrust -= 40
     
 def declareGlobalThrusters():
     naglowek.allThrustersList = [
         'none',
-        "lightThrusters1",
+        "lightThrusters",
+        "mediumThrusters"
         ]
     (naglowek.thrustersStatsBlueprints).none = none()
-    (naglowek.thrustersStatsBlueprints).lightThrusters1 = lightThrusters1()
+    (naglowek.thrustersStatsBlueprints).lightThrusters = lightThrusters()
+    (naglowek.thrustersStatsBlueprints).mediumThrusters = mediumThrusters()
 
     naglowek.thrustersStats = {
         'none':(naglowek.thrustersStatsBlueprints).none,
-        "lightThrusters1":(naglowek.thrustersStatsBlueprints).lightThrusters1
+        "lightThrusters":(naglowek.thrustersStatsBlueprints).lightThrusters,
+        "mediumThrusters":(naglowek.thrustersStatsBlueprints).mediumThrusters
 
     }

@@ -120,7 +120,7 @@ def placeBattleUi(staticUi,uiMetrics,canvas,globalVar,shipLookup):
         if(i>=len(shipChosen.systemSlots)):
             break
         scale = tk.Scale(staticUi.systemsLabelFrame, orient=HORIZONTAL, length=uiMetrics.systemScalesWidth, \
-                            label=system.name, from_ = system.minEnergy, to=system.maxEnergy, relief=RIDGE)
+                            label=system.name, from_ = system.minEnergy, to=system.maxEnergy, relief=RIDGE,fg="white", bg="#4582ec",highlightcolor = "white")
         scale.set(system.energy)
         if(globalVar.turnInProgress):
             scale.config(state = 'disabled', background="#D0D0D0")

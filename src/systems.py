@@ -4,7 +4,7 @@ import src.naglowek as naglowek
 
 ############################## SYSTEMS #############################################
 class system(object):
-    def __init__(self,name = "system",minEnergy=0,maxEnergy=5,energy=0, maxCooldown = 2000, cooldown = 0, mass = 10):
+    def __init__(self,name = "system",minEnergy=0,maxEnergy=5,energy=0, maxCooldown = 2000, cooldown = 0, mass = 10, cost = 0):
         self.name = name
         self.minEnergy = minEnergy
         self.maxEnergy = maxEnergy
@@ -12,18 +12,21 @@ class system(object):
         self.maxCooldown = maxCooldown
         self.cooldown = cooldown
         self.mass = mass
+        self.cost = cost
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         pass
     def activate(self,ship,var,gameRules,uiMetrics):
         pass
     def onAdding(self,ship):
         ship.mass += self.mass
+        ship.cost += self.cost
     def onRemoving(self,ship):
         ship.mass -= self.mass
+        ship.cost -= self.cost
 
 class none(system):
-    def __init__ (self,name = "noneSystem",minEnergy=0,maxEnergy=0,energy=0, maxCooldown = 10, cooldown = 0, mass = 0):
-        super(none,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass)
+    def __init__ (self,name = "noneSystem",minEnergy=0,maxEnergy=0,energy=0, maxCooldown = 10, cooldown = 0, mass = 0, cost = 0):
+        super(none,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         pass
@@ -31,12 +34,14 @@ class none(system):
         pass
     def onAdding(self,ship):
         ship.mass += self.mass
+        ship.cost += self.cost
     def onRemoving(self,ship):
         ship.mass -= self.mass
+        ship.cost -= self.cost
     
 class throttleBrake1(system):
-    def __init__ (self,name = "Throttle Brake I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 3000, cooldown = 0, mass = 10):
-        super(throttleBrake1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass)
+    def __init__ (self,name = "Throttle Brake I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 3000, cooldown = 0, mass = 10, cost = 80):
+        super(throttleBrake1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0 and True):
@@ -52,13 +57,15 @@ class throttleBrake1(system):
         pass
     def onAdding(self,ship):
         ship.mass += self.mass
+        ship.cost += self.cost
     def onRemoving(self,ship):
         ship.mass -= self.mass
+        ship.cost -= self.cost
     
 
 class hullRepairSystem1(system):
-    def __init__ (self,name = "Anti Missle System I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 3000, cooldown = 0, mass = 10):
-        super(hullRepairSystem1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass)
+    def __init__ (self,name = "Anti Missle System I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 3000, cooldown = 0, mass = 10, cost = 100):
+        super(hullRepairSystem1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0 and True):
@@ -69,12 +76,14 @@ class hullRepairSystem1(system):
             self.cooldown=self.maxCooldown
     def onAdding(self,ship):
         ship.mass += self.mass
+        ship.cost += self.cost
     def onRemoving(self,ship):
         ship.mass -= self.mass
+        ship.cost -= self.cost
 
 class hullRepairSystem2(system):
-    def __init__ (self,name = "Anti Missle System II",minEnergy=0,maxEnergy=10,energy=0, maxCooldown = 2000, cooldown = 0, mass = 20):
-        super(hullRepairSystem2,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass)
+    def __init__ (self,name = "Anti Missle System II",minEnergy=0,maxEnergy=10,energy=0, maxCooldown = 2000, cooldown = 0, mass = 20, cost = 150):
+        super(hullRepairSystem2,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0 and ship1.hp != ship1.maxHp):
@@ -85,12 +94,14 @@ class hullRepairSystem2(system):
             self.cooldown=self.maxCooldown
     def onAdding(self,ship):
         ship.mass += self.mass
+        ship.cost += self.cost
     def onRemoving(self,ship):
         ship.mass -= self.mass
+        ship.cost -= self.cost
 
 class antiMissleSystem1(system):
-    def __init__ (self,name = "Anti Missle System II",minEnergy=0,maxEnergy=10,energy=0, maxCooldown = 15000, cooldown = 0, mass = 10):
-        super(antiMissleSystem1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass)
+    def __init__ (self,name = "Anti Missle System II",minEnergy=0,maxEnergy=10,energy=0, maxCooldown = 15000, cooldown = 0, mass = 10, cost = 80):
+        super(antiMissleSystem1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0):
             minDist = 9999999
@@ -118,13 +129,15 @@ class antiMissleSystem1(system):
                 self.cooldown = self.maxCooldown
     def onAdding(self,ship):
         ship.mass += self.mass
+        ship.cost += self.cost
     def onRemoving(self,ship):
         ship.mass -= self.mass
+        ship.cost -= self.cost
 
 
 class antiMissleSystem2(system):
-    def __init__ (self,name = "Anti Missle System II",minEnergy=0,maxEnergy=10,energy=0, maxCooldown = 12000, cooldown = 0, mass = 25):
-        super(antiMissleSystem2,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass)
+    def __init__ (self,name = "Anti Missle System II",minEnergy=0,maxEnergy=10,energy=0, maxCooldown = 12000, cooldown = 0, mass = 25, cost = 80):
+        super(antiMissleSystem2,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0):
             minDist = 9999999
@@ -153,13 +166,15 @@ class antiMissleSystem2(system):
                 self.cooldown = self.maxCooldown
     def onAdding(self,ship):
         ship.mass += self.mass
+        ship.cost += self.cost
     def onRemoving(self,ship):
         ship.mass -= self.mass
+        ship.cost -= self.cost
 
 
 class type1aCannon1(system):
-    def __init__ (self,name = "Type1a Cannon I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 10000, cooldown = 0, mass = 10):
-        super(type1aCannon1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass)
+    def __init__ (self,name = "Type1a Cannon I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 10000, cooldown = 0, mass = 10, cost = 40):
+        super(type1aCannon1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0):
@@ -168,12 +183,14 @@ class type1aCannon1(system):
 
     def onAdding(self,ship):
         ship.mass += self.mass
+        ship.cost += self.cost
     def onRemoving(self,ship):
         ship.mass -= self.mass
+        ship.cost -= self.cost
 
 class type2aCannon1(system):
-    def __init__ (self,name = "Type2a Cannon I",minEnergy=0,maxEnergy=6,energy=0, maxCooldown = 3000, cooldown = 0, mass = 15):
-        super(type2aCannon1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass)
+    def __init__ (self,name = "Type2a Cannon I",minEnergy=0,maxEnergy=6,energy=0, maxCooldown = 3000, cooldown = 0, mass = 15, cost = 65):
+        super(type2aCannon1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0):
@@ -182,12 +199,14 @@ class type2aCannon1(system):
 
     def onAdding(self,ship):
         ship.mass += self.mass
+        ship.cost += self.cost
     def onRemoving(self,ship):
         ship.mass -= self.mass
+        ship.cost -= self.cost
 
 class type3aCannon1(system):
-    def __init__ (self,name = "Type3a Cannon I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 17000, cooldown = 0, mass = 30):
-        super(type3aCannon1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass)
+    def __init__ (self,name = "Type3a Cannon I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 17000, cooldown = 0, mass = 30, cost = 160):
+        super(type3aCannon1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0):
@@ -196,12 +215,14 @@ class type3aCannon1(system):
         
     def onAdding(self,ship):
         ship.mass += self.mass
+        ship.cost += self.cost
     def onRemoving(self,ship):
         ship.mass -= self.mass
+        ship.cost -= self.cost
 
 class gattlingLaser1(system):
-    def __init__ (self,name = "Gattling Laser I",minEnergy=0,maxEnergy=9,energy=0, maxCooldown = 600, cooldown = 0, mass = 10):
-        super(gattlingLaser1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass)
+    def __init__ (self,name = "Gattling Laser I",minEnergy=0,maxEnergy=9,energy=0, maxCooldown = 600, cooldown = 0, mass = 10, cost = 100):
+        super(gattlingLaser1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics): 
         if(self.cooldown <= 0):
@@ -210,12 +231,14 @@ class gattlingLaser1(system):
         
     def onAdding(self,ship):
         ship.mass += self.mass
+        ship.cost += self.cost
     def onRemoving(self,ship):
         ship.mass -= self.mass
+        ship.cost -= self.cost
 
 class gattlingLaser2(system):
-    def __init__ (self,name = "Gattling Laser II",minEnergy=2,maxEnergy=8,energy=0, maxCooldown = 400, cooldown = 0, mass = 15):
-        super(gattlingLaser2,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass)
+    def __init__ (self,name = "Gattling Laser II",minEnergy=2,maxEnergy=8,energy=0, maxCooldown = 400, cooldown = 0, mass = 15, cost = 110):
+        super(gattlingLaser2,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0):
@@ -224,12 +247,14 @@ class gattlingLaser2(system):
         
     def onAdding(self,ship):
         ship.mass += self.mass
+        ship.cost += self.cost
     def onRemoving(self,ship):
         ship.mass -= self.mass
+        ship.cost -= self.cost
 
 class highEnergyLaser1(system):
-    def __init__ (self,name = "High Energy Laser I",minEnergy=4,maxEnergy=8,energy=0, maxCooldown = 8000, cooldown = 0, mass = 10):
-        super(highEnergyLaser1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass)
+    def __init__ (self,name = "High Energy Laser I",minEnergy=4,maxEnergy=8,energy=0, maxCooldown = 8000, cooldown = 0, mass = 10, cost = 50):
+        super(highEnergyLaser1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0):
@@ -238,12 +263,14 @@ class highEnergyLaser1(system):
         
     def onAdding(self,ship):
         ship.mass += self.mass
+        ship.cost += self.cost
     def onRemoving(self,ship):
         ship.mass -= self.mass
+        ship.cost -= self.cost
 
 class kinetic1(system):
-    def __init__ (self,name = "Kinetic cannon I",minEnergy=0,maxEnergy=7,energy=0,maxCooldown=1000,cooldown=0,mass=30):
-        super(kinetic1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass)
+    def __init__ (self,name = "Kinetic cannon I",minEnergy=0,maxEnergy=7,energy=0,maxCooldown=1000,cooldown=0,mass=30, cost = 60):
+        super(kinetic1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0):
@@ -254,8 +281,10 @@ class kinetic1(system):
         
     def onAdding(self,ship):
         ship.mass += self.mass
+        ship.cost += self.cost
     def onRemoving(self,ship):
         ship.mass -= self.mass
+        ship.cost -= self.cost
 
 def shoot(var,system,ship,ammunitionType,ships,uiMetrics,offsetX=0,offsetY=0):
     shipToShoot = 0
@@ -264,40 +293,40 @@ def shoot(var,system,ship,ammunitionType,ships,uiMetrics,offsetX=0,offsetY=0):
         if(not ship.owner == ship2.owner): # add teams if needed            for element in list:
             list = []
             ghostShip = naglowek.dynamic_object()
-            ghostShip.x = (ship.xPos - var.left) * var.zoom
-            ghostShip.y = (ship.yPos - var.top) * var.zoom
+            ghostShip.x = ship.xPos
+            ghostShip.y = ship.yPos
             list.append(ghostShip)
             ghostShip = naglowek.dynamic_object()
-            ghostShip.x = (ship.xPos + uiMetrics.canvasWidth - var.left) * var.zoom
-            ghostShip.y = (ship.yPos - var.top) * var.zoom
+            ghostShip.x = ship.xPos + uiMetrics.canvasWidth
+            ghostShip.y = ship.yPos
             list.append(ghostShip)
             ghostShip = naglowek.dynamic_object()
-            ghostShip.x = (ship.xPos - uiMetrics.canvasWidth - var.left) * var.zoom
-            ghostShip.y = (ship.yPos + var.top) * var.zoom
+            ghostShip.x = ship.xPos - uiMetrics.canvasWidth
+            ghostShip.y = ship.yPos
             list.append(ghostShip)
             ghostShip = naglowek.dynamic_object()
-            ghostShip.x = (ship.xPos - var.left) * var.zoom  
-            ghostShip.y = (ship.yPos + uiMetrics.canvasHeight - var.top) * var.zoom
+            ghostShip.x = ship.xPos 
+            ghostShip.y = ship.yPos + uiMetrics.canvasHeight
             list.append(ghostShip)
             ghostShip = naglowek.dynamic_object()
-            ghostShip.x = (ship.xPos - var.left) * var.zoom 
-            ghostShip.y = (ship.yPos - uiMetrics.canvasHeight - var.top) * var.zoom
+            ghostShip.x = ship.xPos - var.left
+            ghostShip.y = ship.yPos - uiMetrics.canvasHeight
             list.append(ghostShip)
             ghostShip = naglowek.dynamic_object()
-            ghostShip.x = (ship.xPos - uiMetrics.canvasWidth  - var.left) * var.zoom 
-            ghostShip.y = (ship.yPos - uiMetrics.canvasHeight - var.top) * var.zoom
+            ghostShip.x = ship.xPos - uiMetrics.canvasWidth
+            ghostShip.y = ship.yPos - uiMetrics.canvasHeight
             list.append(ghostShip)
             ghostShip = naglowek.dynamic_object()
-            ghostShip.x = (ship.xPos + uiMetrics.canvasWidth  - var.left) * var.zoom 
-            ghostShip.y = (ship.yPos - uiMetrics.canvasHeight - var.top) * var.zoom
+            ghostShip.x = ship.xPos + uiMetrics.canvasWidth
+            ghostShip.y = ship.yPos - uiMetrics.canvasHeight
             list.append(ghostShip)
             ghostShip = naglowek.dynamic_object()
-            ghostShip.x = (ship.xPos - uiMetrics.canvasWidth  - var.left) * var.zoom 
-            ghostShip.y = (ship.yPos + uiMetrics.canvasHeight - var.top) * var.zoom
+            ghostShip.x = ship.xPos - uiMetrics.canvasWidth
+            ghostShip.y = ship.yPos + uiMetrics.canvasHeight
             list.append(ghostShip)
             ghostShip = naglowek.dynamic_object()
-            ghostShip.x = (ship.xPos + uiMetrics.canvasWidth  - var.left) * var.zoom 
-            ghostShip.y = (ship.yPos + uiMetrics.canvasHeight - var.top) * var.zoom
+            ghostShip.x = ship.xPos + uiMetrics.canvasWidth
+            ghostShip.y = ship.yPos + uiMetrics.canvasHeight
             list.append(ghostShip)
             for element in list:
                 distance2 = (element.x-ship2.xPos)*(element.x-ship2.xPos) + (element.y-ship2.yPos)*(element.y-ship2.yPos)
