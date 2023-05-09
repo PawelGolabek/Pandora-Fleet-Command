@@ -34,12 +34,6 @@ def finishSetTrue(var):
 
 def detectionCheck(globalVar,uiMetrics):
     for ship in globalVar.ships:
-        if(ship.visible):
-            ship.wasVisible = True
-        else:
-            ship.wasVisible = False
-            if(ship.wasVisible):
-                createSignature(ship, ship.xPos, ship.yPos)
         ship.visible = False
         for ship2 in globalVar.ships:
             if(not ship2.owner == ship.owner):
@@ -87,7 +81,6 @@ def detectionCheck(globalVar,uiMetrics):
                    #     print(str(element.x) + " " + str(element.y) + " " + str(ship.id) + " " + str(ship2.id) + " " + str(distance))
                         ship.visible = True
                         break
-
        
 def createGhostPoint(ship, xPos, yPos,number = 0):
     ghost = naglowek.ghost_point()

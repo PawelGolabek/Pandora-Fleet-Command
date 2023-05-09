@@ -52,18 +52,18 @@ class mediumThrusters(thrusters):
         ship.directionalThrust -= 40
     
 def declareGlobalThrusters():
-    naglowek.allThrustersList = [
-        'none',
-        "lightThrusters",
-        "mediumThrusters"
-        ]
     (naglowek.thrustersStatsBlueprints).none = none()
     (naglowek.thrustersStatsBlueprints).lightThrusters = lightThrusters()
     (naglowek.thrustersStatsBlueprints).mediumThrusters = mediumThrusters()
+    naglowek.allThrustersList = [ 
+        (naglowek.thrustersStatsBlueprints).none.name,
+        (naglowek.thrustersStatsBlueprints).lightThrusters.name,
+        (naglowek.thrustersStatsBlueprints).mediumThrusters.name,
+        ]
 
     naglowek.thrustersStats = {
-        'none':(naglowek.thrustersStatsBlueprints).none,
-        "lightThrusters":(naglowek.thrustersStatsBlueprints).lightThrusters,
-        "mediumThrusters":(naglowek.thrustersStatsBlueprints).mediumThrusters
+        (naglowek.thrustersStatsBlueprints).none.name:(naglowek.thrustersStatsBlueprints).none,
+        (naglowek.thrustersStatsBlueprints).lightThrusters.name:(naglowek.thrustersStatsBlueprints).lightThrusters,
+        (naglowek.thrustersStatsBlueprints).mediumThrusters.name:(naglowek.thrustersStatsBlueprints).mediumThrusters
 
     }

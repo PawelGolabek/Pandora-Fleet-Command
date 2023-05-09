@@ -110,7 +110,7 @@ def engineChoiceCommand(engineChoice,uiElements,label,info):
     oldEngine = (naglowek.engineStats)[oldEngineName]
     newEngine = (naglowek.engineStats)[a]
     tmpText = "Mass: " + str(newEngine.mass)
-    tmpText += "Cost: " + str(newEngine.cost)
+    tmpText += " Cost: " + str(newEngine.cost)
     label.config(text = tmpText)
     (info.ship).engine = newEngine.name
     (oldEngine).onRemoving(info.ship)
@@ -140,7 +140,7 @@ def radarChoiceCommand(radarChoice,uiElements,label,info):
     oldRadar = (naglowek.radarStats)[oldRadarName]
     newRadar = (naglowek.radarStats)[a]
     tmpText = "Mass: " + str(newRadar.mass)
-    tmpText = ", Cost: " + str(newRadar.cost)
+    tmpText += ", Cost: " + str(newRadar.cost)
     label.config(text = tmpText)
     (info.ship).radar = newRadar.name
     (oldRadar).onRemoving(info.ship)
@@ -216,11 +216,12 @@ def saveShip(info,uiElements,filePath, cp):
         cp.write(hd)
         hd.close()
         window = tk.Toplevel()
-        label = tk.Label(window, text=("'" + shipName + "' \n \n" + " saved successfully") )
+        window.config(bg="#202020")
+        label = ttk.Label(window, style = 'Grey.TLabel', text=("'" + shipName + "' \n \n" + " saved successfully") )
 
         window.config(width = len(shipName) * 6 + 200,height = 200)
         closeWindowCommand = partial(closeWindow,window)
-        button = tk.Button(window, text = "Ok", width = 5, height = 1,command=closeWindowCommand)
+        button = ttk.Button(window,style = 'Grey.TButton', text = "Ok",command=closeWindowCommand)
         label.place(relx=0.5, rely=0.2,anchor=CENTER)
         button.place(relx=0.5, rely=0.5,anchor=CENTER)
     elif(len(shipName) < 13):
@@ -296,13 +297,21 @@ def shipEditor(root,config,uiMenuElements,uiMetrics,menuUiElements):
 
         uiElementsList = []
         uiElements = naglowek.dynamic_object()
-        systemOptions = naglowek.allSystemsList    
-        uiElements.systemStatsLF = tk.LabelFrame(root,text = "Recently changed element statistics:",width = uiMetrics.shipStatsLFWidth,height = uiMetrics.shipStatsLFHeight)
-        uiElements.systemStatsL = tk.Label(uiElements.systemStatsLF,text = "Choose any ship element")
-        uiElements.shipStatsLF = tk.LabelFrame(root,text = "Ship statistics:",width = uiMetrics.shipStatsLFWidth,height = uiMetrics.shipStatsLFHeight)
-        uiElements.shipStatsL = tk.Label(uiElements.shipStatsLF, text = "Hull: 100 \n Armor: 100 \n Mass: 200t \n Cost: 0\
-\n Sensors Range: 200 \n Max Speed: 70 \n RotationSpeed: 0.3/s \n Max Energy: 20 \n Minimum Energy Consumption: 5 \n Maximum Energy Consumption: 35", 
-justify = "left")
+        systemOptions = naglowek.allSystemsList
+        uiElements.systemStatsLF = ttk.Labelframe(root, style = 'Grey.TLabelframe', text = "Recently changed element statistics:",width = uiMetrics.shipStatsLFWidth,height = uiMetrics.shipStatsLFHeight)
+        uiElements.systemStatsL = ttk.Label(uiElements.systemStatsLF, style = 'Grey.TLabel', text = "Choose any ship element")
+        uiElements.shipStatsLF = ttk.Labelframe(root, style = 'Grey.TLabelframe', text = "Ship statistics:",width = uiMetrics.shipStatsLFWidth,height = uiMetrics.shipStatsLFHeight)
+        uiElements.shipStatsL = ttk.Label(uiElements.shipStatsLF, style = 'Grey.TLabel', justify = "left", text = 
+        "Hull: 100 \n \
+        Armor: 100 \n \
+        Mass: 200t \n \
+        Cost: 0 \n \
+        Sensors Range: 200 \n \
+        Max Speed: 70 \n \
+        RotationSpeed: 0.3/s \n \
+        Max Energy: 20 \n \
+        Minimum Energy Consumption: 5 \n \
+        Maximum Energy Consumption: 35")
         uiElements.shipNameInput = tk.Entry(root,width = 50)
 
         uiElementsList.append(uiElements.shipNameInput)
@@ -366,15 +375,15 @@ justify = "left")
         info.radarChoice = StringVar(root)
         info.generatorChoice = StringVar(root)
 
-        uiElements.engineChoiceMenuLF = tk.LabelFrame(root, text = "Main Drive", width = uiMetrics.editorChoiceMenuLFWidth, height = uiMetrics.editorChoiceMenuLFHeight)
-        uiElements.thrustersChoiceMenuLF = tk.LabelFrame(root, text = "Thrusters", width = uiMetrics.editorChoiceMenuLFWidth, height = uiMetrics.editorChoiceMenuLFHeight)
-        uiElements.radarChoiceMenuLF = tk.LabelFrame(root, text = "Sensors", width = uiMetrics.editorChoiceMenuLFWidth, height = uiMetrics.editorChoiceMenuLFHeight)
-        uiElements.generatorChoiceMenuLF = tk.LabelFrame(root, text = "Power Generator", width = uiMetrics.editorChoiceMenuLFWidth, height = uiMetrics.editorChoiceMenuLFHeight)
+        uiElements.engineChoiceMenuLF = ttk.Labelframe(root, style = 'Grey.TLabelframe', text = "Main Drive", width = uiMetrics.editorChoiceMenuLFWidth, height = uiMetrics.editorChoiceMenuLFHeight)
+        uiElements.thrustersChoiceMenuLF = ttk.Labelframe(root, style = 'Grey.TLabelframe', text = "Thrusters", width = uiMetrics.editorChoiceMenuLFWidth, height = uiMetrics.editorChoiceMenuLFHeight)
+        uiElements.radarChoiceMenuLF = ttk.Labelframe(root, style = 'Grey.TLabelframe', text = "Sensors", width = uiMetrics.editorChoiceMenuLFWidth, height = uiMetrics.editorChoiceMenuLFHeight)
+        uiElements.generatorChoiceMenuLF = ttk.Labelframe(root,style = 'Grey.TLabelframe', text = "Power Generator", width = uiMetrics.editorChoiceMenuLFWidth, height = uiMetrics.editorChoiceMenuLFHeight)
 
-        uiElements.engineChoiceMenuL = tk.Label(uiElements.engineChoiceMenuLF, text = "Mass: 0, Cost: 0",)
-        uiElements.thrustersChoiceMenuL = tk.Label(uiElements.thrustersChoiceMenuLF, text = "Mass: 0, Cost: 0")
-        uiElements.radarChoiceMenuL = tk.Label(uiElements.radarChoiceMenuLF, text = "Mass: 0, Cost: 0")
-        uiElements.generatorChoiceMenuL = tk.Label(uiElements.generatorChoiceMenuLF, text = "Mass: 0, Cost: 0")
+        uiElements.engineChoiceMenuL = ttk.Label(uiElements.engineChoiceMenuLF, style = 'Grey.TLabel', text = "Mass: 0, Cost: 0",)
+        uiElements.thrustersChoiceMenuL = ttk.Label(uiElements.thrustersChoiceMenuLF, style = 'Grey.TLabel', text = "Mass: 0, Cost: 0")
+        uiElements.radarChoiceMenuL = ttk.Label(uiElements.radarChoiceMenuLF, style = 'Grey.TLabel', text = "Mass: 0, Cost: 0")
+        uiElements.generatorChoiceMenuL = ttk.Label(uiElements.generatorChoiceMenuLF, style = 'Grey.TLabel', text = "Mass: 0, Cost: 0")
 
         uiElementsList.append(uiElements.engineChoiceMenuLF)
         uiElementsList.append(uiElements.thrustersChoiceMenuLF)
@@ -444,7 +453,7 @@ justify = "left")
         info.subsystemChoice6.set(subsystemOptions[0])
         info.subsystemChoice7.set(subsystemOptions[0])
 
-        uiElements.systemChoiceLF = tk.LabelFrame(root,width = uiMetrics.editorSystemsWidth,text = "Systems (optional)", height = 450)
+        uiElements.systemChoiceLF = ttk.Labelframe(root, style = 'Grey.TLabelframe',width = uiMetrics.editorSystemsWidth,text = "Systems (optional)", height = 450)
         uiElementsList.append(uiElements.systemChoiceLF)
 
 
@@ -457,14 +466,14 @@ justify = "left")
         uiElements.systemChoiceMenu6 = OptionMenu(uiElements.systemChoiceLF, info.systemChoice6, *systemOptions, command=lambda _: systemChoiceCommand(info.systemChoice6,uiElements,uiElements.systemChoiceL6,info,6))
         uiElements.systemChoiceMenu7 = OptionMenu(uiElements.systemChoiceLF, info.systemChoice7, *systemOptions, command=lambda _: systemChoiceCommand(info.systemChoice7,uiElements,uiElements.systemChoiceL7,info,7))
 
-        uiElements.systemChoiceL0 = Label(uiElements.systemChoiceLF,text = "Mass: 0, Cost: 0")
-        uiElements.systemChoiceL1 = Label(uiElements.systemChoiceLF,text = "Mass: 0, Cost: 0")
-        uiElements.systemChoiceL2 = Label(uiElements.systemChoiceLF,text = "Mass: 0, Cost: 0")
-        uiElements.systemChoiceL3 = Label(uiElements.systemChoiceLF,text = "Mass: 0, Cost: 0")
-        uiElements.systemChoiceL4 = Label(uiElements.systemChoiceLF,text = "Mass: 0, Cost: 0")
-        uiElements.systemChoiceL5 = Label(uiElements.systemChoiceLF,text = "Mass: 0, Cost: 0")
-        uiElements.systemChoiceL6 = Label(uiElements.systemChoiceLF,text = "Mass: 0, Cost: 0")
-        uiElements.systemChoiceL7 = Label(uiElements.systemChoiceLF,text = "Mass: 0, Cost: 0")
+        uiElements.systemChoiceL0 = ttk.Label(uiElements.systemChoiceLF,style = 'Grey.TLabel', text = "Mass: 0, Cost: 0")
+        uiElements.systemChoiceL1 = ttk.Label(uiElements.systemChoiceLF,style = 'Grey.TLabel', text = "Mass: 0, Cost: 0")
+        uiElements.systemChoiceL2 = ttk.Label(uiElements.systemChoiceLF,style = 'Grey.TLabel', text = "Mass: 0, Cost: 0")
+        uiElements.systemChoiceL3 = ttk.Label(uiElements.systemChoiceLF,style = 'Grey.TLabel', text = "Mass: 0, Cost: 0")
+        uiElements.systemChoiceL4 = ttk.Label(uiElements.systemChoiceLF,style = 'Grey.TLabel', text = "Mass: 0, Cost: 0")
+        uiElements.systemChoiceL5 = ttk.Label(uiElements.systemChoiceLF,style = 'Grey.TLabel', text = "Mass: 0, Cost: 0")
+        uiElements.systemChoiceL6 = ttk.Label(uiElements.systemChoiceLF,style = 'Grey.TLabel', text = "Mass: 0, Cost: 0")
+        uiElements.systemChoiceL7 = ttk.Label(uiElements.systemChoiceLF,style = 'Grey.TLabel', text = "Mass: 0, Cost: 0")
 
         systemChoiceCommand(info.systemChoice0,uiElements,uiElements.systemChoiceL0,info,0) 
         systemChoiceCommand(info.systemChoice1,uiElements,uiElements.systemChoiceL1,info,1)
@@ -493,17 +502,17 @@ justify = "left")
         uiElementsList.append(uiElements.systemChoiceL6)
         uiElementsList.append(uiElements.systemChoiceL7)
 
-        uiElements.subsystemChoiceLF = tk.LabelFrame(root,width = uiMetrics.editorSystemsWidth,text = "Subsystems (optional)", height = 450)
+        uiElements.subsystemChoiceLF = ttk.Labelframe(root, style = 'Grey.TLabelframe',width = uiMetrics.editorSystemsWidth,text = "Subsystems (optional)", height = 450)
         uiElementsList.append(uiElements.subsystemChoiceLF)
 
-        uiElements.subsystemChoiceL0 = Label(uiElements.subsystemChoiceLF,text = "Mass: 0, Cost: 0")
-        uiElements.subsystemChoiceL1 = Label(uiElements.subsystemChoiceLF,text = "Mass: 0, Cost: 0")
-        uiElements.subsystemChoiceL2 = Label(uiElements.subsystemChoiceLF,text = "Mass: 0, Cost: 0")
-        uiElements.subsystemChoiceL3 = Label(uiElements.subsystemChoiceLF,text = "Mass: 0, Cost: 0")
-        uiElements.subsystemChoiceL4 = Label(uiElements.subsystemChoiceLF,text = "Mass: 0, Cost: 0")
-        uiElements.subsystemChoiceL5 = Label(uiElements.subsystemChoiceLF,text = "Mass: 0, Cost: 0")
-        uiElements.subsystemChoiceL6 = Label(uiElements.subsystemChoiceLF,text = "Mass: 0, Cost: 0")
-        uiElements.subsystemChoiceL7 = Label(uiElements.subsystemChoiceLF,text = "Mass: 0, Cost: 0")
+        uiElements.subsystemChoiceL0 = ttk.Label(uiElements.subsystemChoiceLF,style = 'Grey.TLabel', text = "Mass: 0, Cost: 0")
+        uiElements.subsystemChoiceL1 = ttk.Label(uiElements.subsystemChoiceLF,style = 'Grey.TLabel', text = "Mass: 0, Cost: 0")
+        uiElements.subsystemChoiceL2 = ttk.Label(uiElements.subsystemChoiceLF,style = 'Grey.TLabel', text = "Mass: 0, Cost: 0")
+        uiElements.subsystemChoiceL3 = ttk.Label(uiElements.subsystemChoiceLF,style = 'Grey.TLabel', text = "Mass: 0, Cost: 0")
+        uiElements.subsystemChoiceL4 = ttk.Label(uiElements.subsystemChoiceLF,style = 'Grey.TLabel', text = "Mass: 0, Cost: 0")
+        uiElements.subsystemChoiceL5 = ttk.Label(uiElements.subsystemChoiceLF,style = 'Grey.TLabel', text = "Mass: 0, Cost: 0")
+        uiElements.subsystemChoiceL6 = ttk.Label(uiElements.subsystemChoiceLF,style = 'Grey.TLabel', text = "Mass: 0, Cost: 0")
+        uiElements.subsystemChoiceL7 = ttk.Label(uiElements.subsystemChoiceLF,style = 'Grey.TLabel', text = "Mass: 0, Cost: 0")
 
         subsystemChoiceCommand(info.subsystemChoice0,uiElements,uiElements.subsystemChoiceL0,info,0)
         subsystemChoiceCommand(info.subsystemChoice1,uiElements,uiElements.subsystemChoiceL1,info,1)
@@ -542,10 +551,10 @@ justify = "left")
         uiElementsList.append(uiElements.subsystemChoiceL7)
 
 
-        uiElements.saveShipButton = Button(root, text="Save ship design", command = lambda: [saveShip(info,uiElements,filePath,config)],width=20,height=3)
-        uiElements.completeButton = Button(root, text="Auto-complete ship", command = lambda: [completeShip(uiElements)],width=20,height=3, state = DISABLED)
-        uiElements.clearButton = Button(root, text="Clear Design", command = lambda: [clearShip(info)],width=20,height=3)
-        uiElements.exitToMenuButton = tk.Button(root, text="Exit to menu", command=lambda:[placeMenuUi(root,menuUiElements,uiMetrics), hideMenuUi(uiElementsList)], width = 20, height= 7)
+        uiElements.saveShipButton = tk.Button(root, width = 20, height = 3, text="Save ship design", command = lambda: [saveShip(info,uiElements,filePath,config)])
+        uiElements.completeButton = tk.Button(root, width = 20, height = 3, text="Auto-complete ship", command = lambda: [completeShip(uiElements)], state = DISABLED)
+        uiElements.clearButton = tk.Button(root, width = 20, height = 3,  text="Clear Design", command = lambda: [clearShip(info)])
+        uiElements.exitToMenuButton = tk.Button(root, width = 20, height = 3, text="Exit to menu", command=lambda:[placeMenuUi(root,menuUiElements,uiMetrics), hideMenuUi(uiElementsList)])
 
         uiElementsList.append(uiElements.saveShipButton)
         uiElementsList.append(uiElements.completeButton)

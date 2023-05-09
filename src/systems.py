@@ -4,11 +4,12 @@ import src.naglowek as naglowek
 
 ############################## SYSTEMS #############################################
 class system(object):
-    def __init__(self,name = "system",minEnergy=0,maxEnergy=5,energy=0, maxCooldown = 2000, cooldown = 0, mass = 10, cost = 0):
+    def __init__(self,name = "system",minEnergy=0,maxEnergy=5,energy=0, maxCooldown = 2000, integrity = 100, cooldown = 0, mass = 10, cost = 0):
         self.name = name
         self.minEnergy = minEnergy
         self.maxEnergy = maxEnergy
         self.energy = energy
+        self.integrity = integrity
         self.maxCooldown = maxCooldown
         self.cooldown = cooldown
         self.mass = mass
@@ -25,8 +26,8 @@ class system(object):
         ship.cost -= self.cost
 
 class none(system):
-    def __init__ (self,name = "noneSystem",minEnergy=0,maxEnergy=0,energy=0, maxCooldown = 10, cooldown = 0, mass = 0, cost = 0):
-        super(none,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
+    def __init__ (self,name = "noneSystem",minEnergy=0,maxEnergy=0,energy=0, maxCooldown = 10, integrity = 100, cooldown = 0, mass = 0, cost = 0):
+        super(none,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, integrity, cooldown, mass, cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         pass
@@ -40,8 +41,8 @@ class none(system):
         ship.cost -= self.cost
     
 class throttleBrake1(system):
-    def __init__ (self,name = "Throttle Brake I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 3000, cooldown = 0, mass = 10, cost = 80):
-        super(throttleBrake1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
+    def __init__ (self,name = "Throttle Brake I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 3000, integrity = 100, cooldown = 0, mass = 10, cost = 80):
+        super(throttleBrake1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, integrity, cooldown, mass, cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0 and True):
@@ -64,8 +65,8 @@ class throttleBrake1(system):
     
 
 class hullRepairSystem1(system):
-    def __init__ (self,name = "Anti Missle System I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 3000, cooldown = 0, mass = 10, cost = 100):
-        super(hullRepairSystem1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
+    def __init__ (self,name = "Anti Missle I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 3000, integrity = 100, cooldown = 0, mass = 10, cost = 100):
+        super(hullRepairSystem1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, integrity, cooldown, mass, cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0 and True):
@@ -82,8 +83,8 @@ class hullRepairSystem1(system):
         ship.cost -= self.cost
 
 class hullRepairSystem2(system):
-    def __init__ (self,name = "Anti Missle System II",minEnergy=0,maxEnergy=10,energy=0, maxCooldown = 2000, cooldown = 0, mass = 20, cost = 150):
-        super(hullRepairSystem2,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
+    def __init__ (self,name = "Anti Missle II",minEnergy=0,maxEnergy=10,energy=0, maxCooldown = 2000, integrity = 100, cooldown = 0, mass = 20, cost = 150):
+        super(hullRepairSystem2,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, integrity, cooldown, mass, cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0 and ship1.hp != ship1.maxHp):
@@ -100,8 +101,8 @@ class hullRepairSystem2(system):
         ship.cost -= self.cost
 
 class antiMissleSystem1(system):
-    def __init__ (self,name = "Anti Missle System II",minEnergy=0,maxEnergy=10,energy=0, maxCooldown = 15000, cooldown = 0, mass = 10, cost = 80):
-        super(antiMissleSystem1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
+    def __init__ (self,name = "Anti Missle II",minEnergy=0,maxEnergy=10,energy=0, maxCooldown = 15000, integrity = 100, cooldown = 0, mass = 10, cost = 80):
+        super(antiMissleSystem1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, integrity, cooldown, mass, cost)
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0):
             minDist = 9999999
@@ -136,8 +137,8 @@ class antiMissleSystem1(system):
 
 
 class antiMissleSystem2(system):
-    def __init__ (self,name = "Anti Missle System II",minEnergy=0,maxEnergy=10,energy=0, maxCooldown = 12000, cooldown = 0, mass = 25, cost = 80):
-        super(antiMissleSystem2,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
+    def __init__ (self,name = "Anti Missle II",minEnergy=0,maxEnergy=10,energy=0, maxCooldown = 12000, integrity = 100, cooldown = 0, mass = 25, cost = 80):
+        super(antiMissleSystem2,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, integrity, cooldown, mass, cost)
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0):
             minDist = 9999999
@@ -173,8 +174,8 @@ class antiMissleSystem2(system):
 
 
 class type1aCannon1(system):
-    def __init__ (self,name = "Type1a Cannon I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 10000, cooldown = 0, mass = 10, cost = 40):
-        super(type1aCannon1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
+    def __init__ (self,name = "Type1a Cannon I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 10000, integrity = 100, cooldown = 0, mass = 10, cost = 40):
+        super(type1aCannon1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, integrity, cooldown, mass, cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0):
@@ -189,8 +190,8 @@ class type1aCannon1(system):
         ship.cost -= self.cost
 
 class type2aCannon1(system):
-    def __init__ (self,name = "Type2a Cannon I",minEnergy=0,maxEnergy=6,energy=0, maxCooldown = 3000, cooldown = 0, mass = 15, cost = 65):
-        super(type2aCannon1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
+    def __init__ (self,name = "Type2a Cannon I",minEnergy=0,maxEnergy=6,energy=0, maxCooldown = 3000, integrity = 100, cooldown = 0, mass = 15, cost = 65):
+        super(type2aCannon1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, integrity, cooldown, mass, cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0):
@@ -205,8 +206,8 @@ class type2aCannon1(system):
         ship.cost -= self.cost
 
 class type3aCannon1(system):
-    def __init__ (self,name = "Type3a Cannon I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 17000, cooldown = 0, mass = 30, cost = 160):
-        super(type3aCannon1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
+    def __init__ (self,name = "Type3a Cannon I",minEnergy=0,maxEnergy=3,energy=0, maxCooldown = 17000, integrity = 100, cooldown = 0, mass = 30, cost = 160):
+        super(type3aCannon1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, integrity, cooldown, mass, cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0):
@@ -221,8 +222,8 @@ class type3aCannon1(system):
         ship.cost -= self.cost
 
 class gattlingLaser1(system):
-    def __init__ (self,name = "Gattling Laser I",minEnergy=0,maxEnergy=9,energy=0, maxCooldown = 600, cooldown = 0, mass = 10, cost = 100):
-        super(gattlingLaser1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
+    def __init__ (self,name = "Gattling Laser I",minEnergy=0,maxEnergy=9,energy=0, maxCooldown = 600, integrity = 100, cooldown = 0, mass = 10, cost = 100):
+        super(gattlingLaser1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, integrity, cooldown, mass, cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics): 
         if(self.cooldown <= 0):
@@ -237,8 +238,8 @@ class gattlingLaser1(system):
         ship.cost -= self.cost
 
 class gattlingLaser2(system):
-    def __init__ (self,name = "Gattling Laser II",minEnergy=2,maxEnergy=8,energy=0, maxCooldown = 400, cooldown = 0, mass = 15, cost = 110):
-        super(gattlingLaser2,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
+    def __init__ (self,name = "Gattling Laser II",minEnergy=2,maxEnergy=8,energy=0, maxCooldown = 400, integrity = 100, cooldown = 0, mass = 15, cost = 110):
+        super(gattlingLaser2,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, integrity, cooldown, mass, cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0):
@@ -253,8 +254,8 @@ class gattlingLaser2(system):
         ship.cost -= self.cost
 
 class highEnergyLaser1(system):
-    def __init__ (self,name = "High Energy Laser I",minEnergy=4,maxEnergy=8,energy=0, maxCooldown = 8000, cooldown = 0, mass = 10, cost = 50):
-        super(highEnergyLaser1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
+    def __init__ (self,name = "High Energy Laser I",minEnergy=4,maxEnergy=8,energy=0, maxCooldown = 8000, integrity = 100, cooldown = 0, mass = 10, cost = 50):
+        super(highEnergyLaser1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, integrity, cooldown, mass, cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0):
@@ -269,8 +270,8 @@ class highEnergyLaser1(system):
         ship.cost -= self.cost
 
 class kinetic1(system):
-    def __init__ (self,name = "Kinetic cannon I",minEnergy=0,maxEnergy=7,energy=0,maxCooldown=1000,cooldown=0,mass=30, cost = 60):
-        super(kinetic1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, cooldown, mass, cost)
+    def __init__ (self,name = "Kinetic cannon I",minEnergy=0,maxEnergy=7,energy=0,maxCooldown=1000, integrity = 100,cooldown=0,mass=30, cost = 60):
+        super(kinetic1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, integrity, cooldown, mass, cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0):

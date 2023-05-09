@@ -33,6 +33,7 @@ class global_var():
         self.mouseWheelDown = FALSE
         self.mouseButton1 = FALSE
         self.updateTimer = -1
+        self.frameTime = 0
         self.mouseButton2 = FALSE
         self.mouseButton3 = FALSE
         self.mouseButton3justPressed = FALSE
@@ -86,7 +87,7 @@ class global_var():
 
 
 class ui_metrics():
-    rootX = 1600
+    rootX = 1870
     rootY = 1000
     canvasWidth = 1120
     canvasHeight = 640
@@ -96,12 +97,13 @@ class ui_metrics():
     shipDataOffsetY = 20
     shipDataOffsetBetween = 60
     leftMargin = 10
-    systemScalesWidth = 160
+    systemScalesWidth = canvasWidth
     systemScalesMarginTop = 80
     systemScalesHeightOffset = 90
-    systemScalesLabelFrameWidth = systemScalesWidth+60
+    systemScalesLFWidth = systemScalesWidth+260
     systemProgressbarsHeightOffset = 60
-    canvasX = systemScalesLabelFrameWidth + 20
+    systemsLFWidth = 400
+    canvasX = 440
     canvasY = 100
     shipDataX = canvasX
     shipDataY = canvasY + 20

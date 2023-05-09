@@ -57,15 +57,15 @@ def updateMissionCanvas(missionCanvas,variable,msmVar):
 def missionSelectScreen(root,config,uiMenuElements):
 
     desLabelVar = StringVar(root)
-    desLabelFrame = LabelFrame(width = 800,height = 300)
+    desLabelFrame = ttk.Labelframe(style = 'Grey.TLabelframe', width = 800,height = 300)
     desLabelVar.set("Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
-    desLabel = Label(desLabelFrame,textvariable=desLabelVar,anchor='w',justify = LEFT,wraplength=500)
+    desLabel = ttk.Label(desLabelFrame,style = 'Grey.TLabel', textvariable=desLabelVar,anchor='w',justify = LEFT,wraplength=500)
     desLabel.place(x=0,y=0)
 
     objLabelVar = StringVar(root)
-    objLabelFrame = LabelFrame(width = 350,height = 700)
+    objLabelFrame = ttk.Labelframe(style = 'Grey.TLabelframe', width = 350,height = 700)
     objLabelVar.set("Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
-    objLabel = Label(objLabelFrame,textvariable=objLabelVar,anchor='w',justify = LEFT,wraplength=330)
+    objLabel = ttk.Label(objLabelFrame,style = 'Grey.TLabel', textvariable=objLabelVar,anchor='w',justify = LEFT,wraplength=330)
     objLabel.place(x=0,y=0)
 
     variable = StringVar(root)

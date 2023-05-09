@@ -224,15 +224,15 @@ def customGame(root,config,uiMenuElements,uiMetrics):
 
         uiElementsList.append(uiElements.startGameButton)
 
-        uiElements.mapLF = tk.LabelFrame(root,width = 300, height = 100, text = "Map Choice")
+        uiElements.mapLF = ttk.Labelframe(root,style = 'Grey.TLabelframe', width = 300, height = 100, text = "Map Choice")
         uiElements.mapOM = OptionMenu(uiElements.mapLF, info.mapChoice, *mapOptions, command = lambda _:[updateButton(info, uiElements.startGameButton, info.mapChoice),updateMissionCanvas(uiElements.missionCanvas,info,msmVar)])
 
-        uiElements.blueShipLF0 = tk.LabelFrame(root,width = 300, height = 100, text = "Blue team ship 1")
-        uiElements.blueShipLF1 = tk.LabelFrame(root,width = 300, height = 100, text = "Blue team ship 2")
-        uiElements.blueShipLF2 = tk.LabelFrame(root,width = 300, height = 100, text = "Blue team ship 3")
-        uiElements.redShipLF0 = tk.LabelFrame(root,width = 300, height = 100, text = "Red team ship 1")
-        uiElements.redShipLF1 = tk.LabelFrame(root,width = 300, height = 100, text = "Red team ship 2")
-        uiElements.redShipLF2 = tk.LabelFrame(root,width = 300, height = 100, text = "Red team ship 3")
+        uiElements.blueShipLF0 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = 150, height = 80, text = "Blue team ship 1")
+        uiElements.blueShipLF1 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = 150, height = 80, text = "Blue team ship 2")
+        uiElements.blueShipLF2 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = 150, height = 80, text = "Blue team ship 3")
+        uiElements.redShipLF0 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = 150, height = 80, text = "Red team ship 1")
+        uiElements.redShipLF1 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = 150, height = 80, text = "Red team ship 2")
+        uiElements.redShipLF2 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = 150, height = 80, text = "Red team ship 3")
 
         uiElements.blueShipOM0 = OptionMenu(uiElements.blueShipLF0, info.blueShip0, *shipOptions, command = lambda _: updateButton(info, uiElements.startGameButton, info.blueShip0))
         uiElements.blueShipOM1 = OptionMenu(uiElements.blueShipLF1, info.blueShip1, *shipOptions, command = lambda _: updateButton(info, uiElements.startGameButton, info.blueShip1))
