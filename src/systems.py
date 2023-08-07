@@ -45,12 +45,7 @@ class throttleBrake1(system):
         super(throttleBrake1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, integrity, cooldown, mass, cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
-        if(self.cooldown <= 0 and True):
-            i=100
-            while(ship1.hp != ship1.maxHp and i>0):
-                ship1.hp+=1
-                i-=1
-            self.cooldown=self.maxCooldown
+        return
     def activate(self,ship,var,gameRules,uiMetrics):
         value = ship.maxSpeed/4
         ship.speed = ship.maxSpeed - self.energy*value
@@ -101,7 +96,7 @@ class hullRepairSystem2(system):
         ship.cost -= self.cost
 
 class antiMissleSystem1(system):
-    def __init__ (self,name = "Anti Missle II",minEnergy=0,maxEnergy=10,energy=0, maxCooldown = 15000, integrity = 100, cooldown = 0, mass = 10, cost = 80):
+    def __init__ (self,name = "Anti Missle I",minEnergy=0,maxEnergy=10,energy=0, maxCooldown = 15000, integrity = 100, cooldown = 0, mass = 10, cost = 80):
         super(antiMissleSystem1,self).__init__(name,minEnergy,maxEnergy,energy, maxCooldown, integrity, cooldown, mass, cost)
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0):

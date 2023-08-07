@@ -4,6 +4,7 @@ import configparser
 from functools import partial
 import sys,os
 from decimal import *
+from pathlib import Path
 
 import src.naglowek as naglowek
 from src.rootCommands import *
@@ -282,8 +283,8 @@ def shipEditor(root,config,uiMenuElements,uiMetrics,menuUiElements):
     root.title("Ship Editor")
     if(not naglowek.editorUiReady):
         config = configparser.ConfigParser()
-        cwd = str(sys.argv[0]).removesuffix("/main.py")
-        cwd = str(sys.argv[0]).removesuffix("/main.py")
+        cwd = Path(sys.argv[0])
+        cwd = str(cwd.parent)
         filePath = os.path.join(cwd, "gameData/customShips.ini")
         config.read(filePath)
         
