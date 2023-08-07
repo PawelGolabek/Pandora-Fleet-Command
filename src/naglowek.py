@@ -102,12 +102,12 @@ class ui_metrics():
     systemScalesOffset = 80
     systemScalesWidthOffset = 170
     systemScalesLFWidth = canvasWidth * 2 /3
-    systemScalesLFHeight = 400
+    systemScalesLFHeight = 300
     systemProgressbarsHeightOffset = 60
     systemsLFWidth = 400
     systemScaleWidth = 160
     canvasX = 440
-    canvasY = 100
+    canvasY = 10
     shipDataX = canvasX
     shipDataY = canvasY + 20
     #editor

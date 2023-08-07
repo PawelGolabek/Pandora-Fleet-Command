@@ -31,6 +31,7 @@ def loadStyles(root,s):
   s.configure("Green.TLabel", foreground = 'green', background = '#202020')
   s.configure("Red.TLabel", foreground = 'red', background = '#202020')
   s.configure("Yellow.TLabel", foreground = 'yellow', background = '#202020')
+  s.configure("Blue.TLabel", foreground = '#4582ec', background = '#202020')
 # print(sv_ttk.get_theme())  # Get what theme the app uses (either 'light' or 'dark')
 
  #   s.configure('TButton', font =
