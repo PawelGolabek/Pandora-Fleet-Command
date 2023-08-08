@@ -37,17 +37,17 @@ def placeBattleUi(staticUi,uiMetrics,canvas,globalVar,shipLookup):
     staticUi.startTurnButton.place(x = uiMetrics.canvasX + uiMetrics.canvasWidth -160, y = uiMetrics.canvasY + uiMetrics.canvasHeight + 100)
 
     # ship shields     
-    SPelements = [staticUi.playerSPLF,staticUi.playerSPLF2,staticUi.playerSPLF3,staticUi.enemySPLF,staticUi.enemySPLF2,staticUi.enemySPLF3]   
-    i = 0
-    for element in SPelements:
-        element.place(x=uiMetrics.canvasX, y=uiMetrics.canvasY + uiMetrics.canvasHeight + uiMetrics.shipDataOffsetY)
-        i += 1
+ #  SPelements = [staticUi.playerSPLF,staticUi.playerSPLF2,staticUi.playerSPLF3,staticUi.enemySPLF,staticUi.enemySPLF2,staticUi.enemySPLF3]   
+ #  i = 0
+ #  for element in SPelements:
+ #      element.place(x=uiMetrics.canvasX, y=uiMetrics.canvasY + uiMetrics.canvasHeight + uiMetrics.shipDataOffsetY)
+ #      i += 1
     # place shields
     for tmpShip,shieldArray in zip(globalVar.ships,staticUi.tmpShieldsLabel):
         tmp = 0
         for progressBar in shieldArray:
             progressBar.place(x=tmp + 5, y=5)
-            tmp += ((uiMetrics.shipDataWidth-10) / (tmpShip.maxShields*4+(tmpShip.maxShields-1)))*5
+            tmp += ((uiMetrics.systemScalesLFWidth-10) / (tmpShip.maxShields*4+(tmpShip.maxShields-1)))*5
     # ship armor   player
     staticUi.playerAPLF.place(width=uiMetrics.shipDataWidth, height=54, x=uiMetrics.canvasX,
                             y=uiMetrics.canvasY + uiMetrics.canvasHeight + uiMetrics.shipDataOffsetY + uiMetrics.shipDataOffsetBetween, anchor="nw")
@@ -98,8 +98,8 @@ def placeBattleUi(staticUi,uiMetrics,canvas,globalVar,shipLookup):
     (staticUi.systemsLF).place(x = uiMetrics.canvasX, y = uiMetrics.canvasY + uiMetrics.canvasHeight + 10)
 
     staticUi.enemyLF.place(x=uiMetrics.canvasX + uiMetrics.canvasWidth + 10, y = uiMetrics.canvasY)
-    staticUi.enemyLF2.place(x=uiMetrics.canvasX + uiMetrics.canvasWidth + 10, y = uiMetrics.canvasY + + 1 * uiMetrics.canvasHeight/5*2)
-    staticUi.enemyLF3.place(x=uiMetrics.canvasX + uiMetrics.canvasWidth + 10, y = uiMetrics.canvasY + + 2 * uiMetrics.canvasHeight/5*2)
+    staticUi.enemyLF2.place(x=uiMetrics.canvasX + uiMetrics.canvasWidth + 10, y = uiMetrics.canvasY + 1 * uiMetrics.canvasHeight/5*2)
+    staticUi.enemyLF3.place(x=uiMetrics.canvasX + uiMetrics.canvasWidth + 10, y = uiMetrics.canvasY + 2 * uiMetrics.canvasHeight/5*2)
     staticUi.playerLF.place(x=20, y = uiMetrics.canvasY)
     staticUi.playerLF2.place(x=20, y = uiMetrics.canvasY + 1 * uiMetrics.canvasHeight/5*2)
     staticUi.playerLF3.place(x=20, y = uiMetrics.canvasY + 2 * uiMetrics.canvasHeight/5*2)
@@ -107,11 +107,25 @@ def placeBattleUi(staticUi,uiMetrics,canvas,globalVar,shipLookup):
     for target in labelsList:
         i = j = 0
         for element in target:
-            element.place(x=10 + i*100,y=30+j*20)
-            i+=1
-            if(i%4==0):
-                j+=1
-                i=0
+            if(i<=5 and j == 0):
+                element.place(x=10 + i*80,y=30)
+                i+=1
+                if(i%5==0):
+                    j+=1
+                    i=0
+            else:
+                if(i > 0 and j > 1):
+                    element.place(x=35 + i*80,y=50+j*17)
+                else:
+                    if(j == 1 and not i == 0):
+                        element.place(x=20 + i*80,y=50+j*17)
+                    else:
+                        element.place(x=10 + i*80,y=50+j*17)
+
+                i+=1
+                if(i%5==0):
+                    j+=1
+                    i=0
 
 def placeMenuUi(root,staticUi,uiMetrics):
     root.title("Main Menu")

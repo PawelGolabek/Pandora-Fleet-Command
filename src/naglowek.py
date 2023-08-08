@@ -101,7 +101,7 @@ class ui_metrics():
     systemScalesMarginTop = 60
     systemScalesOffset = 80
     systemScalesWidthOffset = 170
-    systemScalesLFWidth = canvasWidth * 2 /3
+    systemScalesLFWidth = canvasWidth
     systemScalesLFHeight = 300
     systemProgressbarsHeightOffset = 60
     systemsLFWidth = 400
