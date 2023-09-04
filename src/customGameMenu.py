@@ -41,7 +41,6 @@ def runGame(info,configIn,root,menuUiElements):
     cwd = str(cwd.parent)
     a = ("maps\\" + info.mapChoice.get() +"\mapInfo.ini")
     filePath = os.path.join(cwd, a)
-    print(filePath)
     configIn1.read(filePath)
     
     ship0 = readShip(configIn,shipName0,x=configIn1.get("spawnLocations","teamBlue1X"),y=configIn1.get("spawnLocations","teamBlue1Y"),outline="white",owner="player1",id = "0")
@@ -55,7 +54,6 @@ def runGame(info,configIn,root,menuUiElements):
     cwd = Path(sys.argv[0])
     cwd = str(cwd.parent)
     filePath = os.path.join(cwd, "gameData/customGame.ini")
-    print(filePath)
     configOut.read(filePath)
 
     writeShip(ship0,"Player",configOut)
@@ -84,7 +82,6 @@ def runGame(info,configIn,root,menuUiElements):
     configOut.set("Images", "image", cwd + "\maps\\" + info.mapChoice.get() + "\map.png")
     configOut.set("Images", "imageMask", cwd + "\maps\\" + info.mapChoice.get() +"\mapMask.png")
 
-    print(cwd + "\maps\\" + info.mapChoice.get() +"\mapMask.png")
     
     hd = open(filePath, "w")
     configOut.write(hd)
@@ -170,7 +167,6 @@ def updateMissionCanvas(missionCanvas,info,msmVar):
     cwd = Path(sys.argv[0])
     cwd = str(cwd.parent)
     c = os.path.join(cwd, "maps\\" + (info.mapChoice).get() +"\\mapMiniature.png")
-    print(c)
     b = PIL.Image.open(c)
     b = b.resize((800, 500), PIL.Image.ANTIALIAS)
     msmVar.img = ImageTk.PhotoImage(b)

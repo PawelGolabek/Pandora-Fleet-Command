@@ -35,14 +35,14 @@ class shortPulseRadar(radar):
         ship.mass -= self.mass
 
 class longPulseRadar(radar):
-    def __init__ (self,name = "longPulseRadar",mass = 10,cost = 20):
+    def __init__ (self,name = "longPulseRadar",mass = 10,cost = 80):
         super(longPulseRadar,self).__init__(name,mass,cost)
     def onAdding(self,ship):
-        ship.detectionRange += 30
+        ship.detectionRange += 50
         ship.cost += self.cost
         ship.mass += self.mass
     def onRemoving(self,ship):
-        ship.detectionRange -= 30
+        ship.detectionRange -= 50
         ship.cost -= self.cost
         ship.mass -= self.mass
     

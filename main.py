@@ -51,9 +51,7 @@ if __name__ == '__main__':
     config = configparser.ConfigParser()
     cwd = Path(sys.argv[0])
     cwd = str(cwd.parent)
-    print(cwd)
     filePath = os.path.join(cwd, "campaignMissions"+ "\\" + parameter1 + "\\" +  "level info.ini")
-    print(filePath)
     config.read(filePath)
     
     uiMenuElements = dynamic_object()

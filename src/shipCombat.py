@@ -179,23 +179,74 @@ def rotateVector(degree, object, moveDirX, moveDirY):
         object.xDir = object.xDir / scale
         object.yDir = object.yDir / scale
       
-def dealDamage(ship, damage,var):
+def dealDamage(ship, dmg, var, targetSystem, heatDamage):
+    system = ship.systemSlots[targetSystem]
     if(ship.shields > 0):
         tmp = 0
-        while tmp < len(ship.shieldsState):
+        while (tmp < len(ship.shieldsState)):
             if(ship.shieldsState[tmp] == var.shieldMaxState):
                 ship.shieldsState[tmp] = 0
                 break
             tmp += 1
         ship.shields -= 1
     else:
-        while(damage > 0):
-            if(ship.ap > 0):  # armor
-                ship.ap -= 1
+        armorEffect = math.ceil(ship.ap/20) + 3
+        if(dmg <= armorEffect):
+            if(ship.ap <= dmg):
+                dmg -= ship.ap
+                ship.ap = 0
             else:
-                ship.hp -= damage
-                damage -= damage
-            damage-=1
+                ship.ap -= dmg
+                dmg = 0
+        else:
+            if(dmg <= ship.ap):
+                if(ship.ap >= armorEffect):
+                    ship.ap -= armorEffect
+                    dmg -= armorEffect
+                else:
+                    dmg -= ship.ap
+                    ship.ap = 0
+            else:
+                dmg -= ship.ap
+                ship.ap = 0
+        system = ship.systemSlots[targetSystem]
+        numOfSystems = len(ship.systemSlots)
+        totalMaxIntegrity = 0
+        totalIntegrity = 0
+        damageParts = 2 + numOfSystems
+        damagePerSystem = math.floor(dmg/damageParts)
+        if(targetSystem>=0):
+            system.heat += heatDamage
+            system.heat += heatDamage
+            system.heat += heatDamage
+            if(system.integrity > 0):
+                if(system.integrity > damagePerSystem * 2):
+                    system.integrity -= damagePerSystem * 2
+                    dmg -= damagePerSystem * 2
+                else:
+                    dmg -= system.integrity
+                    system.integrity = 0
+        for system1 in ship.systemSlots:                        # calculate system values
+            numOfSystems += 1
+            totalMaxIntegrity += system1.maxIntegrity
+            totalIntegrity += system1.integrity
+        if(totalIntegrity == 0):
+            ship.hp -= dmg
+            return
+        damageBeforeSystems = dmg
+        for system3 in ship.systemSlots:                        # deal damage according to values
+            system3.heat += heatDamage
+            system3.heat = round(system3.heat*100)/100
+            dmgToSystem = (system3.maxIntegrity)/(totalMaxIntegrity)  * damageBeforeSystems
+            if(system3.integrity > dmgToSystem):
+                system3.integrity -= math.floor(dmgToSystem)
+                dmg -= math.floor(dmgToSystem)
+            else:
+                dmgToSystem -= system3.integrity
+                system3.integrity = 0
+                dmg -= math.floor(dmgToSystem)
+        ship.hp -= dmg
+        return
 
 
 def putLaser(missle,var,shipLookup):
@@ -210,10 +261,10 @@ def putLaser(missle,var,shipLookup):
     (var.lasers).append(currentLaser)
     
 
-def createRocket(var, ship, target,_type,offsetX=0,offsetY=0):
+def createRocket(var,ship,target,targetSystem,_type,offsetX=0,offsetY=0):
     var.misslesShot += 1
     missleClass = _type
-    # copy standard for ammunition. To be transformed into constructor like in c++ if needed
+    # copy standard for ammunition. To be transformed into constructor if needed
     missle = ammunition()
     var.currentMissles.append(missle)
     missleName = 'missle' + str(var.misslesShot)
@@ -232,6 +283,8 @@ def createRocket(var, ship, target,_type,offsetX=0,offsetY=0):
     setattr(var.currentMissles[-1], 'turnRate',
             missleClass.turnRate)
     setattr(var.currentMissles[-1], 'target', target.id)
+    setattr(var.currentMissles[-1], 'heat', missleClass.heat)
+    setattr(var.currentMissles[-1], 'targetSystem', targetSystem)
 
 
 def drawRockets(globalVar,ammunitionType,canvas):
@@ -448,8 +501,8 @@ def checkForKilledShips(events,shipLookup,var,uiElements):
 def killShip(shipId,var,events,shipLookup,uiElements):
     ship = shipLookup[shipId]
     for missle in var.currentMissles:
-        if shipLookup[missle.target] == ship:
-            (var.currentMissles).remove(missle)
+        if shipLookup[missle.target] == ship.id:
+            var.currentMissles.remove(missle)
     noEnemies = TRUE
     for progressBar in ship.shieldsLabel:
         progressBar['value'] = 0
@@ -460,17 +513,17 @@ def killShip(shipId,var,events,shipLookup,uiElements):
     if(ship.id == 0):
         (var.shipChoiceRadioButtons).remove(uiElements.shipChoiceRadioButton0)
         (uiElements.shipChoiceRadioButton0).config(state = DISABLED)
-        (uiElements.shipChoiceRadioButton0).config(state = "Destroyed")
+        (uiElements.shipChoiceRadioButton0).config(text = "Destroyed")
         var.radio0Hidden = True
     elif(ship.id == 1):
         (var.shipChoiceRadioButtons).remove(uiElements.shipChoiceRadioButton1)
         (uiElements.shipChoiceRadioButton1).config(state = DISABLED)
-        (uiElements.shipChoiceRadioButton1).config(state = "Destroyed")
+        (uiElements.shipChoiceRadioButton1).config(text = "Destroyed")
         var.radio1Hidden = True
     elif(ship.id == 2):
         (var.shipChoiceRadioButtons).remove(uiElements.shipChoiceRadioButton2)
         (uiElements.shipChoiceRadioButton2).config(state = DISABLED)
-        (uiElements.shipChoiceRadioButton2).config(state = "Destroyed")
+        (uiElements.shipChoiceRadioButton2).config(text = "Destroyed")
         var.radio2Hidden = True
 
     if noEnemies and not events.showedWin:
@@ -514,9 +567,10 @@ def updateShips(var,uiMetrics,gameRules,shipLookup,events,uiElements):  # rotate
 
         if(colorWeight < 600 and colorWeight > 200):
             movementPenality = gameRules.movementPenalityMedium
+            dealDamage(shipLookup[ship.id], 0, var,-1, 0.01)
         elif(colorWeight < 200):
             movementPenality = gameRules.movementPenalityHard
-            dealDamage(shipLookup[ship.id], 1,var)
+            dealDamage(shipLookup[ship.id], 0, var,-1, 0.1)
             checkForKilledShips(events,shipLookup,var,uiElements)
         else:
             movementPenality = 0.000001  # change

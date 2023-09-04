@@ -49,7 +49,11 @@ class _events():
 
 
 class ship():
-    def __init__(self,var, name="MSS Artemis", owner="ai2", target='MSS Artemis',
+    def setTarget(self,variable):
+        self.target = variable.get()
+    def setTargetStr(self,variable):
+        self.target = variable
+    def __init__(self,var, name="MSS Artemis", owner="ai2", target=0,
                  hp=200, maxHp=None, ap=10000, maxAp=None, shields=3, maxShields = 3, xPos=300, yPos=300,energyLimit = 20,
                  ammunitionChoice=0, ammunitionNumberChoice=0, systemSlots = [],systemStatus = [],
                  detectionRange=200, xDir=0.0, yDir=1, turnRate=0.5, ghostPoints = [], signatures = [], speed=40, maxSpeed = 40,
@@ -65,6 +69,7 @@ class ship():
         self.energy = energyLimit
         self.ammunitionChoice = ammunitionChoice
         self.ammunitionNumberChoice = ammunitionNumberChoice
+        self.signatureCounter = signatureCounter
 
         self.systemSlots = []
         for tmp in systemSlots:
@@ -239,9 +244,10 @@ def manageSystemActivations(ships,var,gameRules,uiMetrics,shipLookup):
 
 def manageSystemTriggers(ships,var,shipLookup,uiMetrics):
     for ship1 in ships:
-        for system in ship1.systemSlots:
-            system.trigger(var,ship1,ships,shipLookup,uiMetrics)
-                # trigger is activated during round and activation is between
+        if(ship1.hp > 0):
+            for system in ship1.systemSlots:
+                system.trigger(var,ship1,ships,shipLookup,uiMetrics)
+                    # trigger is activated during round and activation is between
                                     
 def getOrders(ship,var,gameRules,uiMetrics,forced=False):
     tracered = False
@@ -285,9 +291,9 @@ def manageRockets(missles,shipLookup,var,events,uiElements,uiMetrics):    # mana
     for missle in missles:
         if(missle.sort == 'laser'):
             putLaser(missle,var,shipLookup)
-            dealDamage(shipLookup[missle.target], missle.damage,var)
-            checkForKilledShips(events,shipLookup,var,uiElements)
+            dealDamage(shipLookup[missle.target], missle.damage,var,missle.targetSystem, missle.heat)
             missles.remove(missle)
+            checkForKilledShips(events,shipLookup,var,uiElements)
             continue
         targetShipX = shipLookup[missle.target].xPos
         targetShipY = shipLookup[missle.target].yPos
@@ -306,7 +312,7 @@ def manageRockets(missles,shipLookup,var,events,uiElements,uiMetrics):    # mana
         ##
         if(missle.yPos == max(missle.yPos,targetShipY)):
             aroundDistance = uiMetrics.canvasHeight - missle.yPos + targetShipY
-            straightDistance = missle.yPos - targetShipX
+            straightDistance = missle.yPos - targetShipY
         else:
             aroundDistance = uiMetrics.canvasHeight + missle.yPos - targetShipY
             straightDistance = targetShipY - missle.yPos
@@ -329,7 +335,7 @@ def manageRockets(missles,shipLookup,var,events,uiElements,uiMetrics):    # mana
             abs(missle.xPos - targetShipX) +
             abs(missle.yPos - targetShipY) *
             abs(missle.yPos - targetShipY)) < 25):
-            dealDamage(shipLookup[missle.target], missle.damage,var)
+            dealDamage(shipLookup[missle.target], missle.damage,var,missle.targetSystem,missle.heat)
             missles.remove(missle)
             continue
         if(0 > missle.xPos):
@@ -341,7 +347,56 @@ def manageRockets(missles,shipLookup,var,events,uiElements,uiMetrics):    # mana
         if(missle.yPos > uiMetrics.canvasHeight):
             missle.yPos -= uiMetrics.canvasHeight
 
+def declareTargets(var):
+    list1 = {}
+    list2 = {}
+    i = 2
+    for ship in var.ships:
+        if(not ship.owner == 'player1'):
+            if(not ship.name in list1):
+                list1.update({ship.name : ship.id})
+            else:
+                while((ship.name + ' (' + str(i) + ')') in list1):
+                    i+=1
+                ship.name = (ship.name + '(' + str(i) + ')')
+                list1.update({ship.name : ship.id})
+    i = 2
+    for ship in var.ships:
+        if(ship.owner == 'player1'):
+            if(not ship.name in list2):
+                list2.update({ship.name : ship.id})
+            else:
+                while((ship.name + ' (' + str(i) + ')') in list2):
+                    i+=1
+                ship.name = (ship.name + ' (' + str(i) + ')')
+                list2.update({ship.name : ship.id})
 
+    return list1,list2
+
+def declareSystemTargets(var,shipLookup):
+    for ship in var.ships:
+        list1 = {}
+        i = 2
+        for system in ship.systemSlots:
+            if(not system.name in list1):
+                list1.update({system.name : system.id})
+            else:
+                while((system.name + ' (' + str(i) + ')') in list1):
+                    i+=1
+                system.name = (system.name + ' (' + str(i) + ')')
+                list1.update({system.name : system.id})
+            if(system.category == 'weapon'):
+                system.setTargetStr(0)
+                    #shipLookup[var.enemies[list(var.enemies.keys())[0]]].systemSlots[0])
+
+
+def declareShipsTargets(var):
+    for ship in var.ships:
+        if(ship.owner == 'player1'):
+            ship.setTargetStr(list(var.enemies.keys())[0])
+            continue
+        if(ship.owner == 'ai1'):
+            ship.setTargetStr(list(var.players.keys())[0])
 
 
 def drawLasers(var,canvas,uiMetrics):
@@ -442,14 +497,16 @@ def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,a
             root.title("TURN IN PROGRESS")
             var.systemTime = time.time()
             while(ticksToEndFrame < var.gameSpeed):
+                checkForKilledShips(events,shipLookup,var,uiElements)
                 detectionCheck(var,uiMetrics)
                 updateShips(var,uiMetrics,gameRules,shipLookup,events,uiElements)
-                checkForKilledShips(events,shipLookup,var,uiElements)
                 manageLandmarks(var.landmarks,var.ships)
-                manageRockets(var.currentMissles,shipLookup,var,events,uiElements,uiMetrics) 
                 manageSystemTriggers(var.ships,var,shipLookup,uiMetrics)
+                manageRockets(var.currentMissles,shipLookup,var,events,uiElements,uiMetrics) 
                 updateShields(var.ships,var)
                 updateCooldowns(var.ships,var,shipLookup,uiMetrics)
+                updateHeat(var.ships)
+                dealHeatDamage(var.ships)
                 updateSignatures(var.ships)
                 for laser in var.lasers:
                     if var.turnInProgress:
@@ -483,7 +540,7 @@ def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,a
         if(var.updateTimer>0):
             var.updateTimer -= 1
         if(var.turnInProgress or var.mouseButton3):
-            root.after(20, partial(update,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root))
+            root.after(10, partial(update,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root))
         else:
             root.after(20, partial(update,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root))
 
@@ -616,18 +673,6 @@ def endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons):
 
 
 def updateScales(uiElements,var,shipLookup):
- #   uiElements.playerAPProgressBar['value'] = shipLookup[0].ap
- #   uiElements.playerAPProgressBar2['value'] = shipLookup[1].ap
- #   uiElements.playerAPProgressBar3['value'] = shipLookup[2].ap
- #   uiElements.enemyAPProgressBar['value'] = shipLookup[3].ap
- #   uiElements.enemyAPProgressBar2['value'] = shipLookup[4].ap
- #   uiElements.enemyAPProgressBar3['value'] = shipLookup[5].ap
- #   uiElements.playerHPProgressBar['value'] = shipLookup[0].hp
- #   uiElements.playerHPProgressBar2['value'] = shipLookup[1].hp
- #   uiElements.playerHPProgressBar3['value'] = shipLookup[2].hp
- #   uiElements.enemyHPProgressBar['value'] = shipLookup[3].hp
- #   uiElements.enemyHPProgressBar2['value'] = shipLookup[4].hp
- #   uiElements.enemyHPProgressBar3['value'] = shipLookup[5].hp
 
     var.tmpCounter += 1
     shipChosen = shipLookup[var.shipChoice]
@@ -658,9 +703,57 @@ def updateCooldowns(ships,var,shipLookup,uiMetrics):
             #change if needed
             energyTicks = system.energy
             while(system.cooldown > 0 and energyTicks):
-                system.cooldown -= 1
+                if(system.heat < 70):
+                    system.cooldown -= 0.8
+                if(system.heat < 30):
+                    system.cooldown -= 1
+                elif(system.heat > 200):
+                    system.cooldown -= 0
+                else:
+                    system.cooldown -= 0.3
                 energyTicks -= 1
                 system.trigger(var,ship,ships,shipLookup,uiMetrics)
+
+def updateHeat(ships):
+    for ship in ships:
+        for system in ship.systemSlots:
+            system.coolUnits += system.cooling
+            system.coolTicks = floor(system.coolUnits/100)
+            if(system.coolTicks):
+                system.coolUnits -= system.coolTicks * 100
+                while(system.heat > 0 and system.coolTicks):
+                    system.coolTicks -= 1
+                    if(system.heat < 70):
+                        system.heat -= 2
+                    if(system.heat < 30):
+                        system.heat -= 0
+                    elif(system.heat > 200):
+                        system.heat -= 8
+                    else:
+                        system.heat -= 4
+            system.heat = round(system.heat*100)/100
+            if(system.heat < 0):
+                system.heat = 0
+
+def dealHeatDamage(ships):
+    for ship in ships:
+        for system in ship.systemSlots:
+            if(system.heat < 70):
+                heatDamage = 0.2
+            if(system.heat < 30):
+                heatDamage = 0
+            elif(system.heat > 200):
+                heatDamage = 5
+            else:
+                heatDamage = 1
+            system.heatUnits += heatDamage
+            system.heatDamageTicks = floor(system.heatUnits/100)
+            if(system.heatDamageTicks):
+                print("dealing damage")
+                system.heatUnits -= system.heatDamageTicks*100
+                while(system.integrity > 0 and system.heatDamageTicks):
+                    system.integrity -= 1
+                    system.heatDamageTicks -= 1
 
 def updateEnergy(var,uiElements,shipLookup):
     shipChosen = shipLookup[var.shipChoice]
@@ -721,6 +814,8 @@ def updateLabels(uiElements,shipLookup,var):
             uiElements.systemLFs[shipCounter].config(style = 'Green.TLabelframe')
         else:
             uiElements.systemLFs[shipCounter].config(style = 'Grey.TLabelframe')
+        if(not shipLookup[shipCounter].owner == 'player1'):
+            uiElements.systemLFs[shipCounter].config(style = 'DarkRed.TLabelframe')
             
         label[0].config(text = "Hull: " )
         label[1].config(text = str(shipLookup[shipCounter].hp))
@@ -750,15 +845,24 @@ def updateLabels(uiElements,shipLookup,var):
                 label[j+1].config(style = "Yellow.TLabel")
             label[j+1].config(text = str(readiness))
             integrity = system.integrity
-            if(integrity == 100):
+            if(integrity == system.maxIntegrity):
                 label[j+2].config(style = "Green.TLabel")
-            elif(integrity < 30):
+            elif(integrity < system.maxIntegrity * 0.3):
                 label[j+2].config(style = "Red.TLabel")
-            elif(integrity > 70):
+            elif(integrity > system.maxIntegrity * 0.7):
                 label[j+2].config(style = "Blue.TLabel")
             else:
                 label[j+2].config(style = "Yellow.TLabel")
             label[j+2].config(text = str(integrity))
+
+            if(system.heat < 70):
+                label[j+3].config(style = "Blue.TLabel")
+            if(system.heat < 30):
+                label[j+3].config(style = "Green.TLabel")
+            elif(system.heat > 200):
+                label[j+3].config(style = "Red.TLabel")
+            else:
+                label[j+3].config(style = "Yellow.TLabel")
             label[j+3].config(text = str(system.heat))
             label[j+4].config(text = str(system.energy))
             label[j+2].config(anchor = E)
@@ -788,7 +892,7 @@ def updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas):
 
     var.uiEnergyLabel = ttk.Label(uiElements.systemsLF,style = 'Grey.TLabel', width=20, text = "Energy remaining: " + str(shipChosen.energy), font = "16")
     hideBattleUi(uiElements.staticUi,uiElements)
-    placeBattleUi(uiElements,uiMetrics,canvas,var,shipLookup)
+    placeBattleUi(uiElements,uiMetrics,canvas,var,shipLookup,root,uiElements)
         
 def mouseOnCanvas(var,uiMetrics):
     if(var.pointerX > uiMetrics.canvasX and var.pointerX <
@@ -799,13 +903,13 @@ def mouseOnCanvas(var,uiMetrics):
         return False
 
 def declareShips(var,config):
-        var.playerName = (config.get("Ships", "playerName"))
-        var.playerName2 = (config.get("Ships", "playerName2"))
-        var.playerName3 = (config.get("Ships", "playerName3"))
+        var.playerName =  config.get("Ships", "playerName")
+        var.playerName2 = config.get("Ships", "playerName2")
+        var.playerName3 = config.get("Ships", "playerName3")
 
-        var.enemyName =  (config.get("Ships", "enemyName"))
-        var.enemyName2 = (config.get("Ships", "enemyName2"))
-        var.enemyName3 = (config.get("Ships", "enemyName3"))
+        var.enemyName =  config.get("Ships", "enemyName")
+        var.enemyName2 = config.get("Ships", "enemyName2")
+        var.enemyName3 = config.get("Ships", "enemyName3")
         var.player = 0
         var.player2 = 0
         var.player3 = 0
@@ -864,13 +968,13 @@ def declareShips(var,config):
         var.enemy = creationList[3]
         var.enemy2 = creationList[4]
         var.enemy3 = creationList[5]
-        (var.ships).append(var.player)
-        (var.ships).append(var.player2)
-        (var.ships).append(var.player3)
+        var.ships.append(var.player)
+        var.ships.append(var.player2)
+        var.ships.append(var.player3)
 
-        (var.ships).append(var.enemy)
-        (var.ships).append(var.enemy2)
-        (var.ships).append(var.enemy3)
+        var.ships.append(var.enemy)
+        var.ships.append(var.enemy2)
+        var.ships.append(var.enemy3)
 
 ############################################ INPUTS #############################################
 
@@ -1005,12 +1109,6 @@ def run(config,root,menuUiElements):
             widget.destroy()
         for element in ((cinfo.var).shipChoiceRadioButtons):
             element.destroy()
-        (cinfo.uiElements).playerSPLF.destroy()
-        (cinfo.uiElements).playerSPLF2.destroy()
-        (cinfo.uiElements).playerSPLF3.destroy()
-        (cinfo.uiElements).enemySPLF.destroy()
-        (cinfo.uiElements).enemySPLF2.destroy()
-        (cinfo.uiElements).enemySPLF3.destroy()
         for element in ((cinfo.uiElements).UIElementsList):
             element.destroy()
         del (cinfo.var).img
@@ -1071,7 +1169,7 @@ def resume(config,root,menuUiElements):
             var.image = var.image.resize((uiMetrics.canvasWidth, uiMetrics.canvasHeight))
             var.imageMask = var.imageMask.resize((uiMetrics.canvasWidth, uiMetrics.canvasHeight))
       #  var.img = var.img.resize((uiMetrics.canvasWidth, uiMetrics.canvasHeight))
-        canvas = Canvas(root, width=uiMetrics.canvasWidth, height=uiMetrics.canvasHeight,border=1, relief="groove")
+        canvas = Canvas(root, width=uiMetrics.canvasWidth, height=uiMetrics.canvasHeight)
         canvas.ovalList = []
         canvas.availableOvalList = []
         tmp = uiIcons.armorIcon 
@@ -1084,17 +1182,20 @@ def resume(config,root,menuUiElements):
 
         # Ships
         shipLookup = {
-        0: var.player,
-        1: var.player2,
-        2: var.player3,
-        3: var.enemy,
-        4: var.enemy2,
-        5: var.enemy3
+            0: var.player,
+            1: var.player2,
+            2: var.player3,
+            3: var.enemy,
+            4: var.enemy2,
+            5: var.enemy3
         }
+
+        var.enemies,var.players = declareTargets(var)
+        declareShipsTargets(var)
+        declareSystemTargets(var,shipLookup)
 
     #    land1 = landmark(200, 200, 3200, 3200, 50, 'armor')
     #    (var.landmarks).append(land1)
-
         
         var.resizedImage = var.image
         canvas.imageList = []
@@ -1137,20 +1238,6 @@ def resume(config,root,menuUiElements):
             if(ship1.owner == "player1"):
                 putTracer(ship1,var,gameRules,uiMetrics)
 
-        # ship shields
-        uiElements.playerSPLF = ttk.Labelframe(root, style = 'Grey.TLabelframe', text= var.playerName + " Shields",
-                                            borderwidth=2, relief="groove")
-        uiElements.playerSPLF2 = ttk.Labelframe(root,style = 'Grey.TLabelframe',  text= var.playerName2 + " Shields",
-                                            borderwidth=2, relief="groove")
-        uiElements.playerSPLF3 = ttk.Labelframe(root, style = 'Grey.TLabelframe', text= var.playerName3 + " Shields",
-                                            borderwidth=2, relief="groove")
-        uiElements.enemySPLF = ttk.Labelframe(root, style = 'Grey.TLabelframe', text=var.enemyName + " Shields",
-                                        borderwidth=2, relief="groove")
-        uiElements.enemySPLF2 = ttk.Labelframe(root, style = 'Grey.TLabelframe', text=var.enemyName2 + " Shields",
-                                            borderwidth=2, relief="groove")
-        uiElements.enemySPLF3 = ttk.Labelframe(root, style = 'Grey.TLabelframe', text= var.enemyName3 + " Shields",
-                                            borderwidth=2, relief="groove")
-        
         uiElements.enemyLF = ttk.Labelframe(root, style = 'Grey.TLabelframe',text = shipLookup[3].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
         uiElements.enemyLF2 = ttk.Labelframe(root, style = 'Grey.TLabelframe',text = shipLookup[4].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
         uiElements.enemyLF3 = ttk.Labelframe(root, style = 'Grey.TLabelframe',text = shipLookup[5].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
@@ -1174,40 +1261,6 @@ def resume(config,root,menuUiElements):
                 target.append(ttk.Progressbar(
                     labelframe, maximum=100, length=math.floor((uiMetrics.systemScalesLFWidth-10)/x * 4/5), variable=100))
                 n += 1
-        # ship armor
-        uiElements.playerAPLF = ttk.Labelframe(root, style = 'Grey.TLabelframe', text=var.playerName + " Armor Effectivness",
-                                            borderwidth=2, relief="groove")
-        uiElements.playerAPProgressBar = ttk.Progressbar(
-            uiElements.playerAPLF, maximum=(var.player).maxAp, length=(uiMetrics.shipDataWidth-10), variable=100)
-        uiElements.playerAPLF2 = ttk.Labelframe(root, style = 'Grey.TLabelframe', text=var.playerName2 + " Armor Effectivness",
-                                            borderwidth=2, relief="groove")
-        uiElements.playerAPProgressBar2 = ttk.Progressbar(
-            uiElements.playerAPLF2, maximum=(var.player2).maxAp, length=(uiMetrics.shipDataWidth-10), variable=100)
-        uiElements.playerAPLF3 = ttk.Labelframe(root, style = 'Grey.TLabelframe', text=var.playerName3 + " Armor Effectivness",
-                                            borderwidth=2, relief="groove")
-        uiElements.playerAPProgressBar3 = ttk.Progressbar(
-            uiElements.playerAPLF3, maximum=(var.player3).maxAp, length=(uiMetrics.shipDataWidth-10), variable=100)
-        uiElements.enemyAPLF = ttk.Labelframe(root, style = 'Grey.TLabelframe', text=var.enemyName + " Armor Effectivness",
-                                        borderwidth=2, relief="groove")
-        uiElements.enemyAPProgressBar = ttk.Progressbar(
-            uiElements.enemyAPLF, maximum=(var.enemy).maxAp, length=(uiMetrics.shipDataWidth-10), variable=100)
-        uiElements.enemyAPLF2 = ttk.Labelframe(root, style = 'Grey.TLabelframe', text= var.enemyName2 + " Armor Effectivness",
-                                            borderwidth=2, relief="groove")
-        uiElements.enemyAPProgressBar2 = ttk.Progressbar(
-            uiElements.enemyAPLF2, maximum=(var.enemy).maxAp, length=(uiMetrics.shipDataWidth-10), variable=100)
-
-        uiElements.enemyAPLF3 = ttk.Labelframe(root, style = 'Grey.TLabelframe', text=var.enemyName3 + " Armor Effectivness",
-                                            borderwidth=2, relief="groove")
-        uiElements.enemyAPProgressBar3 = ttk.Progressbar(
-            uiElements.enemyAPLF3, maximum=(var.enemy).maxAp, length=(uiMetrics.shipDataWidth-10), variable=100)
-
-            
-        (uiElements.staticUi).append(uiElements.playerAPLF)
-        (uiElements.staticUi).append(uiElements.playerAPLF2)
-        (uiElements.staticUi).append(uiElements.playerAPLF3)
-        (uiElements.staticUi).append(uiElements.enemyAPLF)
-        (uiElements.staticUi).append(uiElements.enemyAPLF2)
-        (uiElements.staticUi).append(uiElements.enemyAPLF3)
 
         for ship1 in var.ships:
             if(ship1.owner == "ai1"):
@@ -1237,12 +1290,6 @@ def resume(config,root,menuUiElements):
 
         uiElementsToPlace = uiElements
         
-        (uiElements.staticUi).append(uiElements.playerSPLF)
-        (uiElements.staticUi).append(uiElements.playerSPLF2)
-        (uiElements.staticUi).append(uiElements.playerSPLF3)
-        (uiElements.staticUi).append(uiElements.enemySPLF)
-        (uiElements.staticUi).append(uiElements.enemySPLF2)
-        (uiElements.staticUi).append(uiElements.enemySPLF3)
 
         var.shipChoiceRadioButtons = []
         radioCommand = partial(radioBox,shipLookup , uiElements,var,uiMetrics,root,canvas)

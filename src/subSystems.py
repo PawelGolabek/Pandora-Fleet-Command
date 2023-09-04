@@ -40,14 +40,14 @@ class extendedSensors(subsystem):
     def onAdding(self,ship):
         ship.mass += self.mass
         ship.cost += self.cost
-        ship.detectionRange += 30
+        ship.detectionRange += 10
         ship.maxEnergy -= 1
         ship.minEnergyConsumption += 1
         ship.maxEnergyConsumption += 1
     def onRemoving(self,ship):
         ship.mass -= self.mass
         ship.cost -= self.cost
-        ship.detectionRange -= 30
+        ship.detectionRange -= 10
         ship.maxEnergy += 1
         ship.minEnergyConsumption -= 1
         ship.maxEnergyConsumption -= 1

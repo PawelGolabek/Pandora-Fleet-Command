@@ -1,3 +1,4 @@
+from functools import partial
 from tkinter import *
 import tkinter.ttk as ttk
 import tkinter as tk
@@ -19,13 +20,16 @@ def hideBattleUi(uiElementsList,uiElements):
         uiElement.place_forget()
     (uiElements.systemsLF).place_forget()
 
-def placeBattleUi(staticUi,uiMetrics,canvas,globalVar,shipLookup):
-    
+def hideSystemTargets(uiElementsList):
+    for uiElement in uiElementsList:
+        uiElement.place_forget()
 
+
+def placeBattleUi(staticUi,uiMetrics,canvas,var,shipLookup,root,uiElements):
+    
     staticUi.shipChoiceRadioButton0.place(x=uiMetrics.canvasX - 120, y=uiMetrics.canvasY + uiMetrics.canvasHeight + 160)
     staticUi.shipChoiceRadioButton1.place(x=uiMetrics.canvasX - 120, y=uiMetrics.canvasY + uiMetrics.canvasHeight + 200)
     staticUi.shipChoiceRadioButton2.place(x=uiMetrics.canvasX - 120, y=uiMetrics.canvasY + uiMetrics.canvasHeight + 240)
-
 
     staticUi.gameSpeedScale.place(x=uiMetrics.canvasX, y=uiMetrics.canvasY - 160)
     canvas.place(x=uiMetrics.canvasX, y=uiMetrics.canvasY)
@@ -36,45 +40,34 @@ def placeBattleUi(staticUi,uiMetrics,canvas,globalVar,shipLookup):
     staticUi.exitToMenuButton.place(x = uiMetrics.canvasX + uiMetrics.canvasWidth -160, y = uiMetrics.canvasY + uiMetrics.canvasHeight + 220)
     staticUi.startTurnButton.place(x = uiMetrics.canvasX + uiMetrics.canvasWidth -160, y = uiMetrics.canvasY + uiMetrics.canvasHeight + 100)
 
-    # ship shields     
- #  SPelements = [staticUi.playerSPLF,staticUi.playerSPLF2,staticUi.playerSPLF3,staticUi.enemySPLF,staticUi.enemySPLF2,staticUi.enemySPLF3]   
- #  i = 0
- #  for element in SPelements:
- #      element.place(x=uiMetrics.canvasX, y=uiMetrics.canvasY + uiMetrics.canvasHeight + uiMetrics.shipDataOffsetY)
- #      i += 1
     # place shields
-    for tmpShip,shieldArray in zip(globalVar.ships,staticUi.tmpShieldsLabel):
+    for tmpShip,shieldArray in zip(var.ships,staticUi.tmpShieldsLabel):
         tmp = 0
-        for progressBar in shieldArray:
-            progressBar.place(x=tmp + 5, y=5)
-            tmp += ((uiMetrics.systemScalesLFWidth-10) / (tmpShip.maxShields*4+(tmpShip.maxShields-1)))*5
-    # ship armor   player
-    staticUi.playerAPLF.place(width=uiMetrics.shipDataWidth, height=54, x=uiMetrics.canvasX,
-                            y=uiMetrics.canvasY + uiMetrics.canvasHeight + uiMetrics.shipDataOffsetY + uiMetrics.shipDataOffsetBetween, anchor="nw")
-    staticUi.playerAPProgressBar.place(x=2, y=5)
-    staticUi.playerAPLF2.place(width=uiMetrics.shipDataWidth, height=54, x=uiMetrics.canvasX + uiMetrics.shipDataWidth,
-                            y=uiMetrics.canvasY + uiMetrics.canvasHeight + uiMetrics.shipDataOffsetY + uiMetrics.shipDataOffsetBetween, anchor="nw")
-    staticUi.playerAPProgressBar2.place(x=2, y=5)
-    staticUi.playerAPLF3.place(width=uiMetrics.shipDataWidth, height=54, x=uiMetrics.canvasX + 2*uiMetrics.shipDataWidth,
-                            y=uiMetrics.canvasY + uiMetrics.canvasHeight + uiMetrics.shipDataOffsetY + uiMetrics.shipDataOffsetBetween, anchor="nw")
-    staticUi.playerAPProgressBar3.place(x=2, y=5)
-
-    staticUi.enemyAPLF.place(width=uiMetrics.shipDataWidth, height=54, x=uiMetrics.canvasX + 3*uiMetrics.shipDataWidth,
-                            y=uiMetrics.canvasY + uiMetrics.canvasHeight + uiMetrics.shipDataOffsetY + uiMetrics.shipDataOffsetBetween, anchor="nw")
-    staticUi.enemyAPProgressBar.place(x=2, y=5)
-    staticUi.enemyAPLF2.place(width=uiMetrics.shipDataWidth, height=54, x=uiMetrics.canvasX + 4*uiMetrics.shipDataWidth,
-                            y=uiMetrics.canvasY + uiMetrics.canvasHeight + uiMetrics.shipDataOffsetY + uiMetrics.shipDataOffsetBetween, anchor="nw")
-    staticUi.enemyAPProgressBar2.place(x=2, y=5)
-    staticUi.enemyAPLF3.place(width=uiMetrics.shipDataWidth, height=54, x=uiMetrics.canvasX + 5*uiMetrics.shipDataWidth,
-                            y=uiMetrics.canvasY + uiMetrics.canvasHeight + uiMetrics.shipDataOffsetY + uiMetrics.shipDataOffsetBetween, anchor="nw")
-    staticUi.enemyAPProgressBar3.place(x=2, y=5)
+        if(len(shieldArray) == 1):
+            shieldArray[0].config(length = uiMetrics.systemScaleWidth*7/3)
+            shieldArray[0].place(x=tmp + 5, y=5)
+        else:
+            for progressBar in shieldArray:
+                progressBar.place(x=tmp + 5, y=5)
+                tmp += ((uiMetrics.systemScalesLFWidth-10) / (tmpShip.maxShields*4+(tmpShip.maxShields-1)))*5
 
     ########################## SYSTEMS  #######################
-    
-    globalVar.uiEnergyLabel.place(x = 10, y = 20)
+    var.uiEnergyLabel.place(x = 10, y = 20) 
 
-    shipChosen = shipLookup[globalVar.shipChoice]
+    options = var.enemies
+    shipTarget = StringVar()
+    shipTarget.set(shipLookup[var.shipChoice].target)
+    optionMenu = OptionMenu(staticUi.systemsLF, shipTarget, *options.keys(), command=lambda _: [shipLookup[var.shipChoice].setTarget(shipTarget),hideSystemTargets(uiElements.systemTargetsList),declareSystemsTargets(var,root,shipLookup,staticUi,uiMetrics,shipTarget,uiElements)])
+    optionMenu.place(x = 160, y = 20) 
+    declareSystemsTargets(var,root,shipLookup,staticUi,uiMetrics,shipTarget,uiElements)
+
+def declareSystemsTargets(var,root,shipLookup,staticUi,uiMetrics,shipTarget,uiElements):
+    shipChosen = shipLookup[var.shipChoice]
     i=0
+    sys1 = 0
+    shipChosen.optionMenus = []
+    uiElements.systemTargetsList = []
+
     for system in shipChosen.systemSlots:
         if (i < 4):
             isDown = 0
@@ -82,18 +75,40 @@ def placeBattleUi(staticUi,uiMetrics,canvas,globalVar,shipLookup):
             isDown = 1
         if(i>=len(shipChosen.systemSlots)):
             break
-
         scale = tk.Scale(staticUi.systemsLF, orient=HORIZONTAL, length=uiMetrics.systemScaleWidth, \
                             label=system.name, from_ = system.minEnergy, to=system.maxEnergy, relief=RIDGE,fg="white", bg="#4582ec",highlightcolor = "white")
         scale.set(system.energy)
-        if(globalVar.turnInProgress):
+        if(system.category == 'weapon'):
+            system.options = shipLookup[var.enemies[shipTarget.get()]].systemSlots
+            system.targetDict = {}
+            system.elementID = 0
+            system.systemTargets = []
+            shipChosen.systemAS = []
+            for element in system.options:
+                system.systemTargets.append(system.elementID)
+                system.targetDict.update({element.name : system.elementID})
+                system.elementID += 1
+            system.variable = StringVar(root)
+            system.variable.set((list(system.targetDict.keys())[system.target]))
+            anotherCommand = partial((system.setTarget),(system.targetDict[system.variable.get()]))
+            a = OptionMenu(staticUi.systemsLF, system.variable, *system.targetDict.keys() , command = anotherCommand)
+            shipChosen.optionMenus.append(a)
+            uiElements.systemTargetsList.append(a)
+            system.alphaStrikeVar = IntVar()
+            system.alphaStrikeVar.set(system.alphaStrike)
+            anotherCommand2 = partial(system.setAS)
+            shipChosen.systemAS.append(ttk.Checkbutton(staticUi.systemsLF, text='AS', variable=system.alphaStrikeVar, onvalue=1, offvalue=0, command=anotherCommand2))
+            shipChosen.systemAS[-1].place(x = 135 + (i - isDown*4) * uiMetrics.systemScalesWidthOffset, y = uiMetrics.systemScalesMarginTop + 60 + uiMetrics.systemScalesOffset * isDown)
+            shipChosen.optionMenus[sys1].place(x = 10 + (i - isDown*4) * uiMetrics.systemScalesWidthOffset, y = uiMetrics.systemScalesMarginTop + 60 + uiMetrics.systemScalesOffset * isDown)
+            sys1 += 1
+        if(var.turnInProgress):
             scale.config(state = 'disabled', background="#D0D0D0")
         (staticUi.uiSystems).append(scale)
         progressBar = ttk.Progressbar(staticUi.systemsLF, bootstyle = 'primary', maximum=system.maxCooldown, length=(uiMetrics.systemScaleWidth),variable=(system.maxCooldown-system.cooldown))
 
         (staticUi.uiSystemsProgressbars).append(progressBar)
         scale.place(x = 10 + (i - isDown*4) * uiMetrics.systemScalesWidthOffset, y = uiMetrics.systemScalesMarginTop + uiMetrics.systemScalesOffset * isDown)
-        progressBar.place(x = 10 + (i - isDown*4) * uiMetrics.systemScalesWidthOffset, y = uiMetrics.systemScalesMarginTop + 40 + uiMetrics.systemScalesOffset * isDown)
+        progressBar.place(x = 10 + (i - isDown*4) * uiMetrics.systemScalesWidthOffset, y = uiMetrics.systemScalesMarginTop + 42 + uiMetrics.systemScalesOffset * isDown)
         i += 1
     (staticUi.systemsLF).place(x = uiMetrics.canvasX, y = uiMetrics.canvasY + uiMetrics.canvasHeight + 10)
 
@@ -115,13 +130,12 @@ def placeBattleUi(staticUi,uiMetrics,canvas,globalVar,shipLookup):
                     i=0
             else:
                 if(i > 0 and j > 1):
-                    element.place(x=35 + i*80,y=50+j*17)
+                    element.place(x=45 + i*80,y=50+j*17)
                 else:
                     if(j == 1 and not i == 0):
                         element.place(x=20 + i*80,y=50+j*17)
                     else:
                         element.place(x=10 + i*80,y=50+j*17)
-
                 i+=1
                 if(i%5==0):
                     j+=1
@@ -138,10 +152,8 @@ def placeMenuUi(root,staticUi,uiMetrics):
     (staticUi.customGameButton).place(x=uiMetrics.rootX/2-30,y = 600)
     (staticUi.exitButton).place(x=uiMetrics.rootX/2-30,y = 700)
 
-    
 
 def placeShipEditorUi(staticUi,uiMetrics):
-
     staticUi.systemStatsLF.place(x=500,y=40)
     staticUi.systemStatsL.place(x=10,y=10)
     (staticUi.shipNameInput).place(x=100,y=100)

@@ -47,7 +47,7 @@ class global_var():
         self.pointerDeltaY = 0.0
         self.drag = ''
         ## GAME OPTIONS ##
-        self.fogOfWar = True
+        self.fogOfWar = False
         self.gameSpeed = 1
         self.turnLength = 1080
         self.zoom = 1
@@ -99,12 +99,12 @@ class ui_metrics():
     leftMargin = 10
     systemScalesWidth = 200
     systemScalesMarginTop = 60
-    systemScalesOffset = 80
-    systemScalesWidthOffset = 170
-    systemScalesLFWidth = canvasWidth
+    systemScalesOffset = 100
+    systemScalesWidthOffset = 190
     systemScalesLFHeight = 300
     systemProgressbarsHeightOffset = 60
     systemsLFWidth = 400
+    systemScalesLFWidth = systemsLFWidth
     systemScaleWidth = 160
     canvasX = 440
     canvasY = 10
