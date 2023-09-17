@@ -43,13 +43,18 @@ def placeBattleUi(staticUi,uiMetrics,canvas,var,shipLookup,root,uiElements):
     # place shields
     for tmpShip,shieldArray in zip(var.ships,staticUi.tmpShieldsLabel):
         tmp = 0
-        if(len(shieldArray) == 1):
-            shieldArray[0].config(length = uiMetrics.systemScaleWidth*7/3)
-            shieldArray[0].place(x=tmp + 5, y=5)
+        i = 0
+        if(tmpShip.maxShields == 1):
+            lenGap = 0
+            lenPro = 5
         else:
-            for progressBar in shieldArray:
-                progressBar.place(x=tmp + 5, y=5)
-                tmp += ((uiMetrics.systemScalesLFWidth-10) / (tmpShip.maxShields*4+(tmpShip.maxShields-1)))*5
+            lenGap = (tmpShip.maxShields-1)
+            lenPro = (tmpShip.maxShields)*4
+        lenTotal = lenGap + lenPro
+        for progressBar in shieldArray:
+            progressBar.place(x=tmp + 5, y=5)
+            tmp += (((lenGap+lenPro)/lenTotal)/tmpShip.maxShields)*(uiMetrics.systemsLFWidth)
+            i+=1
 
     ########################## SYSTEMS  #######################
     var.uiEnergyLabel.place(x = 10, y = 20) 
@@ -97,7 +102,7 @@ def declareSystemsTargets(var,root,shipLookup,staticUi,uiMetrics,shipTarget,uiEl
             system.alphaStrikeVar = IntVar()
             system.alphaStrikeVar.set(system.alphaStrike)
             anotherCommand2 = partial(system.setAS)
-            shipChosen.systemAS.append(ttk.Checkbutton(staticUi.systemsLF, text='AS', variable=system.alphaStrikeVar, onvalue=1, offvalue=0, command=anotherCommand2))
+            shipChosen.systemAS.append(ttk.Checkbutton(staticUi.systemsLF,style = 'Red.TCheckbutton', text='AS', variable=system.alphaStrikeVar, onvalue=1, offvalue=0, command=anotherCommand2))
             shipChosen.systemAS[-1].place(x = 135 + (i - isDown*4) * uiMetrics.systemScalesWidthOffset, y = uiMetrics.systemScalesMarginTop + 60 + uiMetrics.systemScalesOffset * isDown)
             shipChosen.optionMenus[sys1].place(x = 10 + (i - isDown*4) * uiMetrics.systemScalesWidthOffset, y = uiMetrics.systemScalesMarginTop + 60 + uiMetrics.systemScalesOffset * isDown)
             sys1 += 1

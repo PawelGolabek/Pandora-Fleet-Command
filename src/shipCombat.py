@@ -160,6 +160,74 @@ def putTracer(ship,var,gameRules,uiMetrics): # rotate and move the chosen ship
             currentTracer.ttl -= 1
         del currentTracer
         
+def updateLabels(uiElements,shipLookup,var):
+    i = shipCounter = 0
+    targetLabels = [uiElements.playerLabels,uiElements.playerLabels2,uiElements.playerLabels3, uiElements.enemyLabels,uiElements.enemyLabels2,uiElements.enemyLabels3]
+    for label in targetLabels:
+        if(shipCounter == var.shipChoice):
+            uiElements.systemLFs[shipCounter].config(style = 'Green.TLabelframe')
+        else:
+            uiElements.systemLFs[shipCounter].config(style = 'Grey.TLabelframe')
+        if(not shipLookup[shipCounter].owner == 'player1'):
+            uiElements.systemLFs[shipCounter].config(style = 'DarkRed.TLabelframe')
+            
+        label[0].config(text = "Hull: " )
+        label[1].config(text = str(shipLookup[shipCounter].hp))
+        label[2].config(text = "Armor: " )
+        label[3].config(text = str(shipLookup[shipCounter].ap)) 
+        label[4].config(text = "") 
+
+        label[5].config(text = "System: ")
+        label[6].config(text = "Readiness: ")
+        label[7].config(text = "Integrity: ")
+        label[8].config(text = "Heat: ")
+        label[9].config(text = "Energy: ")
+
+        j = 10
+
+        while(i<len(shipLookup[shipCounter].systemSlots)):
+            system = shipLookup[shipCounter].systemSlots[i]
+            label[j].config(text = system.name)
+            readiness = round((abs(system.maxCooldown-system.cooldown)/float(system.maxCooldown))*100.0)
+            if(readiness == 100):
+                label[j+1].config(style = "Green.TLabel")
+            elif(readiness < 30):
+                label[j+1].config(style = "Red.TLabel")
+            elif(readiness > 70):
+                label[j+1].config(style = "Blue.TLabel")
+            else:
+                label[j+1].config(style = "Yellow.TLabel")
+            label[j+1].config(text = str(readiness))
+            integrity = system.integrity
+            if(integrity == system.maxIntegrity):
+                label[j+2].config(style = "Green.TLabel")
+            elif(integrity < system.maxIntegrity * 0.3):
+                label[j+2].config(style = "Red.TLabel")
+            elif(integrity > system.maxIntegrity * 0.7):
+                label[j+2].config(style = "Blue.TLabel")
+            else:
+                label[j+2].config(style = "Yellow.TLabel")
+            label[j+2].config(text = str(integrity))
+
+            if(system.heat < 70):
+                label[j+3].config(style = "Blue.TLabel")
+            if(system.heat < 30):
+                label[j+3].config(style = "Green.TLabel")
+            elif(system.heat > 200):
+                label[j+3].config(style = "Red.TLabel")
+            else:
+                label[j+3].config(style = "Yellow.TLabel")
+            label[j+3].config(text = str(system.heat))
+            label[j+4].config(text = str(system.energy))
+            label[j+2].config(anchor = E)
+            label[j+3].config(anchor = E)
+            label[j+4].config(anchor = E)
+            i += 1
+            j += 5
+        j = 10
+        i = 0
+        shipCounter += 1
+
 def rotateVector(degree, object, moveDirX, moveDirY):
     if((object.xDir > moveDirX and object.yDir > -moveDirY) or object.xDir < moveDirX and object.yDir < -moveDirY):
         degree = object.turnRate
@@ -179,7 +247,10 @@ def rotateVector(degree, object, moveDirX, moveDirY):
         object.xDir = object.xDir / scale
         object.yDir = object.yDir / scale
       
-def dealDamage(ship, dmg, var, targetSystem, heatDamage):
+def dealDamage(ship, dmg, var, targetSystem, heatDamage,uiElements,shipLookup):
+    updateLabel1 = False
+    if(dmg > 4 or heatDamage > 4):
+        updateLabel1 = True
     system = ship.systemSlots[targetSystem]
     if(ship.shields > 0):
         tmp = 0
@@ -246,6 +317,8 @@ def dealDamage(ship, dmg, var, targetSystem, heatDamage):
                 system3.integrity = 0
                 dmg -= math.floor(dmgToSystem)
         ship.hp -= dmg
+        if(updateLabel1):
+            updateLabels(uiElements,shipLookup,var)
         return
 
 
@@ -567,10 +640,10 @@ def updateShips(var,uiMetrics,gameRules,shipLookup,events,uiElements):  # rotate
 
         if(colorWeight < 600 and colorWeight > 200):
             movementPenality = gameRules.movementPenalityMedium
-            dealDamage(shipLookup[ship.id], 0, var,-1, 0.01)
+            dealDamage(shipLookup[ship.id], 0, var,-1, 0.01,uiElements,shipLookup)
         elif(colorWeight < 200):
             movementPenality = gameRules.movementPenalityHard
-            dealDamage(shipLookup[ship.id], 0, var,-1, 0.1)
+            dealDamage(shipLookup[ship.id], 0, var,-1, 0.1,uiElements,shipLookup)
             checkForKilledShips(events,shipLookup,var,uiElements)
         else:
             movementPenality = 0.000001  # change

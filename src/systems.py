@@ -42,6 +42,7 @@ class weapon(system):
         self.target = target   
         self.ASButton = 0
         self.alphaStrike = False
+        self.shotThisTurn = False
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         pass
     def activate(self,ship,var,gameRules,uiMetrics):
@@ -54,13 +55,10 @@ class weapon(system):
         ship.cost -= self.cost
     def setTarget(self,root,var1):
         self.target = (self.targetDict[self.variable.get()])
-        print(var1)
-        print(self.target)
     def setTargetStr(self,var1):
         self.target = var1
     def setAS(self):
         self.alphaStrike = not self.alphaStrike
-        print(self.alphaStrike)
 
 
 class none(weapon):
@@ -341,68 +339,84 @@ class kinetic1(weapon):
         ship.mass -= self.mass
         ship.cost -= self.cost
 
+def checkAlphaStrikeReadiness(ship):
+    for system in ship.systemSlots:
+        if(system.category == 'weapon'):
+            if(not system.alphaStrike or system.cooldown <= 0 or system.shotThisTurn):
+                continue
+            else:
+                return False
+    return True
+
 def shoot(var,system,ship,ammunitionType,ships,uiMetrics,shipLookup,offsetX=0,offsetY=0):
     shipToShoot = 0
     minDist2 = 999999999
     break1 = False
-    for ship2 in ships:
-        if(not ship.owner == ship2.owner): # add teams if needed
-            list = []
-            ghostShip = naglowek.dynamic_object()
-            ghostShip.x = ship.xPos
-            ghostShip.y = ship.yPos
-            list.append(ghostShip)
-            ghostShip = naglowek.dynamic_object()
-            ghostShip.x = ship.xPos + uiMetrics.canvasWidth
-            ghostShip.y = ship.yPos
-            list.append(ghostShip)
-            ghostShip = naglowek.dynamic_object()
-            ghostShip.x = ship.xPos - uiMetrics.canvasWidth
-            ghostShip.y = ship.yPos
-            list.append(ghostShip)
-            ghostShip = naglowek.dynamic_object()
-            ghostShip.x = ship.xPos 
-            ghostShip.y = ship.yPos + uiMetrics.canvasHeight
-            list.append(ghostShip)
-            ghostShip = naglowek.dynamic_object()
-            ghostShip.x = ship.xPos - var.left
-            ghostShip.y = ship.yPos - uiMetrics.canvasHeight
-            list.append(ghostShip)
-            ghostShip = naglowek.dynamic_object()
-            ghostShip.x = ship.xPos - uiMetrics.canvasWidth
-            ghostShip.y = ship.yPos - uiMetrics.canvasHeight
-            list.append(ghostShip)
-            ghostShip = naglowek.dynamic_object()
-            ghostShip.x = ship.xPos + uiMetrics.canvasWidth
-            ghostShip.y = ship.yPos - uiMetrics.canvasHeight
-            list.append(ghostShip)
-            ghostShip = naglowek.dynamic_object()
-            ghostShip.x = ship.xPos - uiMetrics.canvasWidth
-            ghostShip.y = ship.yPos + uiMetrics.canvasHeight
-            list.append(ghostShip)
-            ghostShip = naglowek.dynamic_object()
-            ghostShip.x = ship.xPos + uiMetrics.canvasWidth
-            ghostShip.y = ship.yPos + uiMetrics.canvasHeight
-            list.append(ghostShip)
-            for element in list:
-                distance2 = (element.x-ship2.xPos)*(element.x-ship2.xPos) + (element.y-ship2.yPos)*(element.y-ship2.yPos)
-                if(ship2.visible == True and distance2 < (ship.detectionRange*ship.detectionRange)):
-                    if(ship2.name == ship.target):
-                        minDist2 = distance2
-                        shipToShoot = ship2
-                        break1 = True
-                    if(distance2 < minDist2):
-                        minDist2 = distance2
-                        shipToShoot = ship2
-            if(break1):
-                break
-    if(shipToShoot):
-        if(shipToShoot.name == ship.target):
-            createRocket(var,ship,shipToShoot,system.target,ammunitionType,offsetX,offsetY)
-        else:
-            createRocket(var,ship,shipToShoot,-1,ammunitionType,offsetX,offsetY)
-        return True
-    return False
+    ready = True
+    if(system.alphaStrike):
+        ready = checkAlphaStrikeReadiness(ship)
+    if(ready):
+        for ship2 in ships:
+            if(not ship.owner == ship2.owner): # add teams if needed
+                list = []
+                ghostShip = naglowek.dynamic_object()
+                ghostShip.x = ship.xPos
+                ghostShip.y = ship.yPos
+                list.append(ghostShip)
+                ghostShip = naglowek.dynamic_object()
+                ghostShip.x = ship.xPos + uiMetrics.canvasWidth
+                ghostShip.y = ship.yPos
+                list.append(ghostShip)
+                ghostShip = naglowek.dynamic_object()
+                ghostShip.x = ship.xPos - uiMetrics.canvasWidth
+                ghostShip.y = ship.yPos
+                list.append(ghostShip)
+                ghostShip = naglowek.dynamic_object()
+                ghostShip.x = ship.xPos 
+                ghostShip.y = ship.yPos + uiMetrics.canvasHeight
+                list.append(ghostShip)
+                ghostShip = naglowek.dynamic_object()
+                ghostShip.x = ship.xPos - var.left
+                ghostShip.y = ship.yPos - uiMetrics.canvasHeight
+                list.append(ghostShip)
+                ghostShip = naglowek.dynamic_object()
+                ghostShip.x = ship.xPos - uiMetrics.canvasWidth
+                ghostShip.y = ship.yPos - uiMetrics.canvasHeight
+                list.append(ghostShip)
+                ghostShip = naglowek.dynamic_object()
+                ghostShip.x = ship.xPos + uiMetrics.canvasWidth
+                ghostShip.y = ship.yPos - uiMetrics.canvasHeight
+                list.append(ghostShip)
+                ghostShip = naglowek.dynamic_object()
+                ghostShip.x = ship.xPos - uiMetrics.canvasWidth
+                ghostShip.y = ship.yPos + uiMetrics.canvasHeight
+                list.append(ghostShip)
+                ghostShip = naglowek.dynamic_object()
+                ghostShip.x = ship.xPos + uiMetrics.canvasWidth
+                ghostShip.y = ship.yPos + uiMetrics.canvasHeight
+                list.append(ghostShip)
+                for element in list:
+                    distance2 = (element.x-ship2.xPos)*(element.x-ship2.xPos) + (element.y-ship2.yPos)*(element.y-ship2.yPos)
+                    if(ship2.visible == True and distance2 < (ship.detectionRange*ship.detectionRange)):
+                        if(ship2.name == ship.target):
+                            minDist2 = distance2
+                            shipToShoot = ship2
+                            break1 = True
+                        if(distance2 < minDist2):
+                            minDist2 = distance2
+                            shipToShoot = ship2
+                if(break1):
+                    break
+        if(shipToShoot):
+            system.shotThisTurn = True
+            if(shipToShoot.name == ship.target):
+                createRocket(var,ship,shipToShoot,system.target,ammunitionType,offsetX,offsetY)
+            else:
+                createRocket(var,ship,shipToShoot,-1,ammunitionType,offsetX,offsetY)
+            return True
+        return False
+    else:
+        return False
 
 def declareGlobalSystems():
     naglowek.systemLookup = {           #for system creation

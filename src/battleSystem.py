@@ -248,6 +248,10 @@ def manageSystemTriggers(ships,var,shipLookup,uiMetrics):
             for system in ship1.systemSlots:
                 system.trigger(var,ship1,ships,shipLookup,uiMetrics)
                     # trigger is activated during round and activation is between
+    for ship1 in ships:
+        for system in ship1.systemSlots:
+            if(system.category == 'weapon'):
+                system.shotThisTurn = False
                                     
 def getOrders(ship,var,gameRules,uiMetrics,forced=False):
     tracered = False
@@ -291,7 +295,7 @@ def manageRockets(missles,shipLookup,var,events,uiElements,uiMetrics):    # mana
     for missle in missles:
         if(missle.sort == 'laser'):
             putLaser(missle,var,shipLookup)
-            dealDamage(shipLookup[missle.target], missle.damage,var,missle.targetSystem, missle.heat)
+            dealDamage(shipLookup[missle.target], missle.damage,var,missle.targetSystem, missle.heat,uiElements,shipLookup)
             missles.remove(missle)
             checkForKilledShips(events,shipLookup,var,uiElements)
             continue
@@ -335,7 +339,7 @@ def manageRockets(missles,shipLookup,var,events,uiElements,uiMetrics):    # mana
             abs(missle.xPos - targetShipX) +
             abs(missle.yPos - targetShipY) *
             abs(missle.yPos - targetShipY)) < 25):
-            dealDamage(shipLookup[missle.target], missle.damage,var,missle.targetSystem,missle.heat)
+            dealDamage(shipLookup[missle.target], missle.damage,var,missle.targetSystem,missle.heat,uiElements,shipLookup)
             missles.remove(missle)
             continue
         if(0 > missle.xPos):
@@ -749,7 +753,6 @@ def dealHeatDamage(ships):
             system.heatUnits += heatDamage
             system.heatDamageTicks = floor(system.heatUnits/100)
             if(system.heatDamageTicks):
-                print("dealing damage")
                 system.heatUnits -= system.heatDamageTicks*100
                 while(system.integrity > 0 and system.heatDamageTicks):
                     system.integrity -= 1
@@ -805,74 +808,6 @@ def radioBox(shipLookup,uiElements,var,uiMetrics,root,canvas):
         var.shipChoice = shipLookup[2].id
     updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas)
 
-
-def updateLabels(uiElements,shipLookup,var):
-    i = shipCounter = 0
-    targetLabels = [uiElements.playerLabels,uiElements.playerLabels2,uiElements.playerLabels3, uiElements.enemyLabels,uiElements.enemyLabels2,uiElements.enemyLabels3]
-    for label in targetLabels:
-        if(shipCounter == var.shipChoice):
-            uiElements.systemLFs[shipCounter].config(style = 'Green.TLabelframe')
-        else:
-            uiElements.systemLFs[shipCounter].config(style = 'Grey.TLabelframe')
-        if(not shipLookup[shipCounter].owner == 'player1'):
-            uiElements.systemLFs[shipCounter].config(style = 'DarkRed.TLabelframe')
-            
-        label[0].config(text = "Hull: " )
-        label[1].config(text = str(shipLookup[shipCounter].hp))
-        label[2].config(text = "Armor: " )
-        label[3].config(text = str(shipLookup[shipCounter].ap)) 
-        label[4].config(text = "") 
-
-        label[5].config(text = "System: ")
-        label[6].config(text = "Readiness: ")
-        label[7].config(text = "Integrity: ")
-        label[8].config(text = "Heat: ")
-        label[9].config(text = "Energy: ")
-
-        j = 10
-
-        while(i<len(shipLookup[shipCounter].systemSlots)):
-            system = shipLookup[shipCounter].systemSlots[i]
-            label[j].config(text = system.name)
-            readiness = round((abs(system.maxCooldown-system.cooldown)/float(system.maxCooldown))*100.0)
-            if(readiness == 100):
-                label[j+1].config(style = "Green.TLabel")
-            elif(readiness < 30):
-                label[j+1].config(style = "Red.TLabel")
-            elif(readiness > 70):
-                label[j+1].config(style = "Blue.TLabel")
-            else:
-                label[j+1].config(style = "Yellow.TLabel")
-            label[j+1].config(text = str(readiness))
-            integrity = system.integrity
-            if(integrity == system.maxIntegrity):
-                label[j+2].config(style = "Green.TLabel")
-            elif(integrity < system.maxIntegrity * 0.3):
-                label[j+2].config(style = "Red.TLabel")
-            elif(integrity > system.maxIntegrity * 0.7):
-                label[j+2].config(style = "Blue.TLabel")
-            else:
-                label[j+2].config(style = "Yellow.TLabel")
-            label[j+2].config(text = str(integrity))
-
-            if(system.heat < 70):
-                label[j+3].config(style = "Blue.TLabel")
-            if(system.heat < 30):
-                label[j+3].config(style = "Green.TLabel")
-            elif(system.heat > 200):
-                label[j+3].config(style = "Red.TLabel")
-            else:
-                label[j+3].config(style = "Yellow.TLabel")
-            label[j+3].config(text = str(system.heat))
-            label[j+4].config(text = str(system.energy))
-            label[j+2].config(anchor = E)
-            label[j+3].config(anchor = E)
-            label[j+4].config(anchor = E)
-            i += 1
-            j += 5
-        j = 10
-        i = 0
-        shipCounter += 1
 
 
 def clearUtilityChoice(uiElements,var):
@@ -971,10 +906,10 @@ def declareShips(var,config):
         var.ships.append(var.player)
         var.ships.append(var.player2)
         var.ships.append(var.player3)
-
         var.ships.append(var.enemy)
         var.ships.append(var.enemy2)
         var.ships.append(var.enemy3)
+
 
 ############################################ INPUTS #############################################
 
@@ -1113,7 +1048,6 @@ def run(config,root,menuUiElements):
             element.destroy()
         del (cinfo.var).img
         del (cinfo.var).radio
-        ((cinfo.uiElements).playerAPLF)
         (cinfo.uiElements).uiSystems = []
         (cinfo.uiElements).uiSystemsProgressbars = []
         del (cinfo.var)
@@ -1253,13 +1187,19 @@ def resume(config,root,menuUiElements):
 
         targets = [var.playerShields,var.playerShields2,var.playerShields3,var.enemyShields,var.enemyShields2,var.enemyShields3]
         elements = [var.player,var.player2,var.player3,var.enemy,var.enemy2,var.enemy3]
-        labelframes = [uiElements.enemyLF,uiElements.enemyLF2, uiElements.enemyLF3, uiElements.playerLF, uiElements.playerLF2, uiElements.playerLF3]
+        labelframes = [uiElements.playerLF, uiElements.playerLF2, uiElements.playerLF3, uiElements.enemyLF,uiElements.enemyLF2, uiElements.enemyLF3]
         for target,element,labelframe in zip(targets,elements,labelframes):
             x = (element).maxShields
             n = 0
+            if(element.maxShields == 1):
+                lenGap = 0
+                lenPro = 5
+            else:
+                lenGap = (element.maxShields-1)
+                lenPro = (element.maxShields)*4
+            lenTotal = lenGap + lenPro
             while(n < x):
-                target.append(ttk.Progressbar(
-                    labelframe, maximum=100, length=math.floor((uiMetrics.systemScalesLFWidth-10)/x * 4/5), variable=100))
+                target.append(ttk.Progressbar(labelframe, maximum=100, length = (((lenPro/lenTotal)/element.maxShields)*(uiMetrics.systemsLFWidth - 15)),variable=100))
                 n += 1
 
         for ship1 in var.ships:
@@ -1296,15 +1236,15 @@ def resume(config,root,menuUiElements):
 
 ##################################
 
-        uiElements.enemyLabels = []
-        uiElements.enemyLabels2 = []
-        uiElements.enemyLabels3 = []
         uiElements.playerLabels = []
         uiElements.playerLabels2 = []
         uiElements.playerLabels3 = []
+        uiElements.enemyLabels = []
+        uiElements.enemyLabels2 = []
+        uiElements.enemyLabels3 = []
         uiElements.systemLFs = []
 
-        targets = [uiElements.playerLabels, uiElements.playerLabels2, uiElements.playerLabels3,uiElements.enemyLabels, uiElements.enemyLabels2, uiElements.enemyLabels3]
+        targets = [uiElements.playerLabels, uiElements.playerLabels2, uiElements.playerLabels3, uiElements.enemyLabels, uiElements.enemyLabels2, uiElements.enemyLabels3]
 
 
         (uiElements.staticUi).append(uiElements.enemyLF)
