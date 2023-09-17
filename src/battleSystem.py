@@ -1,30 +1,32 @@
 import configparser
+import math
+import os
+import random
+import sys
+import time
+import tkinter as tk
+import tkinter.ttk as ttk
 from ctypes import pointer
 from dis import dis
 from ensurepip import bootstrap
 from faulthandler import disable
-from tabnanny import check
-import tkinter as tk
-from tkinter import *
-from tkinter.filedialog import askopenfilename
-from tkinter import Tk, Canvas, Frame, BOTH
-from random import randint
-import math
-from PIL import Image, ImageTk
-import PIL.Image
-import tkinter.ttk as ttk
 from functools import partial
-import random
-import sys,os
 from pathlib import Path
-import time
+from random import randint
+from tabnanny import check
+from tkinter import *
+from tkinter import BOTH, Canvas, Frame, Tk
+from tkinter.filedialog import askopenfilename
 
-from src.shipCombat import *
-from src.canvasCalls import *
+import PIL.Image
+from PIL import Image, ImageTk
+
 import src.naglowek as naglowek
-from src.rootCommands import *
-from src.systems import *
 from src.ammunitionType import *
+from src.canvasCalls import *
+from src.rootCommands import *
+from src.shipCombat import *
+from src.systems import *
 
 #   Artemis 2021
 #   Project by Pawel Golabek
@@ -110,13 +112,12 @@ class ship():
             self.shieldsState.append(var.shieldMaxState)
             tmp += 1
         # Mid-round info
-        self.shotsTaken = 0
-        self.shotsNotTaken = 0
         self.visible = FALSE
         self.moveOrderX = xPos+0.01
         self.moveOrderY = yPos+0.01
         self.id = id
         self.signatureCounter = 0
+        self.killed = False
 
 class tracer():
     def __init__(self, xPos=300, yPos=300, xDir=0.0, yDir=1.0, turnRate=0.5, speed=40): 
@@ -286,8 +287,6 @@ def getBonus(ship, boost):
         # add boosts
 
 
-
-
 ############################################## MISSLES ##############################################
 
 
@@ -299,6 +298,14 @@ def manageRockets(missles,shipLookup,var,events,uiElements,uiMetrics):    # mana
             missles.remove(missle)
             checkForKilledShips(events,shipLookup,var,uiElements)
             continue
+        
+        # check for terrain
+        if(missle.ttl % 30 == 0):
+            colorWeight = var.mask[int(missle.xPos)][int(missle.yPos)]
+            if(colorWeight <= 200):
+                missles.remove(missle)
+                continue
+
         targetShipX = shipLookup[missle.target].xPos
         targetShipY = shipLookup[missle.target].yPos
 
@@ -350,6 +357,7 @@ def manageRockets(missles,shipLookup,var,events,uiElements,uiMetrics):    # mana
             missle.yPos += uiMetrics.canvasHeight
         if(missle.yPos > uiMetrics.canvasHeight):
             missle.yPos -= uiMetrics.canvasHeight
+        missle.ttl -= 1
 
 def declareTargets(var):
     list1 = {}
@@ -473,23 +481,29 @@ def drawLasers(var,canvas,uiMetrics):
             drawY3 = (y3- var.top) * var.zoom
             drawY4 = (y4- var.top) * var.zoom
 
-            line = canvas.create_line(drawX,drawY,drawX2,drawY2, fill = laser.color)
+            line = canvas.create_line(drawX,drawY,drawX2,drawY2, fill = laser.color, stipple="gray75")
             canvas.elements.append(line)
             
 
             if(aroundFlagX or aroundFlagY):
-                line = canvas.create_line(drawX3,drawY3,drawX4,drawY4, fill = laser.color)
+                line = canvas.create_line(drawX3,drawY3,drawX4,drawY4, fill = laser.color, stipple="gray75")
                 canvas.elements.append(line)
         else:
             (var.lasers).remove(laser)
 
 
-def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root):        ### sprawdz co zamula
-    if(var.drag==''):    
+def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root):
+    #for ship in var.ships:
+    #    print(str(ship.name) + " " + str(ship.killed))
+    if(var.drag==''):
         canvas.delete('all')
         updateScales(uiElements,var,shipLookup)
-        if(var.frameTime % 5 == 0):
-            updateLabels(uiElements,shipLookup,var)
+        if(var.frameTime % 7 == 0):
+            if(shipLookup[var.labelCounter].hp >= 0):
+                updateLabel(uiElements,shipLookup,var,var.labelCounter)
+            var.labelCounter += 1
+            if(var.labelCounter == 5):
+                var.labelCounter = 0
         updateEnergy(var,uiElements,shipLookup)
         var.gameSpeed = float((uiElements.gameSpeedScale).get())
         if(not var.turnInProgress):
@@ -497,6 +511,7 @@ def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,a
             for ship in var.ships:
                 getOrders(ship,var,gameRules,uiMetrics)
         ticksToEndFrame = 0
+        root.title(uiElements.rootTitle)
         if(var.turnInProgress):
             root.title("TURN IN PROGRESS")
             var.systemTime = time.time()
@@ -521,8 +536,6 @@ def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,a
                     root.title("AI IS THINKING")
                     endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons)
                     break
-        else:
-            root.title(uiElements.rootTitle)
         var.input = (var.mouseWheelUp or var.mouseWheelDown or (var.mouseButton3 and var.zoom != 1 and mouseOnCanvas(var,uiMetrics)) or var.mouseButton1 )
         newWindow(uiMetrics,var,canvas)
         drawGhostPoints(canvas,var)
@@ -546,8 +559,7 @@ def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,a
         if(var.turnInProgress or var.mouseButton3):
             root.after(10, partial(update,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root))
         else:
-            root.after(20, partial(update,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root))
-
+            root.after(100, partial(update,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root))
 
 def newWindow(uiMetrics,var,canvas):
     canvas.delete(canvas.imageID)
@@ -636,9 +648,6 @@ def startTurn(uiElements,var,ships,gameRules,uiMetrics):
     print("New Round")
     var.turnInProgress = True
     uiElements.timeElapsedProgressBar['value'] = 0
-    for ship1 in var.ships:
-        ship1.shotsNotTaken = 0
-        ship1.shotsTaken = 0
     for object in uiElements.UIElementsList:
         object.config(state=DISABLED, background="#D0D0D0")
     for object in uiElements.RadioElementsList:
@@ -648,7 +657,7 @@ def startTurn(uiElements,var,ships,gameRules,uiMetrics):
 
 
 def endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons): 
-    var.turnInProgress = FALSE
+    var.turnInProgress = False
     for object in uiElements.UIElementsList:
         object.config(state = NORMAL, bg="#4582ec",highlightcolor = "white",fg = "white",highlightbackground = "#bfbfbf")
     for object in uiElements.RadioElementsList:
@@ -845,9 +854,11 @@ def declareShips(var,config):
         var.enemyName =  config.get("Ships", "enemyName")
         var.enemyName2 = config.get("Ships", "enemyName2")
         var.enemyName3 = config.get("Ships", "enemyName3")
+
         var.player = 0
         var.player2 = 0
         var.player3 = 0
+
         var.enemy = 0
         var.enemy2 = 0
         var.enemy3 = 0
@@ -867,6 +878,7 @@ def declareShips(var,config):
                     name=targetShipName, 
                     maxShields = int((config.get(configList[i], "maxShields"))),
                     shields=int((config.get(configList[i], "shields"))), 
+                    energyLimit=int((config.get(configList[i], "energyLimit"))), 
                     xPos=int((config.get(configList[i], "xPos"))), 
                     yPos=int((config.get(configList[i], "yPos"))),
                     systemSlots=((config.get(configList[i], "systemSlots1")),
@@ -1112,6 +1124,12 @@ def resume(config,root,menuUiElements):
         (uiElements.staticUi).append(canvas)
         declareShips(var,config)
         uiElements.rootTitle = (config.get("Root", "title"))
+        fog = (config.get("Options", "fogOfWar"))
+        if(fog == '0'):
+            var.fogOfWar = False
+        else:
+            var.fogOfWar = True
+
         root.title(uiElements.rootTitle)
 
         # Ships
@@ -1137,13 +1155,11 @@ def resume(config,root,menuUiElements):
         newWindow(uiMetrics,var,canvas)
         # item with background to avoid python bug people were mentioning about disappearing non-anchored images
 
-
         canvas.imageList.append(var.image)
         canvas.imageList.append(var.imageMask)
         canvas.imageList.append(var.resizedImage)
 
         var.mask = createMask(var,uiMetrics)
-
 
         uiElements.UIElementsList = []
         uiElements.RadioElementsList = []
@@ -1260,9 +1276,9 @@ def resume(config,root,menuUiElements):
             i = 0
             system = shipLookup[shipID].systemSlots[i] 
             target.append(ttk.Label(targetLF, style='Grey.TLabel', text = "Hull: "))
-            target.append(ttk.Label(targetLF, style='Grey.TLabel', text = str(shipLookup[3].hp)))
+            target.append(ttk.Label(targetLF, style='Grey.TLabel', text = str(shipLookup[shipID].hp)))
             target.append(ttk.Label(targetLF, style='Grey.TLabel', text = "Armor: "))
-            target.append(ttk.Label(targetLF, style='Grey.TLabel', text = str(shipLookup[3].ap)))
+            target.append(ttk.Label(targetLF, style='Grey.TLabel', text = str(shipLookup[shipID].ap)))
             target.append(ttk.Label(targetLF, style='Grey.TLabel', text = ""))
 
             target.append(ttk.Label(targetLF, style='Grey.TLabel', text = "System: "))
@@ -1310,8 +1326,15 @@ def resume(config,root,menuUiElements):
         bindInputs(root,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType)
         
         # first update 
+
+        print(var.ships)
+        checkForKilledShips(events,shipLookup,var,uiElements)
+        print(var.ships)
+        detectionCheck(var,uiMetrics)
         endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons)
-        
+        print(shipLookup[2].killed)
+        newWindow(uiMetrics,var,canvas)
+        updateLabels(uiElements,shipLookup,var)
 
         (naglowek.combatSystemInfo).canvas = canvas
         (naglowek.combatSystemInfo).uiMetrics = uiMetrics
@@ -1325,8 +1348,6 @@ def resume(config,root,menuUiElements):
         (naglowek.combatSystemInfo).canvas = canvas
         (naglowek.combatSystemInfo).uiElementsToPlace = uiElementsToPlace
         naglowek.combatUiReady = True
-        # clock       
-
     else:
         ((naglowek.combatSystemInfo).var).finished = False
         ((naglowek.combatSystemInfo).uiElements).systemsLF = ttk.Labelframe(root,text= "" + " systems",borderwidth=2,style='Grey.TLabelframe.Label')

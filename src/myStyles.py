@@ -11,6 +11,7 @@ def loadStyles(root,s):
   root.config(bg="#202020")
   s.map('Big.TButton')
   s.map('Grey.TLabelframe')
+  s.map('GreyBig.TLabelframe')
   s.map('Grey.TLabel')
   s.map('Green.TLabelframe')
   s.map('Green.TLabel')
@@ -22,8 +23,12 @@ def loadStyles(root,s):
   s.map("Green.TLabel")
   s.map("Red.TLabel")
   s.map("Yellow.TLabel")
+  s.map("TMenubutton")
   s.configure('Grey.TLabelframe', background='#202020',bordercolor = '#505050',lightcolor = "#0F4F0F", darkcolor = "#044404")
   s.configure('Grey.TLabelframe.Label', fg = "#EFEFEF", background='#202020',lightcolor = "#0F4F0F", darkcolor = "#FAFAFA",foreground = "#FAFAFA")
+  s.configure('GreyBig.TLabelframe', background='#202020',bordercolor = '#505050',lightcolor = "#0F4F0F", darkcolor = "#044404")
+  s.configure('GreyBig.TLabelframe.Label', fg = "#EFEFEF", background='#202020',lightcolor = "#0F4F0F", darkcolor = "#FAFAFA",foreground = "#FAFAFA")
+  s.configure('GreyBig.TLabel', background='#202020',lightcolor = "#0F4F0F", darkcolor = "#FAFAFA",foreground = "#bfbfbf", font= ('Calibri 16 normal'))
   s.configure('Green.TLabelframe', background='#202020',bordercolor = '#505050',lightcolor = "#0FAF0F", darkcolor = "#0AAF0A")
   s.configure('Green.TLabelframe.Label', fg = "#EFEFEF", background='#202020',lightcolor = "#0FAF0F", darkcolor = "#FAFAFA",foreground = "#FAFAFA")
   s.configure('DarkRed.TLabelframe', background='#202020',bordercolor = '#505050',lightcolor = "#4F0F0F", darkcolor = "#4F0A0A")
@@ -40,6 +45,7 @@ def loadStyles(root,s):
   s.configure("Red.TLabel", foreground = 'red', background = '#202020',justify='center')
   s.configure("Yellow.TLabel", foreground = 'yellow', background = '#202020',justify='center')
   s.configure("Blue.TLabel", foreground = '#4582ec', background = '#202020',justify='center')
+  s.configure("TMenubutton", background="#4582ec", foreground = "white", padding = 3)
 # print(sv_ttk.get_theme())  # Get what theme the app uses (either 'light' or 'dark')
 
  #   s.configure('TButton', font =

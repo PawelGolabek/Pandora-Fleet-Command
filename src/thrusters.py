@@ -10,6 +10,7 @@ class thrusters(object):
         self.mass = mass
         self.name = name
         self.cost = cost
+        self.description = ("Default text")
     def onAdding(self,ship):
         ship.mass += self.mass
         ship.cost += self.cost

@@ -11,6 +11,7 @@ class radar(object):
         self.mass = mass
         self.name = name
         self.cost = cost
+        self.description = ("Default text")
 
 class none(radar):
     def __init__ (self,name = "none",mass = 0,cost = 0):

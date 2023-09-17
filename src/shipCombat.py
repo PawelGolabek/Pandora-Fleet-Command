@@ -109,7 +109,7 @@ def updateSignatures(ships):
                 ship.signatures.remove(signature)
 
 def putTracer(ship,var,gameRules,uiMetrics): # rotate and move the chosen ship
-    if(ship.owner == 'player1'):
+    if(ship.owner == 'player1' and ship.killed == False):
         ship.ghostPoints = []
         currentTracer = naglowek.tracer()
         currentTracer.xPos = ship.xPos
@@ -228,6 +228,74 @@ def updateLabels(uiElements,shipLookup,var):
         i = 0
         shipCounter += 1
 
+def updateLabel(uiElements,shipLookup,var,shipId):
+    i = 0
+    shipCounter = shipId
+    targetLabels = [uiElements.playerLabels,uiElements.playerLabels2,uiElements.playerLabels3, uiElements.enemyLabels,uiElements.enemyLabels2,uiElements.enemyLabels3]
+    targetLabel = targetLabels[shipId]
+    if(shipCounter == var.shipChoice):
+        uiElements.systemLFs[shipCounter].config(style = 'Green.TLabelframe')
+    else:
+        uiElements.systemLFs[shipCounter].config(style = 'Grey.TLabelframe')
+    if(not shipLookup[shipCounter].owner == 'player1'):
+        uiElements.systemLFs[shipCounter].config(style = 'DarkRed.TLabelframe')
+        
+    targetLabel[0].config(text = "Hull: " )
+    targetLabel[1].config(text = str(shipLookup[shipCounter].hp))
+    targetLabel[2].config(text = "Armor: " )
+    targetLabel[3].config(text = str(shipLookup[shipCounter].ap)) 
+    targetLabel[4].config(text = "") 
+
+    targetLabel[5].config(text = "System: ")
+    targetLabel[6].config(text = "Readiness: ")
+    targetLabel[7].config(text = "Integrity: ")
+    targetLabel[8].config(text = "Heat: ")
+    targetLabel[9].config(text = "Energy: ")
+
+    j = 10
+
+    while(i<len(shipLookup[shipCounter].systemSlots)):
+        system = shipLookup[shipCounter].systemSlots[i]
+        targetLabel[j].config(text = system.name)
+        readiness = round((abs(system.maxCooldown-system.cooldown)/float(system.maxCooldown))*100.0)
+        if(readiness == 100):
+            targetLabel[j+1].config(style = "Green.TLabel")
+        elif(readiness < 30):
+            targetLabel[j+1].config(style = "Red.TLabel")
+        elif(readiness > 70):
+            targetLabel[j+1].config(style = "Blue.TLabel")
+        else:
+            targetLabel[j+1].config(style = "Yellow.TLabel")
+        targetLabel[j+1].config(text = str(readiness))
+        integrity = system.integrity
+        if(integrity == system.maxIntegrity):
+            targetLabel[j+2].config(style = "Green.TLabel")
+        elif(integrity < system.maxIntegrity * 0.3):
+            targetLabel[j+2].config(style = "Red.TLabel")
+        elif(integrity > system.maxIntegrity * 0.7):
+            targetLabel[j+2].config(style = "Blue.TLabel")
+        else:
+            targetLabel[j+2].config(style = "Yellow.TLabel")
+        targetLabel[j+2].config(text = str(integrity))
+
+        if(system.heat < 70):
+            targetLabel[j+3].config(style = "Blue.TLabel")
+        if(system.heat < 30):
+            targetLabel[j+3].config(style = "Green.TLabel")
+        elif(system.heat > 200):
+            targetLabel[j+3].config(style = "Red.TLabel")
+        else:
+            targetLabel[j+3].config(style = "Yellow.TLabel")
+        targetLabel[j+3].config(text = str(system.heat))
+        targetLabel[j+4].config(text = str(system.energy))
+        targetLabel[j+2].config(anchor = E)
+        targetLabel[j+3].config(anchor = E)
+        targetLabel[j+4].config(anchor = E)
+        i += 1
+        j += 5
+    return
+
+
 def rotateVector(degree, object, moveDirX, moveDirY):
     if((object.xDir > moveDirX and object.yDir > -moveDirY) or object.xDir < moveDirX and object.yDir < -moveDirY):
         degree = object.turnRate
@@ -252,7 +320,7 @@ def dealDamage(ship, dmg, var, targetSystem, heatDamage,uiElements,shipLookup):
     if(dmg > 4 or heatDamage > 4):
         updateLabel1 = True
     system = ship.systemSlots[targetSystem]
-    if(ship.shields > 0):
+    if(ship.shields > 0 and dmg > 0):
         tmp = 0
         while (tmp < len(ship.shieldsState)):
             if(ship.shieldsState[tmp] == var.shieldMaxState):
@@ -318,7 +386,7 @@ def dealDamage(ship, dmg, var, targetSystem, heatDamage,uiElements,shipLookup):
                 dmg -= math.floor(dmgToSystem)
         ship.hp -= dmg
         if(updateLabel1):
-            updateLabels(uiElements,shipLookup,var)
+            updateLabel(uiElements,shipLookup,var,ship.id)
         return
 
 
@@ -396,6 +464,19 @@ def drawRockets(globalVar,ammunitionType,canvas):
             line = canvas.create_line(drawX-1, drawY-1,
                             drawX+1, drawY+1, fill = color)
             canvas.elements.append(line)
+        elif(missle.typeName == ammunitionType.incirination1adefault):
+            line = canvas.create_line(drawX-2, drawY-2,
+                            drawX-7, drawY+2, fill = color)
+            canvas.elements.append(line)
+            line = canvas.create_line(drawX-7, drawY+2,
+                            drawX, drawY+2, fill = color)
+            canvas.elements.append(line)
+            line = canvas.create_line(drawX, drawY+2,
+                            drawX+2, drawY-2, fill = color)
+            canvas.elements.append(line)
+            line = canvas.create_line(drawX+2, drawY-2,
+                            drawX-2, drawY-2, fill = color)
+            canvas.elements.append(line)
 
         else:
             line = canvas.create_line(drawX-5, drawY-5,
@@ -452,136 +533,29 @@ def drawLandmarks(var,canvas,uiIcons):
             canvas.elements.append(image)
 
 
-def drawShips(canvas,var,uiMetrics):  # draw ship on the map with all of its accesories
-    for ship in var.ships:
-        if(ship.visible or not var.fogOfWar or ship.owner == "player1"):
-            drawX = (ship.xPos - var.left) * var.zoom   # get coords relative to window
-            drawY = (ship.yPos - var.top) * var.zoom
-
-            fillColor = "red"
-            if(ship.owner == "player1"):
-                if(var.shipChoice == ship.id):
-                    fillColor = "spring green"
-                else:
-                    fillColor = "white"
-                drawOrderX = (ship.moveOrderX - var.left) * \
-                    var.zoom    # get order relative to window
-                drawOrderY = (ship.moveOrderY - var.top) * var.zoom
-                line = canvas.create_line(drawOrderX+2, drawOrderY+2, drawOrderX,
-                                   drawOrderY,   fill=fillColor)
-                canvas.elements.append(line)
-                line = canvas.create_line(drawOrderX-2, drawOrderY-2, drawOrderX,
-                                   drawOrderY,   fill=fillColor)
-                canvas.elements.append(line)
-                line = canvas.create_line(drawOrderX+2, drawOrderY-2, drawOrderX,
-                                   drawOrderY,   fill=fillColor)
-                canvas.elements.append(line)
-                line = canvas.create_line(drawOrderX-2, drawOrderY+2, drawOrderX,
-                                   drawOrderY,   fill=fillColor)
-                canvas.elements.append(line)
-
-            line = canvas.create_line(int(drawX-5*var.zoom), 
-                                int(drawY-5*var.zoom), 
-                                int(drawX +5*var.zoom), 
-                                int(drawY+5*var.zoom),
-                                width=int(1+2*var.zoom), 
-                                fill=fillColor)
-            canvas.elements.append(line)
-                                   
-            if(ship.owner == "player1" or (not var.fogOfWar)):
-                line = canvas.create_line(drawX, drawY,   drawX+(ship.xDir*20*var.zoom),
-                                   drawY+(ship.yDir*20*var.zoom), fill="green")
-                canvas.elements.append(line)
-            if(ship.owner == "player1"):
-                if(drawX < uiMetrics.canvasWidth - 50 * var.zoom):
-                    line = canvas.create_text(drawX + 12 * var.zoom, drawY + 10, anchor=W,
-                                font=("Purisa", 8 + math.floor(var.zoom)), text=ship.name, fill = fillColor)
-                    canvas.elements.append(line)
-                else:
-                    line = canvas.create_text(drawX - (20 + 12 * var.zoom), drawY + 10, anchor=W,
-                                font=("Purisa", 8 + math.floor(var.zoom)), text=ship.name, fill = fillColor)
-                    canvas.elements.append(line)
-
-            else:
-                if(drawX < uiMetrics.canvasWidth - 50 * var.zoom):
-                    line = canvas.create_text(drawX + 12 * var.zoom, drawY + 10, anchor=W,
-                                font=("Purisa", 8 + math.floor(var.zoom)), text=ship.name, fill = "white")
-                    canvas.elements.append(line)
-                else:
-                    line = canvas.create_text(drawX - (20 + 12 * var.zoom), drawY + 10, anchor=W,
-                                font=("Purisa", 8 + math.floor(var.zoom)), text=ship.name, fill = "white")
-                    canvas.elements.append(line)
-            
-            if(ship.owner == "player1"):
-                fillColor = "white"
-            
-            if(ship.owner == "ai1"):
-                fillColor = "red"
-            
-            list = []
-            ghostShip = naglowek.dynamic_object()
-            ghostShip.x = (ship.xPos - var.left) * var.zoom
-            ghostShip.y = (ship.yPos - var.top) * var.zoom
-            list.append(ghostShip)
-            ghostShip = naglowek.dynamic_object()
-            ghostShip.x = (ship.xPos + uiMetrics.canvasWidth - var.left) * var.zoom
-            ghostShip.y = (ship.yPos - var.top) * var.zoom
-            list.append(ghostShip)
-            ghostShip = naglowek.dynamic_object()
-            ghostShip.x = (ship.xPos - uiMetrics.canvasWidth - var.left) * var.zoom
-            ghostShip.y = (ship.yPos + var.top) * var.zoom
-            list.append(ghostShip)
-            ghostShip = naglowek.dynamic_object()
-            ghostShip.x = (ship.xPos - var.left) * var.zoom  
-            ghostShip.y = (ship.yPos + uiMetrics.canvasHeight - var.top) * var.zoom
-            list.append(ghostShip)
-            ghostShip = naglowek.dynamic_object()
-            ghostShip.x = (ship.xPos - var.left) * var.zoom 
-            ghostShip.y = (ship.yPos - uiMetrics.canvasHeight - var.top) * var.zoom
-            list.append(ghostShip)
-            ghostShip = naglowek.dynamic_object()
-            ghostShip.x = (ship.xPos - uiMetrics.canvasWidth  - var.left) * var.zoom 
-            ghostShip.y = (ship.yPos - uiMetrics.canvasHeight - var.top) * var.zoom
-            list.append(ghostShip)
-            ghostShip = naglowek.dynamic_object()
-            ghostShip.x = (ship.xPos + uiMetrics.canvasWidth  - var.left) * var.zoom 
-            ghostShip.y = (ship.yPos - uiMetrics.canvasHeight - var.top) * var.zoom
-            list.append(ghostShip)
-            ghostShip = naglowek.dynamic_object()
-            ghostShip.x = (ship.xPos - uiMetrics.canvasWidth  - var.left) * var.zoom 
-            ghostShip.y = (ship.yPos + uiMetrics.canvasHeight - var.top) * var.zoom
-            list.append(ghostShip)
-            ghostShip = naglowek.dynamic_object()
-            ghostShip.x = (ship.xPos + uiMetrics.canvasWidth  - var.left) * var.zoom 
-            ghostShip.y = (ship.yPos + uiMetrics.canvasHeight - var.top) * var.zoom
-            list.append(ghostShip)
-            
-            for element in list:
-                x1 = element.x-ship.detectionRange*var.zoom
-                x2 = element.x + ship.detectionRange*var.zoom
-                y1 = element.y - ship.detectionRange*var.zoom
-                y2 = element.y+ship.detectionRange*var.zoom
-                canvas.create_oval(x1, y1, x2, y2, outline=ship.outlineColor, dash = (1,3))
-
- 
-
-       
 def checkForKilledShips(events,shipLookup,var,uiElements):
+    shipsToKill = []
     for ship1 in var.ships:
-        if(ship1.hp < 1): 
-            killShip(ship1.id,var,events,shipLookup,uiElements)
-            
+        if(ship1.hp < 1 and not ship1.killed): 
+            shipsToKill.append(ship1)
+    for ship2 in shipsToKill:
+        killShip(ship2.id,var,events,shipLookup,uiElements)
+    if(len(shipsToKill)):
+        updateLabels(uiElements,shipLookup,var)
+
+
 def killShip(shipId,var,events,shipLookup,uiElements):
     ship = shipLookup[shipId]
+    shipLookup[shipId].killed = True
     for missle in var.currentMissles:
         if shipLookup[missle.target] == ship.id:
             var.currentMissles.remove(missle)
-    noEnemies = TRUE
+    noEnemies = True
     for progressBar in ship.shieldsLabel:
         progressBar['value'] = 0
     for ship in var.ships:
         if(not ship.owner == "player1"):
-            noEnemies = FALSE
+            noEnemies = False
             break
     if(ship.id == 0):
         (var.shipChoiceRadioButtons).remove(uiElements.shipChoiceRadioButton0)
@@ -614,6 +588,7 @@ def killShip(shipId,var,events,shipLookup,uiElements):
             (var.ships).remove(element)
             break
 
+
 def updateShips(var,uiMetrics,gameRules,shipLookup,events,uiElements):  # rotate and move the chosen ship
     for ship in var.ships:
         # check for terrain
@@ -640,10 +615,10 @@ def updateShips(var,uiMetrics,gameRules,shipLookup,events,uiElements):  # rotate
 
         if(colorWeight < 600 and colorWeight > 200):
             movementPenality = gameRules.movementPenalityMedium
-            dealDamage(shipLookup[ship.id], 0, var,-1, 0.01,uiElements,shipLookup)
+            dealDamage(shipLookup[ship.id], 0, var,-1, 0.05,uiElements,shipLookup)
         elif(colorWeight < 200):
             movementPenality = gameRules.movementPenalityHard
-            dealDamage(shipLookup[ship.id], 0, var,-1, 0.1,uiElements,shipLookup)
+            dealDamage(shipLookup[ship.id], 1, var,-1, 1,uiElements,shipLookup)
             checkForKilledShips(events,shipLookup,var,uiElements)
         else:
             movementPenality = 0.000001  # change

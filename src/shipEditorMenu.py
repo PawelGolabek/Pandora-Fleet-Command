@@ -102,8 +102,7 @@ def updateShipStats(uiElements,info):
     (info.oldShip).directionalThrust = ship.directionalThrust
 
 def updateSystemStats(uiElements,subsystem):
-    (uiElements.systemStatsL).config(text = "Mass: {}".format(subsystem.mass,))
-    (uiElements.systemStatsL).config(text = "Cost: {}".format(subsystem.cost,))
+    (uiElements.systemStatsL).config(text = subsystem.description)
 
 def engineChoiceCommand(engineChoice,uiElements,label,info):
     a = engineChoice.get()
@@ -170,8 +169,19 @@ def closeWindow(window):
 
 def saveShip(info,uiElements,filePath, cp):
     shipName = str((uiElements.shipNameInput).get())
-
-    if(not(len(shipName) == 0) and len(shipName) < 13):
+    if(info.engineChoice.get() == "none"):
+        (uiElements.shipNameInput).delete(0, END)
+        (uiElements.shipNameInput).insert(0, "Ship must have a Main Drive") 
+    elif(info.thrustersChoice.get() == "none"):
+        (uiElements.shipNameInput).delete(0, END)
+        (uiElements.shipNameInput).insert(0, "Ship must have Thrusters") 
+    elif(info.radarChoice.get() == "none"):
+        (uiElements.shipNameInput).delete(0, END)
+        (uiElements.shipNameInput).insert(0, "Ship must have Sensors") 
+    elif(info.generatorChoice.get() == "none"):
+        (uiElements.shipNameInput).delete(0, END)
+        (uiElements.shipNameInput).insert(0, "Ship must have a Generator")
+    elif(not(len(shipName) == 0) and len(shipName) < 13):
         if(not cp.has_section(shipName)):
             cp.add_section(shipName)
 
@@ -201,7 +211,7 @@ def saveShip(info,uiElements,filePath, cp):
 
         cp.set(shipName, "shields",str((info.ship).shields))
         cp.set(shipName, "maxShields",str((info.ship).maxShields))
-        cp.set(shipName, "shields",str((info.ship).shields))
+        cp.set(shipName, "energyLimit",str((info.ship).maxEnergy))
         cp.set(shipName, "detectionRange",str((info.ship).detectionRange))
         cp.set(shipName, "turnRate",str((info.ship).turnRate))
         cp.set(shipName, "maxSpeed",str((info.ship).maxSpeed))
@@ -225,6 +235,9 @@ def saveShip(info,uiElements,filePath, cp):
         button = ttk.Button(window,style = 'Grey.TButton', text = "Ok",command=closeWindowCommand)
         label.place(relx=0.5, rely=0.2,anchor=CENTER)
         button.place(relx=0.5, rely=0.5,anchor=CENTER)
+        print(info.engineChoice.get() + "none")
+        print(info.engineChoice.get() == "none")
+        print(info.thrustersChoice.get() == "none")
     elif(len(shipName) < 13):
         (uiElements.shipNameInput).delete(0, END)
         (uiElements.shipNameInput).insert(0, "Ship must have a name. Insert the name to continue.") 
@@ -242,7 +255,7 @@ def saveShip(info,uiElements,filePath, cp):
 def completeShip(uiElements):
     x=10
 
-def clearShip(info):
+def clearShip(info,uiElements):
     systemOptions = naglowek.allSystemsList
     subsystemOptions = naglowek.allSubsystemsList
     engineOptions = naglowek.allEnginesList
@@ -250,33 +263,69 @@ def clearShip(info):
     radarOptions = naglowek.allRadarsList
     generatorOptions = naglowek.allGeneratorsList
 
-    (info.engineChoice).set(engineOptions[0])
-    (info.thrustersChoice).set(thrustersOptions[0])
-    (info.radarChoice).set(radarOptions[0])
-    (info.generatorChoice).set(generatorOptions[0])
+    info.engineChoice.set(engineOptions[0])
+    info.thrustersChoice.set(thrustersOptions[0])
+    info.radarChoice.set(radarOptions[0])
+    info.generatorChoice.set(generatorOptions[0])
 
-    (info.subsystemChoice0).set(subsystemOptions[0])
-    (info.subsystemChoice1).set(subsystemOptions[0])
-    (info.subsystemChoice2).set(subsystemOptions[0])
-    (info.subsystemChoice2).set(subsystemOptions[0])
-    (info.subsystemChoice3).set(subsystemOptions[0])
-    (info.subsystemChoice4).set(subsystemOptions[0])
-    (info.subsystemChoice5).set(subsystemOptions[0])
-    (info.subsystemChoice6).set(subsystemOptions[0])
-    (info.subsystemChoice7).set(subsystemOptions[0])
+    info.subsystemChoice0.set(subsystemOptions[0])
+    info.subsystemChoice1.set(subsystemOptions[0])
+    info.subsystemChoice2.set(subsystemOptions[0])
+    info.subsystemChoice3.set(subsystemOptions[0])
+    info.subsystemChoice4.set(subsystemOptions[0])
+    info.subsystemChoice5.set(subsystemOptions[0])
+    info.subsystemChoice6.set(subsystemOptions[0])
+    info.subsystemChoice7.set(subsystemOptions[0])
 
-    (info.systemChoice0).set(systemOptions[0])
-    (info.systemChoice1).set(systemOptions[0])
-    (info.systemChoice2).set(systemOptions[0])
-    (info.systemChoice2).set(systemOptions[0])
-    (info.systemChoice3).set(systemOptions[0])
-    (info.systemChoice4).set(systemOptions[0])
-    (info.systemChoice5).set(systemOptions[0])
-    (info.systemChoice6).set(systemOptions[0])
-    (info.systemChoice7).set(systemOptions[0])
+    info.systemChoice0.set(systemOptions[0])
+    info.systemChoice1.set(systemOptions[0])
+    info.systemChoice2.set(systemOptions[0])
+    info.systemChoice3.set(systemOptions[0])
+    info.systemChoice4.set(systemOptions[0])
+    info.systemChoice5.set(systemOptions[0])
+    info.systemChoice6.set(systemOptions[0])
+    info.systemChoice7.set(systemOptions[0])
+    zeroShip(info)
+    updateShipStats(uiElements,info)
 
-    x=10
+def zeroShip(info):  
+    (info.ship).mass = 100
+    (info.ship).cost = 0
+    (info.ship).hp = 100
+    (info.ship).ap = 100
+    (info.ship).shields = 1
+    (info.ship).maxShields = 1
+    (info.ship).detectionRange = 100
+    (info.ship).maxSpeed = 0
+    (info.ship).turnRate = 0.3
+    (info.ship).maxEnergy = 10
+    (info.ship).minEnergyConsumption = 0
+    (info.ship).maxEnergyConsumption = 0
+    (info.ship).engine = "none"
+    (info.ship).radar = "none"
+    (info.ship).thrusters = "none"
+    (info.ship).generator = "none"
+    (info.ship).mainThrust = 0
+    (info.ship).directionalThrust = 0
 
+    (info.oldShip).mass = (info.ship).mass
+    (info.oldShip).cost = (info.ship).cost
+    (info.oldShip).hp = (info.ship).hp
+    (info.oldShip).ap = (info.ship).ap
+    (info.oldShip).shields = (info.ship).shields
+    (info.oldShip).maxShields = (info.ship).maxShields
+    (info.oldShip).detectionRange = (info.ship).detectionRange
+    (info.oldShip).maxSpeed = (info.ship).maxSpeed
+    (info.oldShip).turnRate = (info.ship).turnRate
+    (info.oldShip).maxEnergy = (info.ship).maxEnergy
+    (info.oldShip).minEnergyConsumption = (info.ship).minEnergyConsumption
+    (info.oldShip).maxEnergyConsumption = (info.ship).maxEnergyConsumption
+    (info.oldShip).engine = (info.ship).engine
+    (info.oldShip).radar = (info.ship).radar
+    (info.oldShip).thrusters = (info.ship).thrusters
+    (info.oldShip).generator = (info.ship).generator
+    (info.oldShip).mainThrust = (info.ship).mainThrust
+    (info.oldShip).directionalThrust = (info.ship).directionalThrust      
 
 
 def shipEditor(root,config,uiMenuElements,uiMetrics,menuUiElements):
@@ -299,8 +348,8 @@ def shipEditor(root,config,uiMenuElements,uiMetrics,menuUiElements):
         uiElementsList = []
         uiElements = naglowek.dynamic_object()
         systemOptions = naglowek.allSystemsList
-        uiElements.systemStatsLF = ttk.Labelframe(root, style = 'Grey.TLabelframe', text = "Recently changed element statistics:",width = uiMetrics.shipStatsLFWidth,height = uiMetrics.shipStatsLFHeight)
-        uiElements.systemStatsL = ttk.Label(uiElements.systemStatsLF, style = 'Grey.TLabel', text = "Choose any ship element")
+        uiElements.systemStatsLF = ttk.Labelframe(root, style = 'Grey.TLabelframe', text = "Recently changed element:",width = uiMetrics.shipStatsLFWidth,height = uiMetrics.shipStatsLFHeight)
+        uiElements.systemStatsL = ttk.Label(uiElements.systemStatsLF, style = 'Grey.TLabel',justify = "left", text = "Choose any ship element")
         uiElements.shipStatsLF = ttk.Labelframe(root, style = 'Grey.TLabelframe', text = "Ship statistics:",width = uiMetrics.shipStatsLFWidth,height = uiMetrics.shipStatsLFHeight)
         uiElements.shipStatsL = ttk.Label(uiElements.shipStatsLF, style = 'Grey.TLabel', justify = "left", text = 
         "Hull: 100 \n \
@@ -333,43 +382,7 @@ def shipEditor(root,config,uiMenuElements,uiMetrics,menuUiElements):
             ((info.ship).systemSlots).append("none")
             ((info.ship).subsystemSlots).append("none")
             tmp-=1     
-        (info.ship).mass = 100
-        (info.ship).cost = 0
-        (info.ship).hp = 100
-        (info.ship).ap = 100
-        (info.ship).shields = 1
-        (info.ship).maxShields = 1
-        (info.ship).detectionRange = 100
-        (info.ship).maxSpeed = 70
-        (info.ship).turnRate = 0.3
-        (info.ship).maxEnergy = 10
-        (info.ship).minEnergyConsumption = 0
-        (info.ship).maxEnergyConsumption = 0
-        (info.ship).engine = "none"
-        (info.ship).radar = "none"
-        (info.ship).thrusters = "none"
-        (info.ship).generator = "none"
-        (info.ship).mainThrust = 0
-        (info.ship).directionalThrust = 0
-
-        (info.oldShip).mass = 100
-        (info.oldShip).cost = 0
-        (info.oldShip).hp = 100
-        (info.oldShip).ap = 100
-        (info.oldShip).shields = 1
-        (info.oldShip).maxShields = 1
-        (info.oldShip).detectionRange = 100
-        (info.oldShip).maxSpeed = 70
-        (info.oldShip).turnRate = 0.3
-        (info.oldShip).maxEnergy = 10
-        (info.oldShip).minEnergyConsumption = 0
-        (info.oldShip).maxEnergyConsumption = 0
-        (info.oldShip).engine = "none"
-        (info.oldShip).radar = "none"
-        (info.oldShip).thrusters = "none"
-        (info.oldShip).generator = "none"
-        (info.oldShip).mainThrust = 0
-        (info.oldShip).directionalThrust = 0
+        zeroShip(info)
 
         info.engineChoice = StringVar(root)
         info.thrustersChoice = StringVar(root)
@@ -397,12 +410,12 @@ def shipEditor(root,config,uiMenuElements,uiMetrics,menuUiElements):
         info.radarChoice.set(radarOptions[0])
         info.generatorChoice.set(generatorOptions[0])
 
-        uiElements.engineChoiceMenu =  OptionMenu(uiElements.engineChoiceMenuLF, info.engineChoice, *engineOptions, command=lambda _: engineChoiceCommand(info.engineChoice,uiElements,uiElements.engineChoiceMenuL,info))
-        uiElements.thrustersChoiceMenu = OptionMenu(uiElements.thrustersChoiceMenuLF,info.thrustersChoice, *thrustersOptions, command=lambda _: thrustersChoiceCommand(info.thrustersChoice,uiElements,uiElements.thrustersChoiceMenuL,info))
-        uiElements.radarChoiceMenu = OptionMenu(uiElements.radarChoiceMenuLF,info.radarChoice, *radarOptions, command=lambda _: radarChoiceCommand(info.radarChoice,uiElements,uiElements.radarChoiceMenuL,info))
-        uiElements.generatorChoiceMenu = OptionMenu(uiElements.generatorChoiceMenuLF,info.generatorChoice, *generatorOptions, command=lambda _: generatorChoiceCommand(info.generatorChoice,uiElements,uiElements.generatorChoiceMenuL,info))
+        uiElements.engineChoiceMenu =  ttk.OptionMenu(uiElements.engineChoiceMenuLF,info.engineChoice,engineOptions[0], *engineOptions, style = "TMenubutton", command=lambda _: engineChoiceCommand(info.engineChoice,uiElements,uiElements.engineChoiceMenuL,info))
+        uiElements.thrustersChoiceMenu = ttk.OptionMenu(uiElements.thrustersChoiceMenuLF,info.thrustersChoice,thrustersOptions[0],*thrustersOptions, style = "TMenubutton", command=lambda _: thrustersChoiceCommand(info.thrustersChoice,uiElements,uiElements.thrustersChoiceMenuL,info))
+        uiElements.radarChoiceMenu = ttk.OptionMenu(uiElements.radarChoiceMenuLF,info.radarChoice,radarOptions[0], *radarOptions, style = "TMenubutton",command=lambda _: radarChoiceCommand(info.radarChoice,uiElements,uiElements.radarChoiceMenuL,info))
+        uiElements.generatorChoiceMenu = ttk.OptionMenu(uiElements.generatorChoiceMenuLF,info.generatorChoice,generatorOptions[0], *generatorOptions, style = "TMenubutton",command=lambda _: generatorChoiceCommand(info.generatorChoice,uiElements,uiElements.generatorChoiceMenuL,info))
     
-
+        print(info.engineChoice.get())
         engineChoiceCommand(info.engineChoice,uiElements,uiElements.engineChoiceMenuL,info)
         thrustersChoiceCommand(info.thrustersChoice,uiElements,uiElements.thrustersChoiceMenuL,info)
         radarChoiceCommand(info.radarChoice,uiElements,uiElements.radarChoiceMenuL,info)
@@ -417,7 +430,6 @@ def shipEditor(root,config,uiMenuElements,uiMetrics,menuUiElements):
         info.systemChoice0 = StringVar(root)
         info.systemChoice1 = StringVar(root)
         info.systemChoice2 = StringVar(root)
-        info.systemChoice2 = StringVar(root)
         info.systemChoice3 = StringVar(root)
         info.systemChoice4 = StringVar(root)
         info.systemChoice5 = StringVar(root)
@@ -426,7 +438,6 @@ def shipEditor(root,config,uiMenuElements,uiMetrics,menuUiElements):
 
         info.systemChoice0.set(systemOptions[0])
         info.systemChoice1.set(systemOptions[0])
-        info.systemChoice2.set(systemOptions[0])
         info.systemChoice2.set(systemOptions[0])
         info.systemChoice3.set(systemOptions[0])
         info.systemChoice4.set(systemOptions[0])
@@ -437,7 +448,6 @@ def shipEditor(root,config,uiMenuElements,uiMetrics,menuUiElements):
         info.subsystemChoice0 = StringVar(root)
         info.subsystemChoice1 = StringVar(root)
         info.subsystemChoice2 = StringVar(root)
-        info.subsystemChoice2 = StringVar(root)
         info.subsystemChoice3 = StringVar(root)
         info.subsystemChoice4 = StringVar(root)
         info.subsystemChoice5 = StringVar(root)
@@ -446,7 +456,6 @@ def shipEditor(root,config,uiMenuElements,uiMetrics,menuUiElements):
 
         info.subsystemChoice0.set(subsystemOptions[0])
         info.subsystemChoice1.set(subsystemOptions[0])
-        info.subsystemChoice2.set(subsystemOptions[0])
         info.subsystemChoice2.set(subsystemOptions[0])
         info.subsystemChoice3.set(subsystemOptions[0])
         info.subsystemChoice4.set(subsystemOptions[0])
@@ -458,14 +467,14 @@ def shipEditor(root,config,uiMenuElements,uiMetrics,menuUiElements):
         uiElementsList.append(uiElements.systemChoiceLF)
 
 
-        uiElements.systemChoiceMenu0 = OptionMenu(uiElements.systemChoiceLF, info.systemChoice0, *systemOptions, command=lambda _: systemChoiceCommand(info.systemChoice0,uiElements,uiElements.systemChoiceL0,info,0))
-        uiElements.systemChoiceMenu1 = OptionMenu(uiElements.systemChoiceLF, info.systemChoice1, *systemOptions, command=lambda _: systemChoiceCommand(info.systemChoice1,uiElements,uiElements.systemChoiceL1,info,1))
-        uiElements.systemChoiceMenu2 = OptionMenu(uiElements.systemChoiceLF, info.systemChoice2, *systemOptions, command=lambda _: systemChoiceCommand(info.systemChoice2,uiElements,uiElements.systemChoiceL2,info,2))
-        uiElements.systemChoiceMenu3 = OptionMenu(uiElements.systemChoiceLF, info.systemChoice3, *systemOptions, command=lambda _: systemChoiceCommand(info.systemChoice3,uiElements,uiElements.systemChoiceL3,info,3))
-        uiElements.systemChoiceMenu4 = OptionMenu(uiElements.systemChoiceLF, info.systemChoice4, *systemOptions, command=lambda _: systemChoiceCommand(info.systemChoice4,uiElements,uiElements.systemChoiceL4,info,4))
-        uiElements.systemChoiceMenu5 = OptionMenu(uiElements.systemChoiceLF, info.systemChoice5, *systemOptions, command=lambda _: systemChoiceCommand(info.systemChoice5,uiElements,uiElements.systemChoiceL5,info,5))
-        uiElements.systemChoiceMenu6 = OptionMenu(uiElements.systemChoiceLF, info.systemChoice6, *systemOptions, command=lambda _: systemChoiceCommand(info.systemChoice6,uiElements,uiElements.systemChoiceL6,info,6))
-        uiElements.systemChoiceMenu7 = OptionMenu(uiElements.systemChoiceLF, info.systemChoice7, *systemOptions, command=lambda _: systemChoiceCommand(info.systemChoice7,uiElements,uiElements.systemChoiceL7,info,7))
+        uiElements.systemChoiceMenu0 = ttk.OptionMenu(uiElements.systemChoiceLF, info.systemChoice0, systemOptions[0], *systemOptions, style = "TMenubutton",  command=lambda _: systemChoiceCommand(info.systemChoice0,uiElements,uiElements.systemChoiceL0,info,0))
+        uiElements.systemChoiceMenu1 = ttk.OptionMenu(uiElements.systemChoiceLF, info.systemChoice1, systemOptions[0], *systemOptions, style = "TMenubutton",  command=lambda _: systemChoiceCommand(info.systemChoice1,uiElements,uiElements.systemChoiceL1,info,1))
+        uiElements.systemChoiceMenu2 = ttk.OptionMenu(uiElements.systemChoiceLF, info.systemChoice2, systemOptions[0], *systemOptions, style = "TMenubutton",  command=lambda _: systemChoiceCommand(info.systemChoice2,uiElements,uiElements.systemChoiceL2,info,2))
+        uiElements.systemChoiceMenu3 = ttk.OptionMenu(uiElements.systemChoiceLF, info.systemChoice3, systemOptions[0], *systemOptions, style = "TMenubutton",  command=lambda _: systemChoiceCommand(info.systemChoice3,uiElements,uiElements.systemChoiceL3,info,3))
+        uiElements.systemChoiceMenu4 = ttk.OptionMenu(uiElements.systemChoiceLF, info.systemChoice4, systemOptions[0], *systemOptions, style = "TMenubutton",  command=lambda _: systemChoiceCommand(info.systemChoice4,uiElements,uiElements.systemChoiceL4,info,4))
+        uiElements.systemChoiceMenu5 = ttk.OptionMenu(uiElements.systemChoiceLF, info.systemChoice5, systemOptions[0], *systemOptions, style = "TMenubutton",  command=lambda _: systemChoiceCommand(info.systemChoice5,uiElements,uiElements.systemChoiceL5,info,5))
+        uiElements.systemChoiceMenu6 = ttk.OptionMenu(uiElements.systemChoiceLF, info.systemChoice6, systemOptions[0], *systemOptions, style = "TMenubutton",  command=lambda _: systemChoiceCommand(info.systemChoice6,uiElements,uiElements.systemChoiceL6,info,6))
+        uiElements.systemChoiceMenu7 = ttk.OptionMenu(uiElements.systemChoiceLF, info.systemChoice7, systemOptions[0], *systemOptions, style = "TMenubutton",  command=lambda _: systemChoiceCommand(info.systemChoice7,uiElements,uiElements.systemChoiceL7,info,7))
 
         uiElements.systemChoiceL0 = ttk.Label(uiElements.systemChoiceLF,style = 'Grey.TLabel', text = "Mass: 0, Cost: 0")
         uiElements.systemChoiceL1 = ttk.Label(uiElements.systemChoiceLF,style = 'Grey.TLabel', text = "Mass: 0, Cost: 0")
@@ -524,14 +533,14 @@ def shipEditor(root,config,uiMenuElements,uiMetrics,menuUiElements):
         subsystemChoiceCommand(info.subsystemChoice6,uiElements,uiElements.subsystemChoiceL6,info,6)
         subsystemChoiceCommand(info.subsystemChoice7,uiElements,uiElements.subsystemChoiceL7,info,7)
 
-        uiElements.subsystemChoiceMenu0 = OptionMenu(uiElements.subsystemChoiceLF, info.subsystemChoice0, *subsystemOptions, command=lambda _: subsystemChoiceCommand(info.subsystemChoice0,uiElements,uiElements.subsystemChoiceL0,info,0))
-        uiElements.subsystemChoiceMenu1 = OptionMenu(uiElements.subsystemChoiceLF, info.subsystemChoice1, *subsystemOptions, command=lambda _: subsystemChoiceCommand(info.subsystemChoice1,uiElements,uiElements.subsystemChoiceL1,info,1))
-        uiElements.subsystemChoiceMenu2 = OptionMenu(uiElements.subsystemChoiceLF, info.subsystemChoice2, *subsystemOptions, command=lambda _: subsystemChoiceCommand(info.subsystemChoice2,uiElements,uiElements.subsystemChoiceL2,info,2))
-        uiElements.subsystemChoiceMenu3 = OptionMenu(uiElements.subsystemChoiceLF, info.subsystemChoice3, *subsystemOptions, command=lambda _: subsystemChoiceCommand(info.subsystemChoice3,uiElements,uiElements.subsystemChoiceL3,info,3))
-        uiElements.subsystemChoiceMenu4 = OptionMenu(uiElements.subsystemChoiceLF, info.subsystemChoice4, *subsystemOptions, command=lambda _: subsystemChoiceCommand(info.subsystemChoice4,uiElements,uiElements.subsystemChoiceL4,info,4))
-        uiElements.subsystemChoiceMenu5 = OptionMenu(uiElements.subsystemChoiceLF, info.subsystemChoice5, *subsystemOptions, command=lambda _: subsystemChoiceCommand(info.subsystemChoice5,uiElements,uiElements.subsystemChoiceL5,info,5))
-        uiElements.subsystemChoiceMenu6 = OptionMenu(uiElements.subsystemChoiceLF, info.subsystemChoice6, *subsystemOptions, command=lambda _: subsystemChoiceCommand(info.subsystemChoice6,uiElements,uiElements.subsystemChoiceL6,info,6))
-        uiElements.subsystemChoiceMenu7 = OptionMenu(uiElements.subsystemChoiceLF, info.subsystemChoice7, *subsystemOptions, command=lambda _: subsystemChoiceCommand(info.subsystemChoice7,uiElements,uiElements.subsystemChoiceL7,info,7))
+        uiElements.subsystemChoiceMenu0 = ttk.OptionMenu(uiElements.subsystemChoiceLF, info.subsystemChoice0, subsystemOptions[0], *subsystemOptions, style = "TMenubutton",  command=lambda _: subsystemChoiceCommand(info.subsystemChoice0,uiElements,uiElements.subsystemChoiceL0,info,0))
+        uiElements.subsystemChoiceMenu1 = ttk.OptionMenu(uiElements.subsystemChoiceLF, info.subsystemChoice1, subsystemOptions[0], *subsystemOptions, style = "TMenubutton",  command=lambda _: subsystemChoiceCommand(info.subsystemChoice1,uiElements,uiElements.subsystemChoiceL1,info,1))
+        uiElements.subsystemChoiceMenu2 = ttk.OptionMenu(uiElements.subsystemChoiceLF, info.subsystemChoice2, subsystemOptions[0], *subsystemOptions, style = "TMenubutton",  command=lambda _: subsystemChoiceCommand(info.subsystemChoice2,uiElements,uiElements.subsystemChoiceL2,info,2))
+        uiElements.subsystemChoiceMenu3 = ttk.OptionMenu(uiElements.subsystemChoiceLF, info.subsystemChoice3, subsystemOptions[0], *subsystemOptions, style = "TMenubutton",  command=lambda _: subsystemChoiceCommand(info.subsystemChoice3,uiElements,uiElements.subsystemChoiceL3,info,3))
+        uiElements.subsystemChoiceMenu4 = ttk.OptionMenu(uiElements.subsystemChoiceLF, info.subsystemChoice4, subsystemOptions[0], *subsystemOptions, style = "TMenubutton",  command=lambda _: subsystemChoiceCommand(info.subsystemChoice4,uiElements,uiElements.subsystemChoiceL4,info,4))
+        uiElements.subsystemChoiceMenu5 = ttk.OptionMenu(uiElements.subsystemChoiceLF, info.subsystemChoice5, subsystemOptions[0], *subsystemOptions, style = "TMenubutton",  command=lambda _: subsystemChoiceCommand(info.subsystemChoice5,uiElements,uiElements.subsystemChoiceL5,info,5))
+        uiElements.subsystemChoiceMenu6 = ttk.OptionMenu(uiElements.subsystemChoiceLF, info.subsystemChoice6, subsystemOptions[0], *subsystemOptions, style = "TMenubutton",  command=lambda _: subsystemChoiceCommand(info.subsystemChoice6,uiElements,uiElements.subsystemChoiceL6,info,6))
+        uiElements.subsystemChoiceMenu7 = ttk.OptionMenu(uiElements.subsystemChoiceLF, info.subsystemChoice7, subsystemOptions[0], *subsystemOptions, style = "TMenubutton",  command=lambda _: subsystemChoiceCommand(info.subsystemChoice7,uiElements,uiElements.subsystemChoiceL7,info,7))
 
         uiElementsList.append(uiElements.subsystemChoiceMenu0)
         uiElementsList.append(uiElements.subsystemChoiceMenu1)
@@ -554,7 +563,7 @@ def shipEditor(root,config,uiMenuElements,uiMetrics,menuUiElements):
 
         uiElements.saveShipButton = tk.Button(root, width = 20, height = 3, text="Save ship design", command = lambda: [saveShip(info,uiElements,filePath,config)])
         uiElements.completeButton = tk.Button(root, width = 20, height = 3, text="Auto-complete ship", command = lambda: [completeShip(uiElements)], state = DISABLED)
-        uiElements.clearButton = tk.Button(root, width = 20, height = 3,  text="Clear Design", command = lambda: [clearShip(info)])
+        uiElements.clearButton = tk.Button(root, width = 20, height = 3,  text="Clear Design", command = lambda: [clearShip(info,uiElements)])
         uiElements.exitToMenuButton = tk.Button(root, width = 20, height = 3, text="Exit to menu", command=lambda:[placeMenuUi(root,menuUiElements,uiMetrics), hideMenuUi(uiElementsList)])
 
         uiElementsList.append(uiElements.saveShipButton)
@@ -563,7 +572,7 @@ def shipEditor(root,config,uiMenuElements,uiMetrics,menuUiElements):
         uiElementsList.append(uiElements.exitToMenuButton)
         (naglowek.shipEditorInfo).uiElements = uiElements
         (naglowek.shipEditorInfo).uiElementsList = uiElementsList
-        clearShip(info)
+        clearShip(info,uiElements)
         naglowek.editorUiReady = True
 
     placeShipEditorUi((naglowek.shipEditorInfo).uiElements,uiMetrics)

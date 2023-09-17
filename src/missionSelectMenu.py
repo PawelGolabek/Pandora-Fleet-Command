@@ -16,25 +16,31 @@ def hideSelectScreenUi(uiElements):
     for uiElement in uiElements:
       uiElement.place_forget()
 
-def optionCommand(variable,desLabelVar,objLabelVar,missionCanvas,msmVar):
+def optionCommand(variable,desLabelVar,objLabelVar,missionCanvas,msmVar,uiMetrics,dateLVar,unitLVar,codeLVar,threatVar,reconLVar,cryptonymLVar):
     cwd = Path(sys.argv[0])
     cwd = str(cwd.parent)
     a = str((variable.get()))
     des = configparser.ConfigParser()
-    filePath = os.path.join(cwd, "maps",a,"map description.ini")
+    filePath = os.path.join(cwd, "campaignMissions",a,"map description.ini")
     des.read(filePath)
-    updateText(desLabelVar,objLabelVar,des)
-    updateMissionCanvas(missionCanvas,variable,msmVar)
+    updateText(desLabelVar,objLabelVar,des,dateLVar,unitLVar,codeLVar,threatVar,reconLVar,cryptonymLVar)
+    updateMissionCanvas(missionCanvas,variable,msmVar,uiMetrics)
 
-def updateText(desLabelVar,objLabelVar,des):
-    try:
-        desLabelVar.set(des.get("Main", "descriptionLong"))
-        objLabelVar.set(des.get("Main", "ObjectivesLong"))
-    except:
-        desLabelVar.set("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam quis orci bibendum, pellentesque nibh nec, consequat erat. Nam lorem sapien, euismod ut velit sed, venenatis consectetur justo. Donec purus ante, ullamcorper vel augue non, gravida tincidunt lorem. Sed at eros eget sapien molestie facilisis non quis lectus. Donec vel ante ut massa finibus elementum interdum in ligula. Sed mollis placerat cursus. Lorem ipsum dolor sit amet, consectetur adipiscing elit. ")
-        objLabelVar.set("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam quis orci bibendum, pellentesque nibh nec, consequat erat. Nam lorem sapien, euismod ut velit sed, venenatis consectetur justo. Donec purus ante, ullamcorper vel augue non, gravida tincidunt lorem. Sed at eros eget sapien molestie facilisis non quis lectus. Donec vel ante ut massa finibus elementum interdum in ligula. Sed mollis placerat cursus. Lorem ipsum dolor sit amet, consectetur adipiscing elit. ")
+def updateText(desLabelVar,objLabelVar,des,dateLVar,unitLVar,codeLVar,threatVar,reconLVar,cryptonymLVar):
+ #   try:
+    desLabelVar.set(des.get("main", "descriptionLong"))
+    dateLVar.set(des.get("main", "date"))
+    cryptonymLVar.set(des.get("main", "cryptonym"))
+    unitLVar.set(des.get("main", "unit"))
+    reconLVar.set(des.get("main", "recon"))
+    codeLVar.set(des.get("main", "code"))
+    threatVar.set(des.get("main", "threat"))
+    objLabelVar.set(des.get("main", "ObjectivesLong"))
+  #  except:
+  #      desLabelVar.set("Lorem ipsum ")
+  #      objLabelVar.set("Lorem ipsum ")
 
-def updateMissionCanvas(missionCanvas,variable,msmVar):
+def updateMissionCanvas(missionCanvas,variable,msmVar,uiMetrics):
     missionCanvas.delete("all")
     cwd = Path(sys.argv[0])
     cwd = str(cwd.parent)
@@ -45,29 +51,67 @@ def updateMissionCanvas(missionCanvas,variable,msmVar):
     a1 = config1.get("Images","map")
     miniaturePath = os.path.join(cwd, "maps" + "\\" + a1 + "\\" + "mapMiniature.png")
     b = PIL.Image.open(miniaturePath)
-    b = b.resize((800, 500), PIL.Image.ANTIALIAS)
+    b = b.resize((uiMetrics.msCanvasWidth, uiMetrics.msCanvasHeight), PIL.Image.ANTIALIAS)
     msmVar.img = ImageTk.PhotoImage(b)
     missionCanvas.create_image(0,0,image=msmVar.img,anchor=NW)
     return msmVar.img
 
-def missionSelectScreen(root,config,uiMenuElements):
-
+def missionSelectScreen(root,config,uiMenuElements,uiMetrics):
+    
+    uiElements = naglowek.dynamic_object()
     desLabelVar = StringVar(root)
-    desLabelFrame = ttk.Labelframe(style = 'Grey.TLabelframe', width = 800,height = 300)
+    uiElements.desLabelFrame = ttk.Labelframe(style = 'GreyBig.TLabelframe', width = 800,height = 300, text = 'Mission Briefing')
     desLabelVar.set("Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
-    desLabel = ttk.Label(desLabelFrame,style = 'Grey.TLabel', textvariable=desLabelVar,anchor='w',justify = LEFT,wraplength=500)
-    desLabel.place(x=0,y=0)
+    uiElements.desLabel = ttk.Label(uiElements.desLabelFrame,style = 'GreyBig.TLabel', textvariable=desLabelVar,anchor='w',justify = LEFT,wraplength=500)
+    uiElements.desLabel.place(x=0,y=0)
+
+    cryptonymLVar = StringVar(root)
+    uiElements.cryptonymLF = ttk.Labelframe(style = 'GreyBig.TLabelframe', width = 350, height = 70, text = 'Cryptonym')
+    cryptonymLVar.set("")
+    uiElements.cryptonymL = ttk.Label(uiElements.cryptonymLF,style = 'GreyBig.TLabel', textvariable=cryptonymLVar,anchor='w',justify = LEFT,wraplength=330)
+    uiElements.cryptonymL.place(x=0,y=0)
+
+    dateLVar = StringVar(root)
+    uiElements.dateLF = ttk.Labelframe(style = 'GreyBig.TLabelframe', width = 350, height = 70, text = 'Date')
+    dateLVar.set("")
+    uiElements.dateL = ttk.Label(uiElements.dateLF,style = 'GreyBig.TLabel', textvariable=dateLVar,anchor='w',justify = LEFT,wraplength=330)
+    uiElements.dateL.place(x=0,y=0)
+
+    unitLVar = StringVar(root)
+    uiElements.unitLF = ttk.Labelframe(style = 'GreyBig.TLabelframe', width = 350, height = 70, text = 'Unit')
+    unitLVar.set("")
+    uiElements.unitL = ttk.Label(uiElements.unitLF,style = 'GreyBig.TLabel', textvariable=unitLVar,anchor='w',justify = LEFT,wraplength=330)
+    uiElements.unitL.place(x=0,y=0)
+
+    reconLVar = StringVar(root)
+    uiElements.reconLF = ttk.Labelframe(style = 'GreyBig.TLabelframe', width = 350, height = 70, text = 'Recon')
+    reconLVar.set("")
+    uiElements.reconL = ttk.Label(uiElements.reconLF,style = 'GreyBig.TLabel', textvariable=reconLVar,anchor='w',justify = LEFT,wraplength=330)
+    uiElements.reconL.place(x=0,y=0)
+
+    codeLVar = StringVar(root)
+    uiElements.codeLF = ttk.Labelframe(style = 'GreyBig.TLabelframe', width = 350, height = 70, text = 'Code')
+    codeLVar.set("")
+    uiElements.codeL = ttk.Label(uiElements.codeLF,style = 'GreyBig.TLabel', textvariable=codeLVar,anchor='w',justify = LEFT,wraplength=330)
+    uiElements.codeL.place(x=0,y=0)
+
+    threatLVar = StringVar(root)
+    uiElements.threatLF = ttk.Labelframe(style = 'GreyBig.TLabelframe', width = 350, height = 70, text = 'Threat Level')
+    threatLVar.set("")
+    uiElements.threatL = ttk.Label(uiElements.threatLF,style = 'GreyBig.TLabel', textvariable=threatLVar,anchor='w',justify = LEFT,wraplength=330)
+    uiElements.threatL.place(x=0,y=0)
 
     objLabelVar = StringVar(root)
-    objLabelFrame = ttk.Labelframe(style = 'Grey.TLabelframe', width = 350,height = 700)
-    objLabelVar.set("Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
-    objLabel = ttk.Label(objLabelFrame,style = 'Grey.TLabel', textvariable=objLabelVar,anchor='w',justify = LEFT,wraplength=330)
-    objLabel.place(x=0,y=0)
+    uiElements.objLabelFrame = ttk.Labelframe(style = 'GreyBig.TLabelframe', width = 350, height = 350, text = 'Mission Objectives')
+    objLabelVar.set("")
+    uiElements.objLabel = ttk.Label(uiElements.objLabelFrame,style = 'GreyBig.TLabel', textvariable=objLabelVar,anchor='w',justify = LEFT,wraplength=330)
+    uiElements.objLabel.place(x=0,y=0)
 
     variable = StringVar(root)
     variable.set(naglowek.campaignOptions[0])
+    uiElementsList = []
 
-    missionCanvas = Canvas(root,width = 800, height = 500)
+    uiElements.missionCanvas = Canvas(root,width = uiMetrics.msCanvasWidth, height = uiMetrics.msCanvasHeight)
    # """
     msmVar = naglowek.dynamic_object()
 
@@ -81,35 +125,37 @@ def missionSelectScreen(root,config,uiMenuElements):
     c = os.path.join(cwd, "maps" + "\\" + a1 + "\\" + "mapMiniature.png")
     b = PIL.Image.open(c)
     img = ImageTk.PhotoImage(b)
-    missionCanvas.create_image(0,0,anchor=NW,image=img)
-    missionCanvas.config(bg="green")
+    uiElements.missionCanvas.create_image(0,0,anchor=NW,image=img)
+    uiElements.missionCanvas.config(bg="green")
  
-    imageToAvoidTrashCollecting = updateMissionCanvas(missionCanvas,variable,msmVar)
-    levelOptionMenu = OptionMenu(root, variable, *naglowek.campaignOptions, command=lambda _: optionCommand(variable,desLabelVar,objLabelVar,missionCanvas,msmVar))
-    optionCommand(variable,desLabelVar,objLabelVar,missionCanvas,msmVar)
+    imageToAvoidTrashCollecting = updateMissionCanvas(uiElements.missionCanvas,variable,msmVar,uiMetrics)
+    uiElements.levelOptionMenu = ttk.OptionMenu(root, variable,naglowek.campaignOptions[0], *naglowek.campaignOptions, command=lambda _: optionCommand(variable,desLabelVar,objLabelVar,uiElements.missionCanvas,msmVar,uiMetrics,dateLVar,unitLVar,codeLVar,threatLVar,reconLVar,cryptonymLVar))
+    optionCommand(variable,desLabelVar,objLabelVar,uiElements.missionCanvas,msmVar,uiMetrics,dateLVar,unitLVar,codeLVar,threatLVar,reconLVar,cryptonymLVar)
 
     a = imageToAvoidTrashCollecting
 
-    uiElements = []
-
+    uiElementsList = []
     startButtonCommand = partial(start,variable,root,uiMenuElements)
-    button = Button(root, text="Start", command= lambda: [hideSelectScreenUi(uiElements),startButtonCommand()])
+    uiElements.button = tk.Button(root, text="Start", width = 20, height = 3, command= lambda: [hideSelectScreenUi(uiElementsList),startButtonCommand()])        
+    uiElements.exitToMenuButton = tk.Button(root, width = 20, height = 3, text="Exit to menu", command=lambda:[placeMenuUi(root,uiMenuElements,uiMetrics), hideMenuUi(uiElementsList)])
+    uiElementsList.append(uiElements.dateLF)
+    uiElementsList.append(uiElements.cryptonymLF)
+    uiElementsList.append(uiElements.unitLF)
+    uiElementsList.append(uiElements.reconLF)
+    uiElementsList.append(uiElements.codeLF)
+    uiElementsList.append(uiElements.threatLF)
+    uiElementsList.append(uiElements.button)
+    uiElementsList.append(uiElements.levelOptionMenu)
+    uiElementsList.append(uiElements.desLabel)
+    uiElementsList.append(uiElements.missionCanvas)
+    uiElementsList.append(uiElements.objLabelFrame)
+    uiElementsList.append(uiElements.objLabel)
+    uiElementsList.append(uiElements.desLabelFrame)
+    uiElementsList.append(uiElements.desLabel)
+    uiElementsList.append(uiElements.exitToMenuButton)
 
-    uiElements.append(button)
-    uiElements.append(levelOptionMenu)
-    uiElements.append(desLabel)
-    uiElements.append(missionCanvas)
-    uiElements.append(objLabelFrame)
-    uiElements.append(objLabel)
-    uiElements.append(desLabelFrame)
-    uiElements.append(desLabel)
 
-    levelOptionMenu.place(x=40,y=100)
-    button.place(x=40,y=150)
-    desLabelFrame.place(x=440,y=650)
-    objLabelFrame.place(x=40,y=250)
-    missionCanvas.place(x=440,y=100)
-
+    placeSelectMenuUI(uiElements,uiMetrics)
     mainloop()
 
 def start(variable,root,uiMenuElements):

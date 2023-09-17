@@ -11,6 +11,7 @@ class generator(object):
         self.mass = mass
         self.name = name
         self.cost = cost
+        self.description = ("Default text")
     def onAdding(self,ship):
         ship.mass += self.mass
         ship.cost += self.cost
@@ -34,7 +35,7 @@ class reactor(generator):
     def onAdding(self,ship):
         ship.mass += self.mass
         ship.cost += self.cost
-        ship.maxEnergy -= 6
+        ship.maxEnergy += 6
     def onRemoving(self,ship):
         ship.mass -= self.mass
         ship.cost -= self.cost

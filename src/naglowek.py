@@ -54,6 +54,7 @@ class global_var():
         self.shieldRegen = 1
         self.shieldMaxState = 1000
         # GAME DATA
+        self.labelCounter = 0
         self.choices = StringVar()
         self.options = []
         self.shipChoice = ''
@@ -133,6 +134,10 @@ class ui_metrics():
     cgShipYoffset = 100
     cgStartButton = customBlueShipY + cgShipYoffset *2
     cgMapChoiceY = cgStartButton - cgShipYoffset *1.5
+    msCanvasWidth = 800
+    msCanvasHeight = 500
+    msCanvasX = 440
+    msCanvasY = 100
     
 
 class game_rules():

@@ -92,6 +92,7 @@ def readShip(confIn,shipId,x,y,outline,owner,id):
     ship = dynamic_object()
     ship.name = shipId
     ship.shields = str(confIn.get(ship.name,"shields"))
+    ship.energyLimit = str(confIn.get(ship.name,"energyLimit"))
     ship.maxShields = str(confIn.get(shipId,"maxShields"))
     ship.detectionRange = str(confIn.get(shipId,"detectionRange"))
     ship.turnRate = str(confIn.get(shipId,"turnRate"))
@@ -151,6 +152,7 @@ def writeShip(ship,target,configOut):
     configOut.set(target, "subsystemSlots7",ship.subsystemSlots7)
     configOut.set(target, "subsystemSlots8",ship.subsystemSlots8)
     configOut.set(target, "shields",ship.shields)
+    configOut.set(target, "energyLimit",ship.energyLimit)
     configOut.set(target, "maxShields",ship.maxShields)
     configOut.set(target, "detectionRange",ship.detectionRange)
     configOut.set(target, "maxSpeed",ship.maxSpeed)
@@ -217,8 +219,9 @@ def customGame(root,config,uiMenuElements,uiMetrics):
 
         buttonCommand = partial(runGame,info,configIn,root,uiMenuElements)
         uiElements.startGameButton = Button(root, text="Start Game", command = lambda:[buttonCommand(), hideMenuUi(uiElementsList)],width=20,height=3,state = DISABLED)
-
+        uiElements.exitToMenuButton = tk.Button(root, width = 20, height = 3, text="Exit to menu", command=lambda:[placeMenuUi(root,uiMenuElements,uiMetrics), hideMenuUi(uiElementsList)])
         uiElementsList.append(uiElements.startGameButton)
+        uiElementsList.append(uiElements.exitToMenuButton)
 
         uiElements.mapLF = ttk.Labelframe(root,style = 'Grey.TLabelframe', width = 300, height = 100, text = "Map Choice")
         uiElements.mapOM = OptionMenu(uiElements.mapLF, info.mapChoice, *mapOptions, command = lambda _:[updateButton(info, uiElements.startGameButton, info.mapChoice),updateMissionCanvas(uiElements.missionCanvas,info,msmVar)])

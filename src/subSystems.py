@@ -5,6 +5,7 @@ class subsystem(object):
         self.name = name
         self.mass = mass
         self.cost = cost
+        self.description = ("Default text")
     def onAdding(self,ship):
         ship.mass += self.mass
         ship.cost += self.cost
@@ -15,6 +16,10 @@ class subsystem(object):
 class none(subsystem):
     def __init__ (self,name = "none",mass = 0, cost = 0):
         super(none,self).__init__(name,mass,cost)
+        self.description = ("No subsystem \n\
+mass: {}\ncost: {}\
+").format(self.mass,self.cost)
+
     def onAdding(self,ship):
         ship.mass += self.mass
         ship.cost += self.cost
@@ -25,84 +30,107 @@ class none(subsystem):
 class armorPlate1(subsystem):
     def __init__ (self,name = "Armor Plate",mass = 45, cost = 20):
         super(armorPlate1,self).__init__(name,mass,cost)
+        self.armorBonus = 30
+        self.description = ("Armor plate:\n Adds +{} to your ship armor \n\
+mass: {}\ncost: {}\
+").format(self.armorBonus,self.mass,self.cost)
     def onAdding(self,ship):
         ship.mass += self.mass
         ship.cost += self.cost
-        ship.ap += 30
+        ship.ap += self.armorBonus
     def onRemoving(self,ship):
         ship.mass -= self.mass
         ship.cost -= self.cost
-        ship.ap -= 30
+        ship.ap -= self.armorBonus
 
 class extendedSensors(subsystem):
     def __init__ (self,name = "Extended Sensors",mass = 5, cost = 30):
         super(extendedSensors,self).__init__(name,mass,cost)
+        self.energyCons = 1
+        self.detectionBoost = 10
+        self.description = ("Extended Sensors:\n Adds +{} to your ship sensor range for {} energy consumption \n\
+mass: {}\ncost: {}\
+").format(self.detectionBoost,self.energyCons,self.mass,self.cost)
     def onAdding(self,ship):
         ship.mass += self.mass
         ship.cost += self.cost
-        ship.detectionRange += 10
-        ship.maxEnergy -= 1
-        ship.minEnergyConsumption += 1
-        ship.maxEnergyConsumption += 1
+        ship.detectionRange += self.detectionBoost
+        ship.maxEnergy -= self.energyCons
+        ship.minEnergyConsumption += self.energyCons
+        ship.maxEnergyConsumption += self.energyCons
     def onRemoving(self,ship):
         ship.mass -= self.mass
         ship.cost -= self.cost
-        ship.detectionRange -= 10
-        ship.maxEnergy += 1
-        ship.minEnergyConsumption -= 1
-        ship.maxEnergyConsumption -= 1
+        ship.detectionRange -= self.detectionBoost
+        ship.maxEnergy += self.energyCons
+        ship.minEnergyConsumption -= self.energyCons
+        ship.maxEnergyConsumption -= self.energyCons
 
 class shieldCell1(subsystem):
     def __init__ (self,name = "Shield Cell I",mass = 15, cost = 40):
         super(shieldCell1,self).__init__(name,mass,cost)
+        self.energyCons = 2
+        self.shieldBoost = 1
+        self.description = ("Shield Cell I:\n Adds +{} shields to your ship for {} energy consumption \n\
+mass: {}\ncost: {}\
+").format(self.shieldBoost,self.energyCons,self.mass,self.cost)
     def onAdding(self,ship):
         ship.mass += self.mass
         ship.cost += self.cost
-        ship.shields += 1
-        ship.maxShields += 1
-        ship.maxEnergy -= 1
-        ship.minEnergyConsumption += 1
-        ship.maxEnergyConsumption += 1
+        ship.shields += self.shieldBoost
+        ship.maxShields += self.energyCons
+        ship.maxEnergy -= self.energyCons
+        ship.minEnergyConsumption += self.energyCons
+        ship.maxEnergyConsumption += self.energyCons
     def onRemoving(self,ship):
         ship.mass -= self.mass
         ship.cost -= self.cost
-        ship.shields -= 1
-        ship.maxShields -= 1
-        ship.maxEnergy += 1
-        ship.minEnergyConsumption -= 1
-        ship.maxEnergyConsumption -= 1
+        ship.shields -= self.shieldBoost
+        ship.maxShields -= self.energyCons
+        ship.maxEnergy += self.energyCons
+        ship.minEnergyConsumption -= self.energyCons
+        ship.maxEnergyConsumption -= self.energyCons
 
 class shieldCell2(subsystem):
-    def __init__ (self,name = "Shield Cell II",mass = 15, cost = 50):
+    def __init__ (self,name = "Shield Cell II",mass = 15, cost = 200):
         super(shieldCell2,self).__init__(name,mass,cost)
+        self.energyCons = 5
+        self.shieldBoost = 2
+        self.description = ("Shield Cell II:\n Adds +{} to your ship shields for {} energy consumption \n\
+mass: {}\ncost: {}\
+").format(self.shieldBoost, self.energyCons,self.mass,self.cost)
     def onAdding(self,ship):
         ship.mass += self.mass
         ship.cost += self.cost
-        ship.shields += 5
-        ship.maxShields += 1
-        ship.maxEnergy -= 2
-        ship.minEnergyConsumption += 2
-        ship.maxEnergyConsumption += 2
+        ship.shields += self.shieldBoost
+        ship.maxShields += self.shieldBoost
+        ship.maxEnergy -= self.energyCons
+        ship.minEnergyConsumption += self.energyCons
+        ship.maxEnergyConsumption += self.energyCons
     def onRemoving(self,ship):
         ship.mass -= self.mass
         ship.cost -= self.cost
-        ship.shields -= 5
-        ship.maxShields -= 1
-        ship.maxEnergy += 2
-        ship.minEnergyConsumption -= 2
-        ship.maxEnergyConsumption -= 2
+        ship.shields -= self.shieldBoost
+        ship.maxShields -= self.shieldBoost
+        ship.maxEnergy += self.energyCons
+        ship.minEnergyConsumption -= self.energyCons
+        ship.maxEnergyConsumption -= self.energyCons
 
 class energyExtension1(subsystem):
     def __init__ (self,name = "Energy Extension I ",mass = 5, cost = 20):
         super(energyExtension1,self).__init__(name,mass,cost)
+        self.energyExt = 1
+        self.description = ("Energy Extension I:\n Adds +{} maximum energy to your ship\n\
+mass: {}\ncost: {}\
+").format(self.energyExt,self.mass,self.cost)
     def onAdding(self,ship):
         ship.mass += self.mass
         ship.cost += self.cost
-        ship.maxEnergy += 1
+        ship.maxEnergy += self.energyExt
     def onRemoving(self,ship):
         ship.mass -= self.mass
         ship.cost -= self.cost
-        ship.maxEnergy -= 1
+        ship.maxEnergy -= self.energyExt
 
 def declareGlobalSubsystems():
     (naglowek.subsystemStatsBlueprints).none = none()

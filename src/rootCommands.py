@@ -62,8 +62,10 @@ def placeBattleUi(staticUi,uiMetrics,canvas,var,shipLookup,root,uiElements):
     options = var.enemies
     shipTarget = StringVar()
     shipTarget.set(shipLookup[var.shipChoice].target)
-    optionMenu = OptionMenu(staticUi.systemsLF, shipTarget, *options.keys(), command=lambda _: [shipLookup[var.shipChoice].setTarget(shipTarget),hideSystemTargets(uiElements.systemTargetsList),declareSystemsTargets(var,root,shipLookup,staticUi,uiMetrics,shipTarget,uiElements)])
-    optionMenu.place(x = 160, y = 20) 
+    optionMenu = tk.OptionMenu(staticUi.systemsLF, shipTarget, *options.keys(), command=lambda _: [shipLookup[var.shipChoice].setTarget(shipTarget),
+                                                                                                hideSystemTargets(uiElements.systemTargetsList),
+                                                                                                declareSystemsTargets(var,root,shipLookup,staticUi,uiMetrics,shipTarget,uiElements)])
+    optionMenu.place(x = 160, y = 20)
     declareSystemsTargets(var,root,shipLookup,staticUi,uiMetrics,shipTarget,uiElements)
 
 def declareSystemsTargets(var,root,shipLookup,staticUi,uiMetrics,shipTarget,uiElements):
@@ -96,7 +98,7 @@ def declareSystemsTargets(var,root,shipLookup,staticUi,uiMetrics,shipTarget,uiEl
             system.variable = StringVar(root)
             system.variable.set((list(system.targetDict.keys())[system.target]))
             anotherCommand = partial((system.setTarget),(system.targetDict[system.variable.get()]))
-            a = OptionMenu(staticUi.systemsLF, system.variable, *system.targetDict.keys() , command = anotherCommand)
+            a = tk.OptionMenu(staticUi.systemsLF, system.variable, *system.targetDict.keys() , command = anotherCommand)
             shipChosen.optionMenus.append(a)
             uiElements.systemTargetsList.append(a)
             system.alphaStrikeVar = IntVar()
@@ -117,12 +119,18 @@ def declareSystemsTargets(var,root,shipLookup,staticUi,uiMetrics,shipTarget,uiEl
         i += 1
     (staticUi.systemsLF).place(x = uiMetrics.canvasX, y = uiMetrics.canvasY + uiMetrics.canvasHeight + 10)
 
-    staticUi.enemyLF.place(x=uiMetrics.canvasX + uiMetrics.canvasWidth + 10, y = uiMetrics.canvasY)
-    staticUi.enemyLF2.place(x=uiMetrics.canvasX + uiMetrics.canvasWidth + 10, y = uiMetrics.canvasY + 1 * uiMetrics.canvasHeight/5*2)
-    staticUi.enemyLF3.place(x=uiMetrics.canvasX + uiMetrics.canvasWidth + 10, y = uiMetrics.canvasY + 2 * uiMetrics.canvasHeight/5*2)
-    staticUi.playerLF.place(x=20, y = uiMetrics.canvasY)
-    staticUi.playerLF2.place(x=20, y = uiMetrics.canvasY + 1 * uiMetrics.canvasHeight/5*2)
-    staticUi.playerLF3.place(x=20, y = uiMetrics.canvasY + 2 * uiMetrics.canvasHeight/5*2)
+    if(not shipLookup[3].name.startswith(">Not Available<")):
+        staticUi.enemyLF.place(x=uiMetrics.canvasX + uiMetrics.canvasWidth + 10, y = uiMetrics.canvasY)
+    if(not shipLookup[4].name.startswith(">Not Available<")):
+        staticUi.enemyLF2.place(x=uiMetrics.canvasX + uiMetrics.canvasWidth + 10, y = uiMetrics.canvasY + 1 * uiMetrics.canvasHeight/5*2)
+    if(not shipLookup[5].name.startswith(">Not Available<")):
+        staticUi.enemyLF3.place(x=uiMetrics.canvasX + uiMetrics.canvasWidth + 10, y = uiMetrics.canvasY + 2 * uiMetrics.canvasHeight/5*2)
+    if(not shipLookup[0].name.startswith(">Not Available<")):
+        staticUi.playerLF.place(x=20, y = uiMetrics.canvasY)
+    if(not shipLookup[1].name.startswith(">Not Available<")):
+        staticUi.playerLF2.place(x=20, y = uiMetrics.canvasY + 1 * uiMetrics.canvasHeight/5*2)
+    if(not shipLookup[2].name.startswith(">Not Available<")):
+        staticUi.playerLF3.place(x=20, y = uiMetrics.canvasY + 2 * uiMetrics.canvasHeight/5*2)
     labelsList = [staticUi.enemyLabels, staticUi.enemyLabels2, staticUi.enemyLabels3, staticUi.playerLabels, staticUi.playerLabels2, staticUi.playerLabels3]
     for target in labelsList:
         i = j = 0
@@ -241,7 +249,30 @@ def placeCustomGameUi(staticUi,uiMetrics):
     (staticUi.redShipOM2).place(x=10,y=10)
 
     (staticUi.startGameButton).place(x=700,y=uiMetrics.cgStartButton)
+    (staticUi.exitToMenuButton).place(x=1200, y = uiMetrics.cgStartButton - 300)
     (staticUi.mapLF).place(x=600,y=uiMetrics.cgMapChoiceY)
     (staticUi.mapOM).place(x=10,y=10)
 
     (staticUi.missionCanvas).place(x=uiMetrics.customBlueShipX + 150,y=10)
+    
+def placeSelectMenuUI(staticUi,uiMetrics):
+    staticUi.levelOptionMenu.place(x=40,y=100)
+    staticUi.button.place(x=40,y=150)
+    staticUi.desLabelFrame.place(x=440,y=650)
+    staticUi.objLabelFrame.place(x=40,y=600)
+
+    i = 0
+    staticUi.cryptonymLF.place(x=40,y=250)
+    i+=1
+    staticUi.dateLF.place(x=40,y=250 + i * 70)
+    i+=1
+    staticUi.unitLF.place(x=40,y=250 + i * 70)
+    i+=1
+    staticUi.reconLF.place(x=40,y=250 + i * 70)
+    i+=1
+    staticUi.codeLF.place(x=40,y=250 + i * 70)
+    i+=1
+    staticUi.threatLF.place(x=40,y=250 + i * 70)
+
+    (staticUi.missionCanvas).place(x=uiMetrics.msCanvasX, y=uiMetrics.msCanvasY)
+    (staticUi.exitToMenuButton).place(x=uiMetrics.msCanvasX + uiMetrics.msCanvasWidth + 40, y=uiMetrics.msCanvasY)

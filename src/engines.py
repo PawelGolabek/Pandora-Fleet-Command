@@ -5,6 +5,7 @@ class engine(object):
         self.name = name
         self.mass = mass
         self.cost = cost
+        self.description = ("Default text")
 
 class none(engine):
     def __init__ (self,name = "none",mass = 0, cost = 0):
@@ -12,9 +13,11 @@ class none(engine):
     def onAdding(self,ship):
         ship.mass += self.mass
         ship.cost += self.cost
+        ship.mainThrust += 0
     def onRemoving(self,ship):
         ship.mass -= self.mass
         ship.cost -= self.cost
+        ship.mainThrust -= 0
 
 class lightPropellant(engine):
     def __init__ (self,name = "lightPropellant",mass = 10,cost = 200):

@@ -60,7 +60,7 @@ if __name__ == '__main__':
     quickBattleCommand1 = partial(run,config,root,uiMenuElements)
     shipEditorCommand = partial(shipEditor,root,config,uiMenuElements,uiMetrics,uiMenuElements)
     hideUiCommand = partial(hideMenuUi,uiMenuElementsList)
-    missionSelect1 =  partial(missionSelectScreen,root,config,uiMenuElements)
+    missionSelect1 =  partial(missionSelectScreen,root,config,uiMenuElements,uiMetrics)
     customGameCommand =  partial(customGame,root,config,uiMenuElements,uiMetrics)
 
     resumeButton = tk.Button(text = "Resume", width = 17, height = 2,   font=('Optima',11), state = DISABLED, command = lambda:[resumeButtonCommand(),hideUiCommand()])
