@@ -27,9 +27,23 @@ def hideSystemTargets(uiElementsList):
 
 def placeBattleUi(staticUi,uiMetrics,canvas,var,shipLookup,root,uiElements):
     
-    staticUi.shipChoiceRadioButton0.place(x=uiMetrics.canvasX - 120, y=uiMetrics.canvasY + uiMetrics.canvasHeight + 160)
-    staticUi.shipChoiceRadioButton1.place(x=uiMetrics.canvasX - 120, y=uiMetrics.canvasY + uiMetrics.canvasHeight + 200)
-    staticUi.shipChoiceRadioButton2.place(x=uiMetrics.canvasX - 120, y=uiMetrics.canvasY + uiMetrics.canvasHeight + 240)
+    if(not shipLookup[0].name.startswith(">Not Available<") or not shipLookup[0].killed):
+        disable = var.radio0Hidden
+        if(disable):
+            uiElements.RadioElementsList[2].config(state = DISABLED)
+        uiElements.RadioElementsList[0].place(x=uiMetrics.canvasX - 120, y=uiMetrics.canvasY + uiMetrics.canvasHeight + 160)
+        
+    if(not shipLookup[1].name.startswith(">Not Available<") or not shipLookup[1].killed):
+        disable = var.radio1Hidden
+        if(disable):
+            uiElements.RadioElementsList[2].config(state = DISABLED)
+        uiElements.RadioElementsList[1].place(x=uiMetrics.canvasX - 120, y=uiMetrics.canvasY + uiMetrics.canvasHeight + 200)
+    
+    if(not shipLookup[2].name.startswith(">Not Available<") or not shipLookup[2].killed):
+        disable = var.radio2Hidden
+        if(disable):
+            uiElements.RadioElementsList[2].config(state = DISABLED)
+        uiElements.RadioElementsList[2].place(x=uiMetrics.canvasX - 120, y=uiMetrics.canvasY + uiMetrics.canvasHeight + 240)
 
     staticUi.gameSpeedScale.place(x=uiMetrics.canvasX, y=uiMetrics.canvasY - 160)
     canvas.place(x=uiMetrics.canvasX, y=uiMetrics.canvasY)
@@ -51,10 +65,11 @@ def placeBattleUi(staticUi,uiMetrics,canvas,var,shipLookup,root,uiElements):
             lenGap = (tmpShip.maxShields-1)
             lenPro = (tmpShip.maxShields)*4
         lenTotal = lenGap + lenPro
-        for progressBar in shieldArray:
-            progressBar.place(x=tmp + 5, y=5)
-            tmp += (((lenGap+lenPro)/lenTotal)/tmpShip.maxShields)*(uiMetrics.systemsLFWidth)
-            i+=1
+        if(len(shieldArray) and tmpShip.maxShields):
+            for progressBar in shieldArray:
+                progressBar.place(x=tmp + 5, y=5)
+                tmp += (((lenGap+lenPro)/lenTotal)/tmpShip.maxShields)*(uiMetrics.systemsLFWidth)
+                i+=1
 
     ########################## SYSTEMS  #######################
     var.uiEnergyLabel.place(x = 10, y = 20) 
@@ -153,6 +168,7 @@ def declareSystemsTargets(var,root,shipLookup,staticUi,uiMetrics,shipTarget,uiEl
                 if(i%5==0):
                     j+=1
                     i=0
+
 
 def placeMenuUi(root,staticUi,uiMetrics):
     root.title("Main Menu")
@@ -258,8 +274,7 @@ def placeCustomGameUi(staticUi,uiMetrics):
 def placeSelectMenuUI(staticUi,uiMetrics):
     staticUi.levelOptionMenu.place(x=40,y=100)
     staticUi.button.place(x=40,y=150)
-    staticUi.desLabelFrame.place(x=440,y=650)
-    staticUi.objLabelFrame.place(x=40,y=600)
+    staticUi.desLabelFrame.place(x=440,y=600)
 
     i = 0
     staticUi.cryptonymLF.place(x=40,y=250)
@@ -267,12 +282,14 @@ def placeSelectMenuUI(staticUi,uiMetrics):
     staticUi.dateLF.place(x=40,y=250 + i * 70)
     i+=1
     staticUi.unitLF.place(x=40,y=250 + i * 70)
-    i+=1
+    i+=2
     staticUi.reconLF.place(x=40,y=250 + i * 70)
     i+=1
     staticUi.codeLF.place(x=40,y=250 + i * 70)
     i+=1
     staticUi.threatLF.place(x=40,y=250 + i * 70)
+    i+=1
+    staticUi.objLabelFrame.place(x=40,y=250 + i * 70)
 
     (staticUi.missionCanvas).place(x=uiMetrics.msCanvasX, y=uiMetrics.msCanvasY)
     (staticUi.exitToMenuButton).place(x=uiMetrics.msCanvasX + uiMetrics.msCanvasWidth + 40, y=uiMetrics.msCanvasY)

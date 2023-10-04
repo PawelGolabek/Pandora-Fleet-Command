@@ -60,7 +60,7 @@ def missionSelectScreen(root,config,uiMenuElements,uiMetrics):
     
     uiElements = naglowek.dynamic_object()
     desLabelVar = StringVar(root)
-    uiElements.desLabelFrame = ttk.Labelframe(style = 'GreyBig.TLabelframe', width = 800,height = 300, text = 'Mission Briefing')
+    uiElements.desLabelFrame = ttk.Labelframe(style = 'GreyBig.TLabelframe', width = 800,height = 350, text = 'Mission Briefing')
     desLabelVar.set("Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
     uiElements.desLabel = ttk.Label(uiElements.desLabelFrame,style = 'GreyBig.TLabel', textvariable=desLabelVar,anchor='w',justify = LEFT,wraplength=500)
     uiElements.desLabel.place(x=0,y=0)
@@ -78,7 +78,7 @@ def missionSelectScreen(root,config,uiMenuElements,uiMetrics):
     uiElements.dateL.place(x=0,y=0)
 
     unitLVar = StringVar(root)
-    uiElements.unitLF = ttk.Labelframe(style = 'GreyBig.TLabelframe', width = 350, height = 70, text = 'Unit')
+    uiElements.unitLF = ttk.Labelframe(style = 'GreyBig.TLabelframe', width = 350, height = 140, text = 'Unit')
     unitLVar.set("")
     uiElements.unitL = ttk.Label(uiElements.unitLF,style = 'GreyBig.TLabel', textvariable=unitLVar,anchor='w',justify = LEFT,wraplength=330)
     uiElements.unitL.place(x=0,y=0)
@@ -102,7 +102,7 @@ def missionSelectScreen(root,config,uiMenuElements,uiMetrics):
     uiElements.threatL.place(x=0,y=0)
 
     objLabelVar = StringVar(root)
-    uiElements.objLabelFrame = ttk.Labelframe(style = 'GreyBig.TLabelframe', width = 350, height = 350, text = 'Mission Objectives')
+    uiElements.objLabelFrame = ttk.Labelframe(style = 'GreyBig.TLabelframe', width = 350, height = 210, text = 'Mission Objectives')
     objLabelVar.set("")
     uiElements.objLabel = ttk.Label(uiElements.objLabelFrame,style = 'GreyBig.TLabel', textvariable=objLabelVar,anchor='w',justify = LEFT,wraplength=330)
     uiElements.objLabel.place(x=0,y=0)

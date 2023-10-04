@@ -1,10 +1,27 @@
 import math
 from tkinter import *
+import tkinter.ttk as ttk
+from threading import Thread
 
 import src.naglowek as naglowek
 from src.ammunitionType import *
 from src.colorCommands import rgbtohex
+from src.canvasCalls import *
+from src.rootCommands import *
 
+
+class MyThread(Thread):
+    """
+    A threading example
+    """
+
+    def __init__(self, name):
+        """Initialize the thread"""
+        Thread.__init__(self)
+        self.name = name
+
+    def run(self):
+        print(msg)
     
 class laser():
     def __init__(self, xPos=300, yPos=300, targetXPos=300, targetYPos=300, color = rgbtohex(22,22,22), ttl = 10): 
@@ -161,72 +178,90 @@ def putTracer(ship,var,gameRules,uiMetrics): # rotate and move the chosen ship
         del currentTracer
         
 def updateLabels(uiElements,shipLookup,var):
-    i = shipCounter = 0
-    targetLabels = [uiElements.playerLabels,uiElements.playerLabels2,uiElements.playerLabels3, uiElements.enemyLabels,uiElements.enemyLabels2,uiElements.enemyLabels3]
-    for label in targetLabels:
-        if(shipCounter == var.shipChoice):
-            uiElements.systemLFs[shipCounter].config(style = 'Green.TLabelframe')
-        else:
-            uiElements.systemLFs[shipCounter].config(style = 'Grey.TLabelframe')
-        if(not shipLookup[shipCounter].owner == 'player1'):
-            uiElements.systemLFs[shipCounter].config(style = 'DarkRed.TLabelframe')
-            
-        label[0].config(text = "Hull: " )
-        label[1].config(text = str(shipLookup[shipCounter].hp))
-        label[2].config(text = "Armor: " )
-        label[3].config(text = str(shipLookup[shipCounter].ap)) 
-        label[4].config(text = "") 
+# Create two threads as follows
+    i = 0
+    try:
+        Thread.start_new_thread(updateLabel, (uiElements,shipLookup,var,0))
+        i += 1
+        Thread.start_new_thread(updateLabel, (uiElements,shipLookup,var,1))
+        i += 1
+        Thread.start_new_thread(updateLabel, (uiElements,shipLookup,var,2))
+        i += 1
+        Thread.start_new_thread(updateLabel, (uiElements,shipLookup,var,3))
+        i += 1
+        Thread.start_new_thread(updateLabel, (uiElements,shipLookup,var,4))
+        i += 1
+        Thread.start_new_thread(updateLabel, (uiElements,shipLookup,var,5))
+        i += 1
+    except:
+        print ("Error: unable to start thread" + str(i))
 
-        label[5].config(text = "System: ")
-        label[6].config(text = "Readiness: ")
-        label[7].config(text = "Integrity: ")
-        label[8].config(text = "Heat: ")
-        label[9].config(text = "Energy: ")
-
-        j = 10
-
-        while(i<len(shipLookup[shipCounter].systemSlots)):
-            system = shipLookup[shipCounter].systemSlots[i]
-            label[j].config(text = system.name)
-            readiness = round((abs(system.maxCooldown-system.cooldown)/float(system.maxCooldown))*100.0)
-            if(readiness == 100):
-                label[j+1].config(style = "Green.TLabel")
-            elif(readiness < 30):
-                label[j+1].config(style = "Red.TLabel")
-            elif(readiness > 70):
-                label[j+1].config(style = "Blue.TLabel")
-            else:
-                label[j+1].config(style = "Yellow.TLabel")
-            label[j+1].config(text = str(readiness))
-            integrity = system.integrity
-            if(integrity == system.maxIntegrity):
-                label[j+2].config(style = "Green.TLabel")
-            elif(integrity < system.maxIntegrity * 0.3):
-                label[j+2].config(style = "Red.TLabel")
-            elif(integrity > system.maxIntegrity * 0.7):
-                label[j+2].config(style = "Blue.TLabel")
-            else:
-                label[j+2].config(style = "Yellow.TLabel")
-            label[j+2].config(text = str(integrity))
-
-            if(system.heat < 70):
-                label[j+3].config(style = "Blue.TLabel")
-            if(system.heat < 30):
-                label[j+3].config(style = "Green.TLabel")
-            elif(system.heat > 200):
-                label[j+3].config(style = "Red.TLabel")
-            else:
-                label[j+3].config(style = "Yellow.TLabel")
-            label[j+3].config(text = str(system.heat))
-            label[j+4].config(text = str(system.energy))
-            label[j+2].config(anchor = E)
-            label[j+3].config(anchor = E)
-            label[j+4].config(anchor = E)
-            i += 1
-            j += 5
-        j = 10
-        i = 0
-        shipCounter += 1
+ #   i = shipCounter = 0
+ #   targetLabels = [uiElements.playerLabels,uiElements.playerLabels2,uiElements.playerLabels3, uiElements.enemyLabels,uiElements.enemyLabels2,uiElements.enemyLabels3]
+ #   for label in targetLabels:
+ #       if(shipCounter == var.shipChoice):
+ #           uiElements.systemLFs[shipCounter].config(style = 'Green.TLabelframe')
+ #       else:
+ #           uiElements.systemLFs[shipCounter].config(style = 'Grey.TLabelframe')
+ #       if(not shipLookup[shipCounter].owner == 'player1'):
+ #           uiElements.systemLFs[shipCounter].config(style = 'DarkRed.TLabelframe')
+ #           
+ #       label[0].config(text = "Hull: " )
+ #       label[1].config(text = str(shipLookup[shipCounter].hp))
+ #       label[2].config(text = "Armor: " )
+ #       label[3].config(text = str(shipLookup[shipCounter].ap)) 
+ #       label[4].config(text = "") 
+#
+ #       label[5].config(text = "System: ")
+ #       label[6].config(text = "Readiness: ")
+ #       label[7].config(text = "Integrity: ")
+ #       label[8].config(text = "Heat: ")
+ #       label[9].config(text = "Energy: ")
+#
+ #       j = 10
+#
+ #       while(i<len(shipLookup[shipCounter].systemSlots)):
+ #           system = shipLookup[shipCounter].systemSlots[i]
+ #           label[j].config(text = system.name)
+ #           readiness = round((abs(system.maxCooldown-system.cooldown)/float(system.maxCooldown))*100.0)
+ #           if(readiness == 100):
+ #               label[j+1].config(style = "Green.TLabel")
+ #           elif(readiness < 30):
+ #               label[j+1].config(style = "Red.TLabel")
+ #           elif(readiness > 70):
+ #               label[j+1].config(style = "Blue.TLabel")
+ #           else:
+ #               label[j+1].config(style = "Yellow.TLabel")
+ #           label[j+1].config(text = str(readiness))
+ #           integrity = system.integrity
+ #           if(integrity == system.maxIntegrity):
+ #               label[j+2].config(style = "Green.TLabel")
+ #           elif(integrity < system.maxIntegrity * 0.3):
+ #               label[j+2].config(style = "Red.TLabel")
+ #           elif(integrity > system.maxIntegrity * 0.7):
+ #               label[j+2].config(style = "Blue.TLabel")
+ #           else:
+ #               label[j+2].config(style = "Yellow.TLabel")
+ #           label[j+2].config(text = str(integrity))
+#
+ #           if(system.heat < 70):
+ #               label[j+3].config(style = "Blue.TLabel")
+ #           if(system.heat < 30):
+ #               label[j+3].config(style = "Green.TLabel")
+ #           elif(system.heat > 200):
+ #               label[j+3].config(style = "Red.TLabel")
+ #           else:
+ #               label[j+3].config(style = "Yellow.TLabel")
+ #           label[j+3].config(text = str(system.heat))
+ #           label[j+4].config(text = str(system.energy))
+ #           label[j+2].config(anchor = E)
+ #           label[j+3].config(anchor = E)
+ #           label[j+4].config(anchor = E)
+ #           i += 1
+ #           j += 5
+ #       j = 10
+ #       i = 0
+ #       shipCounter += 1
 
 def updateLabel(uiElements,shipLookup,var,shipId):
     i = 0
@@ -533,52 +568,78 @@ def drawLandmarks(var,canvas,uiIcons):
             canvas.elements.append(image)
 
 
-def checkForKilledShips(events,shipLookup,var,uiElements):
+def checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas):
     shipsToKill = []
     for ship1 in var.ships:
         if(ship1.hp < 1 and not ship1.killed): 
             shipsToKill.append(ship1)
     for ship2 in shipsToKill:
-        killShip(ship2.id,var,events,shipLookup,uiElements)
+        killShip(ship2.id,var,events,shipLookup,uiElements,uiMetrics,root,canvas)
     if(len(shipsToKill)):
         updateLabels(uiElements,shipLookup,var)
 
 
-def killShip(shipId,var,events,shipLookup,uiElements):
-    ship = shipLookup[shipId]
+def killShip(shipId,var,events,shipLookup,uiElements,uiMetrics,root,canvas):
+    print(shipId)
+    ship1 = shipLookup[shipId]
     shipLookup[shipId].killed = True
     for missle in var.currentMissles:
-        if shipLookup[missle.target] == ship.id:
+        if shipLookup[missle.target] == ship1.id:
             var.currentMissles.remove(missle)
     noEnemies = True
-    for progressBar in ship.shieldsLabel:
+    for progressBar in ship1.shieldsLabel:
         progressBar['value'] = 0
     for ship in var.ships:
+        print("id" + str(ship.id))
         if(not ship.owner == "player1"):
             noEnemies = False
             break
-    if(ship.id == 0):
-        (var.shipChoiceRadioButtons).remove(uiElements.shipChoiceRadioButton0)
-        (uiElements.shipChoiceRadioButton0).config(state = DISABLED)
-        (uiElements.shipChoiceRadioButton0).config(text = "Destroyed")
+    if(ship1.id == 0):
+        uiElements.RadioElementsList[0].config(state = DISABLED)
+        uiElements.RadioElementsList[0].config(text = "Destroyed")
         var.radio0Hidden = True
-    elif(ship.id == 1):
-        (var.shipChoiceRadioButtons).remove(uiElements.shipChoiceRadioButton1)
-        (uiElements.shipChoiceRadioButton1).config(state = DISABLED)
-        (uiElements.shipChoiceRadioButton1).config(text = "Destroyed")
+        choiceMade = False
+        for ship in var.ships:
+            if(not ship.killed):
+                var.shipChosen = ship.id
+                choiceMade = True
+                break
+        if(not choiceMade):
+            var.shipChosen = 10
+
+    elif(ship1.id == 1):
+        uiElements.RadioElementsList[1].config(state = DISABLED)
+        uiElements.RadioElementsList[1].config(text = "Destroyed")
         var.radio1Hidden = True
-    elif(ship.id == 2):
-        (var.shipChoiceRadioButtons).remove(uiElements.shipChoiceRadioButton2)
-        (uiElements.shipChoiceRadioButton2).config(state = DISABLED)
-        (uiElements.shipChoiceRadioButton2).config(text = "Destroyed")
+        choiceMade = False
+        for ship in var.ships:
+            if(not ship.killed):
+                var.shipChosen = ship.id
+                choiceMade = True
+                break
+        if(not choiceMade):
+            var.shipChosen = 10
+
+    elif(ship1.id == 2):
+        uiElements.RadioElementsList[2].config(state = DISABLED)
+        uiElements.RadioElementsList[2].config(text = "Destroyed")
         var.radio2Hidden = True
+        choiceMade = False
+        for ship in var.ships:
+            if(not ship.killed):
+                var.shipChosen = ship.id
+                choiceMade = True
+                break
+        if(not choiceMade):
+            var.shipChosen = 10
+
 
     if noEnemies and not events.showedWin:
         window = Toplevel()
         label = Label(window, text='yes, you win')
         label.place(x=0, y=0)
         events.showedWin = True
-    elif(ship.owner == 'player1' and events.playerDestroyed == False):
+    elif(ship1.owner == 'player1' and events.playerDestroyed == False):
         events.playerDestroyed = True
         window = Toplevel()
         label = Label(window, text='yes, you looose')
@@ -587,9 +648,28 @@ def killShip(shipId,var,events,shipLookup,uiElements):
         if element.id == shipId:
             (var.ships).remove(element)
             break
+    updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas)
 
+def clearUtilityChoice(uiElements,var):
+    for widget in (uiElements.systemsLF).winfo_children():
+        widget.destroy()
+    (uiElements.systemsLF).destroy()
+    uiElements.uiSystems = []
+    uiElements.uiSystemsProgressbars = []
 
-def updateShips(var,uiMetrics,gameRules,shipLookup,events,uiElements):  # rotate and move the chosen ship
+def updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas):
+    clearUtilityChoice(uiElements,var)
+    shipChosen = shipLookup[var.shipChoice]
+    uiElements.systemsLF = ttk.Labelframe(root,style = 'Grey.TLabelframe', width=uiMetrics.canvasWidth*4/5, \
+                                                    height = uiMetrics.systemScalesLFHeight, text= shipChosen.name + " systems", \
+                                                    borderwidth=2, relief="groove")
+
+    var.uiEnergyLabel = ttk.Label(uiElements.systemsLF,style = 'Grey.TLabel', width=20, text = "Energy remaining: " + str(shipChosen.energy), font = "16")
+    hideBattleUi(uiElements.staticUi,uiElements)
+    placeBattleUi(uiElements,uiMetrics,canvas,var,shipLookup,root,uiElements)
+       
+
+def updateShips(var,uiMetrics,gameRules,shipLookup,events,uiElements,root,canvas):  # rotate and move the chosen ship
     for ship in var.ships:
         # check for terrain
         if(0 > ship.xPos):
@@ -619,7 +699,7 @@ def updateShips(var,uiMetrics,gameRules,shipLookup,events,uiElements):  # rotate
         elif(colorWeight < 200):
             movementPenality = gameRules.movementPenalityHard
             dealDamage(shipLookup[ship.id], 1, var,-1, 1,uiElements,shipLookup)
-            checkForKilledShips(events,shipLookup,var,uiElements)
+            checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas)
         else:
             movementPenality = 0.000001  # change
 

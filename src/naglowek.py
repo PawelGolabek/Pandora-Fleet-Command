@@ -64,10 +64,12 @@ class global_var():
         self.misslesShot = 0
         self.currentMissles = []
         self.lasers = []
-        self.radio0hidden = False
-        self.radio1hidden = False
-        self.radio2hidden = False
+        self.radio0Hidden = False
+        self.radio1Hidden = False
+        self.radio2Hidden = False
         # DRAW DATA
+        self.paused = False
+        self.pausedLVisible = False
         self.ovalsList = []
         self.availableOvalsList = []
         # ZOOM
@@ -107,6 +109,8 @@ class ui_metrics():
     systemsLFWidth = 400
     systemScalesLFWidth = systemsLFWidth
     systemScaleWidth = 160
+    pausedLWidth = 100
+    pausedLHeight = 100
     canvasX = 440
     canvasY = 10
     shipDataX = canvasX

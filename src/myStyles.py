@@ -9,25 +9,11 @@ from ttkbootstrap.constants import *
 def loadStyles(root,s):
   x=10
   root.config(bg="#202020")
-  s.map('Big.TButton')
-  s.map('Grey.TLabelframe')
-  s.map('GreyBig.TLabelframe')
-  s.map('Grey.TLabel')
-  s.map('Green.TLabelframe')
-  s.map('Green.TLabel')
-  s.map('DarkRed.TLabelframe')
-  s.map('DarkRed.TLabel')
-  s.map('Blue.THorizontal.Progressbar')
-  s.map('Red.Horizontal.TProgressbar')
-  s.map('Red.TCheckbutton')
-  s.map("Green.TLabel")
-  s.map("Red.TLabel")
-  s.map("Yellow.TLabel")
-  s.map("TMenubutton")
   s.configure('Grey.TLabelframe', background='#202020',bordercolor = '#505050',lightcolor = "#0F4F0F", darkcolor = "#044404")
   s.configure('Grey.TLabelframe.Label', fg = "#EFEFEF", background='#202020',lightcolor = "#0F4F0F", darkcolor = "#FAFAFA",foreground = "#FAFAFA")
   s.configure('GreyBig.TLabelframe', background='#202020',bordercolor = '#505050',lightcolor = "#0F4F0F", darkcolor = "#044404")
   s.configure('GreyBig.TLabelframe.Label', fg = "#EFEFEF", background='#202020',lightcolor = "#0F4F0F", darkcolor = "#FAFAFA",foreground = "#FAFAFA")
+  s.configure('Pause.TLabel', background='#202020',lightcolor = "#0F4F0F", darkcolor = "#FAFAFA",foreground = "#bfbfbf", font= ('Calibri 16 normal'),borderwidth=2, relief="groove", bordercolor = "green", width=10, height = 40, padding = 3,anchor=CENTER)
   s.configure('GreyBig.TLabel', background='#202020',lightcolor = "#0F4F0F", darkcolor = "#FAFAFA",foreground = "#bfbfbf", font= ('Calibri 16 normal'))
   s.configure('Green.TLabelframe', background='#202020',bordercolor = '#505050',lightcolor = "#0FAF0F", darkcolor = "#0AAF0A")
   s.configure('Green.TLabelframe.Label', fg = "#EFEFEF", background='#202020',lightcolor = "#0FAF0F", darkcolor = "#FAFAFA",foreground = "#FAFAFA")
@@ -46,6 +32,10 @@ def loadStyles(root,s):
   s.configure("Yellow.TLabel", foreground = 'yellow', background = '#202020',justify='center')
   s.configure("Blue.TLabel", foreground = '#4582ec', background = '#202020',justify='center')
   s.configure("TMenubutton", background="#4582ec", foreground = "white", padding = 3)
+  s.map('Grey.TRadiobutton',
+        foreground=[('disabled', 'black'),
+                    ('pressed', 'white'),
+                    ('active', '#505050')])
 # print(sv_ttk.get_theme())  # Get what theme the app uses (either 'light' or 'dark')
 
  #   s.configure('TButton', font =

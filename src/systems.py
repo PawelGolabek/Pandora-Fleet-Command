@@ -112,12 +112,12 @@ integrity: {} \nmin energy: {} \nmax energy: {}\ncooling: {} \nmass: {}\ncost: {
 ").format(self.integrity,self.minEnergy,self.maxEnergy,self.cooling,self.mass,self.cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
-        if(self.cooldown <= 0 and True):
+        if(self.cooldown <= 0):
             i=40
             while(ship1.hp != ship1.maxHp and i>0):
                 ship1.hp+=1
                 i-=1
-            self.cooldown=self.maxCooldown
+            self.cooldown = self.maxCooldown
     def onAdding(self,ship):
         ship.mass += self.mass
         ship.cost += self.cost
@@ -362,7 +362,7 @@ mass: {}\ncost: {}\
 
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics): 
-        if(self.cooldown <= 0):
+        if(self.cooldown <= 0.0):
             if(shoot(var,self,ship1,ammunition_type.laser1adefault,ships,uiMetrics,shipLookup)):
                 self.cooldown = self.maxCooldown
                 self.heat += 20

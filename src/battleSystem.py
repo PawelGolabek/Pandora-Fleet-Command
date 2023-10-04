@@ -59,8 +59,8 @@ class ship():
                  hp=200, maxHp=None, ap=10000, maxAp=None, shields=3, maxShields = 3, xPos=300, yPos=300,energyLimit = 20,
                  ammunitionChoice=0, ammunitionNumberChoice=0, systemSlots = [],systemStatus = [],
                  detectionRange=200, xDir=0.0, yDir=1, turnRate=0.5, ghostPoints = [], signatures = [], speed=40, maxSpeed = 40,
-                 outlineColor="red",id = 1,signatureCounter=0):  # replace shot handler
-        # Init info                                             ## to handle shots when more than one enemy in range
+                 outlineColor="red",id = 1,signatureCounter=0):
+        # Init info                                             
         self.name = name
         self.owner = owner
         self.target = target
@@ -290,13 +290,13 @@ def getBonus(ship, boost):
 ############################################## MISSLES ##############################################
 
 
-def manageRockets(missles,shipLookup,var,events,uiElements,uiMetrics):    # manage mid-air munitions
+def manageRockets(missles,shipLookup,var,events,uiElements,uiMetrics,root,canvas):    # manage mid-air munitions
     for missle in missles:
         if(missle.sort == 'laser'):
             putLaser(missle,var,shipLookup)
             dealDamage(shipLookup[missle.target], missle.damage,var,missle.targetSystem, missle.heat,uiElements,shipLookup)
             missles.remove(missle)
-            checkForKilledShips(events,shipLookup,var,uiElements)
+            checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas)
             continue
         
         # check for terrain
@@ -495,8 +495,9 @@ def drawLasers(var,canvas,uiMetrics):
 def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root):
     #for ship in var.ships:
     #    print(str(ship.name) + " " + str(ship.killed))
-    if(var.drag==''):
+    if(var.drag=='' and not var.paused):
         canvas.delete('all')
+        hidePausedText(var,uiElements)
         updateScales(uiElements,var,shipLookup)
         if(var.frameTime % 7 == 0):
             if(shipLookup[var.labelCounter].hp >= 0):
@@ -516,12 +517,12 @@ def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,a
             root.title("TURN IN PROGRESS")
             var.systemTime = time.time()
             while(ticksToEndFrame < var.gameSpeed):
-                checkForKilledShips(events,shipLookup,var,uiElements)
+                checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas)
                 detectionCheck(var,uiMetrics)
-                updateShips(var,uiMetrics,gameRules,shipLookup,events,uiElements)
+                updateShips(var,uiMetrics,gameRules,shipLookup,events,uiElements,root,canvas)
                 manageLandmarks(var.landmarks,var.ships)
                 manageSystemTriggers(var.ships,var,shipLookup,uiMetrics)
-                manageRockets(var.currentMissles,shipLookup,var,events,uiElements,uiMetrics) 
+                manageRockets(var.currentMissles,shipLookup,var,events,uiElements,uiMetrics,root,canvas) 
                 updateShields(var.ships,var)
                 updateCooldowns(var.ships,var,shipLookup,uiMetrics)
                 updateHeat(var.ships)
@@ -534,7 +535,7 @@ def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,a
                 uiElements.timeElapsedProgressBar['value'] += 1
                 if(uiElements.timeElapsedProgressBar['value'] > var.turnLength):
                     root.title("AI IS THINKING")
-                    endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons)
+                    endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons,shipLookup)
                     break
         var.input = (var.mouseWheelUp or var.mouseWheelDown or (var.mouseButton3 and var.zoom != 1 and mouseOnCanvas(var,uiMetrics)) or var.mouseButton1 )
         newWindow(uiMetrics,var,canvas)
@@ -560,6 +561,8 @@ def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,a
             root.after(10, partial(update,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root))
         else:
             root.after(100, partial(update,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root))
+    else:
+        showPausedText(var,uiElements,uiMetrics)
 
 def newWindow(uiMetrics,var,canvas):
     canvas.delete(canvas.imageID)
@@ -656,12 +659,16 @@ def startTurn(uiElements,var,ships,gameRules,uiMetrics):
         object.config(state = DISABLED, background="#D0D0D0")
 
 
-def endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons): 
+def endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons,shipLookup): 
     var.turnInProgress = False
     for object in uiElements.UIElementsList:
         object.config(state = NORMAL, bg="#4582ec",highlightcolor = "white",fg = "white",highlightbackground = "#bfbfbf")
-    for object in uiElements.RadioElementsList:
-        object.config(state = NORMAL)
+    if(not var.radio0Hidden):
+        uiElements.RadioElementsList[0].config(state = NORMAL)
+    if(not var.radio1Hidden):
+        uiElements.RadioElementsList[1].config(state = NORMAL)
+    if(not var.radio2Hidden):
+        uiElements.RadioElementsList[2].config(state = NORMAL)
     for object in uiElements.uiSystems:
         object.config(state = NORMAL, bg="#4582ec",highlightcolor = "white")
     uiElements.gameSpeedScale.config(bg="#4582ec",highlightcolor = "white",fg = "white")
@@ -683,7 +690,17 @@ def endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons):
     drawLasers(var,canvas,uiMetrics)
     drawRockets(var,ammunitionType,canvas)
     updateShields(var.ships,var)
+    updateLabels(uiElements,shipLookup,var)
 
+def showPausedText(var,uiElements,uiMetrics):
+    if(var.pausedLVisible == False):
+        uiElements.pausedL.place(x = uiMetrics.canvasWidth/2-uiMetrics.pausedLWidth/2 - 2, y = uiMetrics.canvasHeight/2-uiMetrics.pausedLHeight/2 - 2)
+        var.pausedLVisible = True
+
+def hidePausedText(var,uiElements):
+    if(var.pausedLVisible == True):
+        uiElements.pausedL.place_forget()
+        var.pausedLVisible = False
 
 def updateScales(uiElements,var,shipLookup):
 
@@ -716,15 +733,33 @@ def updateCooldowns(ships,var,shipLookup,uiMetrics):
             #change if needed
             energyTicks = system.energy
             while(system.cooldown > 0 and energyTicks):
+                cooldownReduction = 2
                 if(system.heat < 70):
-                    system.cooldown -= 0.8
-                if(system.heat < 30):
-                    system.cooldown -= 1
+                    cooldownReduction -= 0.3
+                elif(system.heat < 30):
+                    cooldownReduction -= 0
                 elif(system.heat > 200):
-                    system.cooldown -= 0
+                    cooldownReduction -= 0.9
                 else:
-                    system.cooldown -= 0.3
+                    cooldownReduction -= 0.6
+                
+                if(system.integrity == system.maxIntegrity):
+                    cooldownReduction -= 0
+                elif(system.integrity == 0):
+                    energyTicks -= 1
+                    break
+                elif(system.integrity < system.maxIntegrity * 0.3):
+                    cooldownReduction -= 0.9
+                elif(system.integrity > system.maxIntegrity * 0.7):
+                    cooldownReduction -= 0.3
+                else:
+                    cooldownReduction -= 0.6
+                if(cooldownReduction > 0):
+                    system.cooldown -= cooldownReduction
                 energyTicks -= 1
+                if(system.cooldown < 0):
+                    system.cooldown = 0
+                    break
                 system.trigger(var,ship,ships,shipLookup,uiMetrics)
 
 def updateHeat(ships):
@@ -737,13 +772,13 @@ def updateHeat(ships):
                 while(system.heat > 0 and system.coolTicks):
                     system.coolTicks -= 1
                     if(system.heat < 70):
-                        system.heat -= 2
+                        system.heat -= 0.5
                     if(system.heat < 30):
                         system.heat -= 0
                     elif(system.heat > 200):
-                        system.heat -= 8
+                        system.heat -= 2
                     else:
-                        system.heat -= 4
+                        system.heat -= 1
             system.heat = round(system.heat*100)/100
             if(system.heat < 0):
                 system.heat = 0
@@ -782,8 +817,20 @@ def updateEnergy(var,uiElements,shipLookup):
         (var.uiEnergyLabel).config(foreground = "white")
         for radio in var.shipChoiceRadioButtons:
             radio.configure(state = NORMAL)
-            if(not var.turnInProgress):
-                (uiElements.startTurnButton).config(state = NORMAL)
+        disable = var.radio0Hidden
+        if(disable):
+            uiElements.RadioElementsList[0].config(state = DISABLED)
+        
+        disable = var.radio1Hidden
+        if(disable):
+            uiElements.RadioElementsList[1].config(state = DISABLED)
+    
+        disable = var.radio2Hidden
+        if(disable):
+            uiElements.RadioElementsList[2].config(state = DISABLED)
+
+        if(not var.turnInProgress):
+            (uiElements.startTurnButton).config(state = NORMAL)
     (var.uiEnergyLabel).config(text = "Energy left: " + str(shipChosen.energy))
     
 
@@ -818,26 +865,6 @@ def radioBox(shipLookup,uiElements,var,uiMetrics,root,canvas):
     updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas)
 
 
-
-def clearUtilityChoice(uiElements,var):
-    for widget in (uiElements.systemsLF).winfo_children():
-        widget.destroy()
-    (uiElements.systemsLF).destroy()
-    uiElements.uiSystems = []
-    uiElements.uiSystemsProgressbars = []
-
-
-def updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas):
-    clearUtilityChoice(uiElements,var)
-    shipChosen = shipLookup[var.shipChoice]
-    uiElements.systemsLF = ttk.Labelframe(root,style = 'Grey.TLabelframe', width=uiMetrics.canvasWidth*4/5, \
-                                                    height = uiMetrics.systemScalesLFHeight, text= shipChosen.name + " systems", \
-                                                    borderwidth=2, relief="groove")
-
-    var.uiEnergyLabel = ttk.Label(uiElements.systemsLF,style = 'Grey.TLabel', width=20, text = "Energy remaining: " + str(shipChosen.energy), font = "16")
-    hideBattleUi(uiElements.staticUi,uiElements)
-    placeBattleUi(uiElements,uiMetrics,canvas,var,shipLookup,root,uiElements)
-        
 def mouseOnCanvas(var,uiMetrics):
     if(var.pointerX > uiMetrics.canvasX and var.pointerX <
        (uiMetrics.canvasX + uiMetrics.canvasWidth) and var.pointerY >
@@ -928,11 +955,19 @@ def declareShips(var,config):
 def bindInputs(root,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType):
     root.bind('<Motion>', lambda e: motion(e, var,root))
     root.bind('<Button-1>', lambda e: mouseButton1(e, var))
+    root.bind('<space>', lambda e: startTurn(uiElements,var,var.ships,gameRules,uiMetrics))
+    root.bind('p', lambda e: pauseGame(e,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root))
     root.bind('<Button-2>', lambda e: mouseButton3(e, var))
     root.bind('<ButtonRelease-2>', lambda e: mouseButton3up(e, var))
     root.bind('<MouseWheel>', lambda e: mouseWheel(e, var,uiMetrics))
     root.bind('<Configure>', lambda e: dragging(e,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root))
 
+def pauseGame(e,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root):
+    if(var.paused):
+        var.paused = False
+        root.after(1, partial(update,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root))
+    else:
+        var.paused = True
 
 def motion(event,var,root):
     var.pointerX = root.winfo_pointerx() - root.winfo_rootx()
@@ -1162,7 +1197,11 @@ def resume(config,root,menuUiElements):
         var.mask = createMask(var,uiMetrics)
 
         uiElements.UIElementsList = []
-        uiElements.RadioElementsList = []
+        uiElements.RadioElementsList = []    
+        
+        
+        
+        uiElements.pausedL = ttk.Label(canvas, style = "Pause.TLabel", text = "Paused")
 
         uiElements.gameSpeedScale = tk.Scale(root, orient=HORIZONTAL, length=100, from_=1, to=16)
         uiElements.gameSpeedL = ttk.Label(root, style = 'Grey.TLabel', text = "Playback Speed:")
@@ -1176,6 +1215,7 @@ def resume(config,root,menuUiElements):
         uiElements.exitButton = tk.Button(root, text="Exit", command=exit)
         uiElements.exitToMenuButton = tk.Button(root, text="Exit to menu", command=lambda:[placeMenuUi(root,menuUiElements,uiMetrics), hideBattleUi(uiElements.staticUi,uiElements), finishSetTrue(var),saveCurrentGame(var)], width = 20, height= 7)
 
+        (uiElements.staticUi).append(uiElements.pausedL)
         (uiElements.staticUi).append(uiElements.gameSpeedScale)
         (uiElements.staticUi).append(uiElements.gameSpeedL)
         (uiElements.staticUi).append(uiElements.timeElapsedLabel)
@@ -1247,8 +1287,6 @@ def resume(config,root,menuUiElements):
         uiElementsToPlace = uiElements
         
 
-        var.shipChoiceRadioButtons = []
-        radioCommand = partial(radioBox,shipLookup , uiElements,var,uiMetrics,root,canvas)
 
 ##################################
 
@@ -1263,12 +1301,12 @@ def resume(config,root,menuUiElements):
         targets = [uiElements.playerLabels, uiElements.playerLabels2, uiElements.playerLabels3, uiElements.enemyLabels, uiElements.enemyLabels2, uiElements.enemyLabels3]
 
 
-        (uiElements.staticUi).append(uiElements.enemyLF)
-        (uiElements.staticUi).append(uiElements.enemyLF2)
-        (uiElements.staticUi).append(uiElements.enemyLF3)
         (uiElements.staticUi).append(uiElements.playerLF)
         (uiElements.staticUi).append(uiElements.playerLF2)
         (uiElements.staticUi).append(uiElements.playerLF3)
+        (uiElements.staticUi).append(uiElements.enemyLF)
+        (uiElements.staticUi).append(uiElements.enemyLF2)
+        (uiElements.staticUi).append(uiElements.enemyLF3)
 
         targetLFs = [uiElements.playerLF,uiElements.playerLF2,uiElements.playerLF3,uiElements.enemyLF,uiElements.enemyLF2,uiElements.enemyLF3]
         shipID = 0
@@ -1305,21 +1343,25 @@ def resume(config,root,menuUiElements):
         uiElements.systemLFs.append(uiElements.enemyLF3)
 
         # ships choice
+        var.shipChoiceRadioButtons = []
+        radioCommand = partial(radioBox,shipLookup , uiElements,var,uiMetrics,root,canvas)
         var.shipChoice = (var.player).name
-        uiElements.shipChoiceRadioButton0 = ttk.Radiobutton(root, style = "Grey.TRadiobutton", text=(var.ships[0]).name, variable=var.radio, value=0, command=radioCommand)
-        uiElements.shipChoiceRadioButton1 = ttk.Radiobutton(root, style = "Grey.TRadiobutton", text=(var.ships[1]).name, variable=var.radio, value=1, command=radioCommand)
-        uiElements.shipChoiceRadioButton2 = ttk.Radiobutton(root, style = "Grey.TRadiobutton", text=(var.ships[2]).name, variable=var.radio, value=2, command=radioCommand)
-        (uiElements.RadioElementsList).append(uiElements.shipChoiceRadioButton0)
-        (uiElements.RadioElementsList).append(uiElements.shipChoiceRadioButton1)
-        (uiElements.RadioElementsList).append(uiElements.shipChoiceRadioButton2)
 
-        (var.shipChoiceRadioButtons).append(uiElements.shipChoiceRadioButton0)
-        (var.shipChoiceRadioButtons).append(uiElements.shipChoiceRadioButton1)
-        (var.shipChoiceRadioButtons).append(uiElements.shipChoiceRadioButton2)
+        (uiElements.RadioElementsList).append(ttk.Radiobutton(root, style = "Grey.TRadiobutton", text=(shipLookup[0]).name, variable=var.radio, value=0, command=radioCommand))
+        (uiElements.RadioElementsList).append(ttk.Radiobutton(root, style = "Grey.TRadiobutton", text=(shipLookup[1]).name, variable=var.radio, value=1, command=radioCommand))
+        (uiElements.RadioElementsList).append(ttk.Radiobutton(root, style = "Grey.TRadiobutton", text=(shipLookup[2]).name, variable=var.radio, value=2, command=radioCommand))
+
+        uiElements.shipChoiceRadioButton0 = uiElements.RadioElementsList[0]
+        uiElements.shipChoiceRadioButton1 = uiElements.RadioElementsList[1]
+        uiElements.shipChoiceRadioButton2 = uiElements.RadioElementsList[2]
+
+        (var.shipChoiceRadioButtons).append(uiElements.RadioElementsList[0])
+        (var.shipChoiceRadioButtons).append(uiElements.RadioElementsList[1])
+        (var.shipChoiceRadioButtons).append(uiElements.RadioElementsList[2])
         
-        (uiElements.staticUi).append(uiElements.shipChoiceRadioButton0)
-        (uiElements.staticUi).append(uiElements.shipChoiceRadioButton1)
-        (uiElements.staticUi).append(uiElements.shipChoiceRadioButton2)
+        (uiElements.staticUi).append(uiElements.RadioElementsList[0])
+        (uiElements.staticUi).append(uiElements.RadioElementsList[1])
+        (uiElements.staticUi).append(uiElements.RadioElementsList[2])
 
         radioBox(shipLookup,uiElements,var,uiMetrics,root,canvas)
 
@@ -1327,12 +1369,9 @@ def resume(config,root,menuUiElements):
         
         # first update 
 
-        print(var.ships)
-        checkForKilledShips(events,shipLookup,var,uiElements)
-        print(var.ships)
+        checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas)
         detectionCheck(var,uiMetrics)
-        endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons)
-        print(shipLookup[2].killed)
+        endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons,shipLookup)
         newWindow(uiMetrics,var,canvas)
         updateLabels(uiElements,shipLookup,var)
 
