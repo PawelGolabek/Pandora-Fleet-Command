@@ -1,7 +1,8 @@
 import math
 from tkinter import *
 import tkinter.ttk as ttk
-from threading import Thread
+import threading
+import time
 
 import src.naglowek as naglowek
 from src.ammunitionType import *
@@ -10,18 +11,86 @@ from src.canvasCalls import *
 from src.rootCommands import *
 
 
-class MyThread(Thread):
-    """
-    A threading example
-    """
+class tracer():
+    def __init__(self, xPos=300, yPos=300, xDir=0.0, yDir=1.0, turnRate=0.5, speed=40): 
+        self.xPos = xPos
+        self.yPos = yPos
+        self.xDir = xDir
+        self.yDir = yDir
+        self.turnRate = turnRate
+        self.speed = speed
+        self.moveOrderX = None
+        self.moveOrderY = None
 
-    def __init__(self, name):
-        """Initialize the thread"""
-        Thread.__init__(self)
-        self.name = name
 
-    def run(self):
-        print(msg)
+def updateLabel(uiElements,shipLookup,var,shipId):
+    i = 0
+    shipCounter = shipId
+    targetLabels = [uiElements.playerLabels,uiElements.playerLabels2,uiElements.playerLabels3, 
+                    uiElements.enemyLabels,uiElements.enemyLabels2,uiElements.enemyLabels3]
+    targetLabel = targetLabels[shipId]
+    if(shipCounter == var.shipChoice):
+        uiElements.systemLFs[shipCounter].config(style = 'Green.TLabelframe')
+    else:
+        uiElements.systemLFs[shipCounter].config(style = 'Grey.TLabelframe')
+    if(not shipLookup[shipCounter].owner == 'player1'):
+        uiElements.systemLFs[shipCounter].config(style = 'DarkRed.TLabelframe')
+        
+    targetLabel[0].config(text = "Hull: " )
+    targetLabel[1].config(text = str(shipLookup[shipCounter].hp))
+    targetLabel[2].config(text = "Armor: " )
+    targetLabel[3].config(text = str(shipLookup[shipCounter].ap)) 
+    targetLabel[4].config(text = "") 
+
+    targetLabel[5].config(text = "System: ")
+    targetLabel[6].config(text = "Readiness: ")
+    targetLabel[7].config(text = "Integrity: ")
+    targetLabel[8].config(text = "Heat: ")
+    targetLabel[9].config(text = "Energy: ")
+
+    j = 10
+
+    while(i<len(shipLookup[shipCounter].systemSlots)):
+        system = shipLookup[shipCounter].systemSlots[i]
+        targetLabel[j].config(text = system.name)
+        readiness = round((abs(system.maxCooldown-system.cooldown)/float(system.maxCooldown))*100.0)
+        if(readiness == 100):
+            targetLabel[j+1].config(style = "Green.TLabel")
+        elif(readiness < 30):
+            targetLabel[j+1].config(style = "Red.TLabel")
+        elif(readiness > 70):
+            targetLabel[j+1].config(style = "Blue.TLabel")
+        else:
+            targetLabel[j+1].config(style = "Yellow.TLabel")
+        targetLabel[j+1].config(text = str(readiness))
+        integrity = system.integrity
+        if(integrity == system.maxIntegrity):
+            targetLabel[j+2].config(style = "Green.TLabel")
+        elif(integrity < system.maxIntegrity * 0.3):
+            targetLabel[j+2].config(style = "Red.TLabel")
+        elif(integrity > system.maxIntegrity * 0.7):
+            targetLabel[j+2].config(style = "Blue.TLabel")
+        else:
+            targetLabel[j+2].config(style = "Yellow.TLabel")
+        targetLabel[j+2].config(text = str(integrity))
+
+        if(system.heat < 30):
+            targetLabel[j+3].config(style = "Green.TLabel")
+        elif(system.heat < 70):
+            targetLabel[j+3].config(style = "Blue.TLabel")
+        elif(system.heat > 200):
+            targetLabel[j+3].config(style = "Red.TLabel")
+        else:
+            targetLabel[j+3].config(style = "Yellow.TLabel")
+        targetLabel[j+3].config(text = str(system.heat))
+        targetLabel[j+4].config(text = str(system.energy))
+        targetLabel[j+2].config(anchor = E)
+        targetLabel[j+3].config(anchor = E)
+        targetLabel[j+4].config(anchor = E)
+        i += 1
+        j += 5
+    return 0
+
     
 class laser():
     def __init__(self, xPos=300, yPos=300, targetXPos=300, targetYPos=300, color = rgbtohex(22,22,22), ttl = 10): 
@@ -176,159 +245,25 @@ def putTracer(ship,var,gameRules,uiMetrics): # rotate and move the chosen ship
                 createGhostPoint(ship, currentTracer.xPos, currentTracer.yPos)
             currentTracer.ttl -= 1
         del currentTracer
-        
+         
 def updateLabels(uiElements,shipLookup,var):
 # Create two threads as follows
+    updateLabel(uiElements,shipLookup,var,0)
     i = 0
-    try:
-        Thread.start_new_thread(updateLabel, (uiElements,shipLookup,var,0))
-        i += 1
-        Thread.start_new_thread(updateLabel, (uiElements,shipLookup,var,1))
-        i += 1
-        Thread.start_new_thread(updateLabel, (uiElements,shipLookup,var,2))
-        i += 1
-        Thread.start_new_thread(updateLabel, (uiElements,shipLookup,var,3))
-        i += 1
-        Thread.start_new_thread(updateLabel, (uiElements,shipLookup,var,4))
-        i += 1
-        Thread.start_new_thread(updateLabel, (uiElements,shipLookup,var,5))
-        i += 1
-    except:
-        print ("Error: unable to start thread" + str(i))
+    n = 5
+    t1 = []
+    while(i<n):
+        t1.append(threading.Thread(target=updateLabel, args=(uiElements,shipLookup,var,i,)))
+        i+=1
 
- #   i = shipCounter = 0
- #   targetLabels = [uiElements.playerLabels,uiElements.playerLabels2,uiElements.playerLabels3, uiElements.enemyLabels,uiElements.enemyLabels2,uiElements.enemyLabels3]
- #   for label in targetLabels:
- #       if(shipCounter == var.shipChoice):
- #           uiElements.systemLFs[shipCounter].config(style = 'Green.TLabelframe')
- #       else:
- #           uiElements.systemLFs[shipCounter].config(style = 'Grey.TLabelframe')
- #       if(not shipLookup[shipCounter].owner == 'player1'):
- #           uiElements.systemLFs[shipCounter].config(style = 'DarkRed.TLabelframe')
- #           
- #       label[0].config(text = "Hull: " )
- #       label[1].config(text = str(shipLookup[shipCounter].hp))
- #       label[2].config(text = "Armor: " )
- #       label[3].config(text = str(shipLookup[shipCounter].ap)) 
- #       label[4].config(text = "") 
-#
- #       label[5].config(text = "System: ")
- #       label[6].config(text = "Readiness: ")
- #       label[7].config(text = "Integrity: ")
- #       label[8].config(text = "Heat: ")
- #       label[9].config(text = "Energy: ")
-#
- #       j = 10
-#
- #       while(i<len(shipLookup[shipCounter].systemSlots)):
- #           system = shipLookup[shipCounter].systemSlots[i]
- #           label[j].config(text = system.name)
- #           readiness = round((abs(system.maxCooldown-system.cooldown)/float(system.maxCooldown))*100.0)
- #           if(readiness == 100):
- #               label[j+1].config(style = "Green.TLabel")
- #           elif(readiness < 30):
- #               label[j+1].config(style = "Red.TLabel")
- #           elif(readiness > 70):
- #               label[j+1].config(style = "Blue.TLabel")
- #           else:
- #               label[j+1].config(style = "Yellow.TLabel")
- #           label[j+1].config(text = str(readiness))
- #           integrity = system.integrity
- #           if(integrity == system.maxIntegrity):
- #               label[j+2].config(style = "Green.TLabel")
- #           elif(integrity < system.maxIntegrity * 0.3):
- #               label[j+2].config(style = "Red.TLabel")
- #           elif(integrity > system.maxIntegrity * 0.7):
- #               label[j+2].config(style = "Blue.TLabel")
- #           else:
- #               label[j+2].config(style = "Yellow.TLabel")
- #           label[j+2].config(text = str(integrity))
-#
- #           if(system.heat < 70):
- #               label[j+3].config(style = "Blue.TLabel")
- #           if(system.heat < 30):
- #               label[j+3].config(style = "Green.TLabel")
- #           elif(system.heat > 200):
- #               label[j+3].config(style = "Red.TLabel")
- #           else:
- #               label[j+3].config(style = "Yellow.TLabel")
- #           label[j+3].config(text = str(system.heat))
- #           label[j+4].config(text = str(system.energy))
- #           label[j+2].config(anchor = E)
- #           label[j+3].config(anchor = E)
- #           label[j+4].config(anchor = E)
- #           i += 1
- #           j += 5
- #       j = 10
- #       i = 0
- #       shipCounter += 1
-
-def updateLabel(uiElements,shipLookup,var,shipId):
+    for t in t1:
+        t.start()
     i = 0
-    shipCounter = shipId
-    targetLabels = [uiElements.playerLabels,uiElements.playerLabels2,uiElements.playerLabels3, uiElements.enemyLabels,uiElements.enemyLabels2,uiElements.enemyLabels3]
-    targetLabel = targetLabels[shipId]
-    if(shipCounter == var.shipChoice):
-        uiElements.systemLFs[shipCounter].config(style = 'Green.TLabelframe')
-    else:
-        uiElements.systemLFs[shipCounter].config(style = 'Grey.TLabelframe')
-    if(not shipLookup[shipCounter].owner == 'player1'):
-        uiElements.systemLFs[shipCounter].config(style = 'DarkRed.TLabelframe')
-        
-    targetLabel[0].config(text = "Hull: " )
-    targetLabel[1].config(text = str(shipLookup[shipCounter].hp))
-    targetLabel[2].config(text = "Armor: " )
-    targetLabel[3].config(text = str(shipLookup[shipCounter].ap)) 
-    targetLabel[4].config(text = "") 
+  # for t in t1:
+  #     print("done")
+  #     t.join()
+  #     i+=1
 
-    targetLabel[5].config(text = "System: ")
-    targetLabel[6].config(text = "Readiness: ")
-    targetLabel[7].config(text = "Integrity: ")
-    targetLabel[8].config(text = "Heat: ")
-    targetLabel[9].config(text = "Energy: ")
-
-    j = 10
-
-    while(i<len(shipLookup[shipCounter].systemSlots)):
-        system = shipLookup[shipCounter].systemSlots[i]
-        targetLabel[j].config(text = system.name)
-        readiness = round((abs(system.maxCooldown-system.cooldown)/float(system.maxCooldown))*100.0)
-        if(readiness == 100):
-            targetLabel[j+1].config(style = "Green.TLabel")
-        elif(readiness < 30):
-            targetLabel[j+1].config(style = "Red.TLabel")
-        elif(readiness > 70):
-            targetLabel[j+1].config(style = "Blue.TLabel")
-        else:
-            targetLabel[j+1].config(style = "Yellow.TLabel")
-        targetLabel[j+1].config(text = str(readiness))
-        integrity = system.integrity
-        if(integrity == system.maxIntegrity):
-            targetLabel[j+2].config(style = "Green.TLabel")
-        elif(integrity < system.maxIntegrity * 0.3):
-            targetLabel[j+2].config(style = "Red.TLabel")
-        elif(integrity > system.maxIntegrity * 0.7):
-            targetLabel[j+2].config(style = "Blue.TLabel")
-        else:
-            targetLabel[j+2].config(style = "Yellow.TLabel")
-        targetLabel[j+2].config(text = str(integrity))
-
-        if(system.heat < 70):
-            targetLabel[j+3].config(style = "Blue.TLabel")
-        if(system.heat < 30):
-            targetLabel[j+3].config(style = "Green.TLabel")
-        elif(system.heat > 200):
-            targetLabel[j+3].config(style = "Red.TLabel")
-        else:
-            targetLabel[j+3].config(style = "Yellow.TLabel")
-        targetLabel[j+3].config(text = str(system.heat))
-        targetLabel[j+4].config(text = str(system.energy))
-        targetLabel[j+2].config(anchor = E)
-        targetLabel[j+3].config(anchor = E)
-        targetLabel[j+4].config(anchor = E)
-        i += 1
-        j += 5
-    return
 
 
 def rotateVector(degree, object, moveDirX, moveDirY):
@@ -350,7 +285,7 @@ def rotateVector(degree, object, moveDirX, moveDirY):
         object.xDir = object.xDir / scale
         object.yDir = object.yDir / scale
       
-def dealDamage(ship, dmg, var, targetSystem, heatDamage,uiElements,shipLookup):
+def dealDamage(ship, dmg, var, targetSystem, heatDamage,uiElements,shipLookup,root):
     updateLabel1 = False
     if(dmg > 4 or heatDamage > 4):
         updateLabel1 = True
@@ -420,8 +355,8 @@ def dealDamage(ship, dmg, var, targetSystem, heatDamage,uiElements,shipLookup):
                 system3.integrity = 0
                 dmg -= math.floor(dmgToSystem)
         ship.hp -= dmg
-        if(updateLabel1):
-            updateLabel(uiElements,shipLookup,var,ship.id)
+    #    if(updateLabel1):
+    #        updateLabels(uiElements,shipLookup,var)
         return
 
 
@@ -695,10 +630,10 @@ def updateShips(var,uiMetrics,gameRules,shipLookup,events,uiElements,root,canvas
 
         if(colorWeight < 600 and colorWeight > 200):
             movementPenality = gameRules.movementPenalityMedium
-            dealDamage(shipLookup[ship.id], 0, var,-1, 0.05,uiElements,shipLookup)
+            dealDamage(shipLookup[ship.id], 0, var,-1, 0.05,uiElements,shipLookup,root)
         elif(colorWeight < 200):
             movementPenality = gameRules.movementPenalityHard
-            dealDamage(shipLookup[ship.id], 1, var,-1, 1,uiElements,shipLookup)
+            dealDamage(shipLookup[ship.id], 1, var,-1, 1,uiElements,shipLookup,root)
             checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas)
         else:
             movementPenality = 0.000001  # change

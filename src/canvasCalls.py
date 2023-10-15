@@ -1,6 +1,7 @@
 from math import floor
 from tkinter import W
 from array import *
+import math
 
 import src.naglowek as naglowek
 
@@ -153,6 +154,32 @@ def createMask(var,uiMetrics):
         while(j<uiMetrics.canvasWidth):
             colors = var.imageMask.getpixel((j,i))
             mapMask[j][i] = (colors[0] + colors[1] + colors[2])
+            j+=1
+        j=0
+        i+=1
+    return mapMask
+
+def createPFMask(var,uiMetrics):
+    prec = var.PFprecision
+    prec2 = prec * prec
+    i = j = 0
+    mapMask = [[[0,0,0] for x in range(math.ceil(uiMetrics.canvasHeight/prec))] for y in range(math.ceil(uiMetrics.canvasWidth/prec))]
+    mapWidthUnits = uiMetrics.canvasWidth/prec
+    mapHeightUnits = uiMetrics.canvasHeight/prec
+    while(i<mapHeightUnits):
+        while(j<mapWidthUnits):
+            x1 = 0
+            y1 = 0
+            sum1 = 0
+            while(y1<prec):
+                while(x1<prec):
+                    if((i * prec + x1) < uiMetrics.canvasHeight and (j * prec + y1) < uiMetrics.canvasWidth):
+                        colors = var.imageMask.getpixel((j * prec + y1,i * prec + x1))
+                        sum1 += (colors[0] + colors[1] + colors[2])
+                    x1 += 1
+                x1 = 0
+                y1 += 1
+            mapMask[j][i] = (sum1/prec2)
             j+=1
         j=0
         i+=1

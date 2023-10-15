@@ -86,6 +86,8 @@ class global_var():
         cwd = str(cwd.parent)
         self.image = PIL.Image.open(os.path.join(cwd, config.get("Images", "image")))
         self.imageMask = PIL.Image.open(os.path.join(cwd, config.get("Images", "imageMask")))
+        # Path finding data
+        self.PFprecision = 30
         pass
 
 

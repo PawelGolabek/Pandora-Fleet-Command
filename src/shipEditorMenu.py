@@ -216,6 +216,7 @@ def saveShip(info,uiElements,filePath, cp):
         cp.set(shipName, "turnRate",str((info.ship).turnRate))
         cp.set(shipName, "maxSpeed",str((info.ship).maxSpeed))
         cp.set(shipName, "speed",str((info.ship).maxSpeed))
+        cp.set(shipName, "stance",'rush')                           ####### change if designing ai ships
 
     #engine = engine1
     #thrusters = thrusters1
