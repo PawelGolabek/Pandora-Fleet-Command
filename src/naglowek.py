@@ -47,7 +47,7 @@ class global_var():
         self.pointerDeltaY = 0.0
         self.drag = ''
         ## GAME OPTIONS ##
-        self.fogOfWar = False
+        self.fogOfWar = True
         self.gameSpeed = 1
         self.turnLength = 1080
         self.zoom = 1
@@ -117,6 +117,7 @@ class ui_metrics():
     canvasY = 10
     shipDataX = canvasX
     shipDataY = canvasY + 20
+    orderLength = 3
     #editor
     editorSystemsFrameX = 100
     editorSystemsFrameY = 500

@@ -515,7 +515,7 @@ def checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas):
 
 
 def killShip(shipId,var,events,shipLookup,uiElements,uiMetrics,root,canvas):
-    print(shipId)
+    #print(shipId)
     ship1 = shipLookup[shipId]
     shipLookup[shipId].killed = True
     for missle in var.currentMissles:
@@ -525,7 +525,7 @@ def killShip(shipId,var,events,shipLookup,uiElements,uiMetrics,root,canvas):
     for progressBar in ship1.shieldsLabel:
         progressBar['value'] = 0
     for ship in var.ships:
-        print("id" + str(ship.id))
+   #     print("id" + str(ship.id))
         if(not ship.owner == "player1"):
             noEnemies = False
             break
@@ -643,7 +643,7 @@ def updateShips(var,uiMetrics,gameRules,shipLookup,events,uiElements,root,canvas
 
         ship.xPos += xVector - xVector * movementPenality
         ship.yPos += yVector - yVector * movementPenality
-        if(ship.signatureCounter >= 1200 and not ship.visible and not ship.owner == "player1"):
+        if(ship.signatureCounter >= 1200 and not ship.visible):
             createSignature(ship, ship.xPos, ship.yPos)
             ship.signatureCounter = 0
         else:

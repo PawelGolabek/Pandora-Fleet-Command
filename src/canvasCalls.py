@@ -22,16 +22,16 @@ def drawShips(canvas,var,uiMetrics):  # draw ship on the map with all of its acc
                     drawOrderX = (ship.moveOrderX - var.left) * \
                         var.zoom    # get order relative to window
                     drawOrderY = (ship.moveOrderY - var.top) * var.zoom
-                    line = canvas.create_line(drawOrderX+2, drawOrderY+2, drawOrderX,
+                    line = canvas.create_line(drawOrderX+uiMetrics.orderLength, drawOrderY+uiMetrics.orderLength, drawOrderX,
                                     drawOrderY,   fill=fillColor)
                     canvas.elements.append(line)
-                    line = canvas.create_line(drawOrderX-2, drawOrderY-2, drawOrderX,
+                    line = canvas.create_line(drawOrderX-uiMetrics.orderLength, drawOrderY-uiMetrics.orderLength, drawOrderX,
                                     drawOrderY,   fill=fillColor)
                     canvas.elements.append(line)
-                    line = canvas.create_line(drawOrderX+2, drawOrderY-2, drawOrderX,
+                    line = canvas.create_line(drawOrderX+uiMetrics.orderLength, drawOrderY-uiMetrics.orderLength, drawOrderX,
                                     drawOrderY,   fill=fillColor)
                     canvas.elements.append(line)
-                    line = canvas.create_line(drawOrderX-2, drawOrderY+2, drawOrderX,
+                    line = canvas.create_line(drawOrderX-uiMetrics.orderLength, drawOrderY+uiMetrics.orderLength, drawOrderX,
                                     drawOrderY,   fill=fillColor)
                     canvas.elements.append(line)
 
@@ -43,7 +43,7 @@ def drawShips(canvas,var,uiMetrics):  # draw ship on the map with all of its acc
                                     fill=fillColor)
                 canvas.elements.append(line)
                                     
-                if(ship.owner == "player1" or (not var.fogOfWar)):
+                if(ship.owner == "player1" or ship.visible or not var.fogOfWar):
                     line = canvas.create_line(drawX, drawY,   drawX+(ship.xDir*20*var.zoom),
                                     drawY+(ship.yDir*20*var.zoom), fill="green")
                     canvas.elements.append(line)
@@ -131,20 +131,21 @@ def drawSignatures(canvas,var):
     if(var.fogOfWar):
         for ship in var.ships:
             for signature in ship.signatures:
-                drawX = int((signature.xPos - var.left) * var.zoom)
-                drawY = int((signature.yPos - var.top) * var.zoom )
-                line = canvas.create_line(int(drawX-4*var.zoom), int(drawY-10*var.zoom), int(drawX-8*var.zoom), int(drawY-8*var.zoom), width=int(var.zoom),  fill='white') 
-                canvas.elements.append(line) 
-                line = canvas.create_line(int(drawX-8*var.zoom), int(drawY-8*var.zoom), int(drawX-8*var.zoom), int(drawY+8*var.zoom), width=int(var.zoom),  fill='white')  
-                canvas.elements.append(line)
-                line = canvas.create_line(int(drawX-8*var.zoom), int(drawY+8*var.zoom), int(drawX-4*var.zoom), int(drawY+10*var.zoom), width=int(var.zoom),  fill='white') 
-                canvas.elements.append(line)
-                line = canvas.create_line(int(drawX+4*var.zoom), int(drawY-10*var.zoom), int(drawX+8*var.zoom), int(drawY-8*var.zoom), width=int(var.zoom),  fill='white')  
-                canvas.elements.append(line)
-                line = canvas.create_line(int(drawX+8*var.zoom), int(drawY-8*var.zoom), int(drawX+8*var.zoom), int(drawY+8*var.zoom), width=int(var.zoom),  fill='white')  
-                canvas.elements.append(line)
-                line = canvas.create_line(int(drawX+8*var.zoom), int(drawY+8*var.zoom), int(drawX+4*var.zoom), int(drawY+10*var.zoom), width=int(var.zoom),  fill='white')  
-                canvas.elements.append(line)
+                if(not ship.owner == "player1"):
+                    drawX = int((signature.xPos - var.left) * var.zoom)
+                    drawY = int((signature.yPos - var.top) * var.zoom )
+                    line = canvas.create_line(int(drawX-4*var.zoom), int(drawY-10*var.zoom), int(drawX-8*var.zoom), int(drawY-8*var.zoom), width=int(var.zoom),  fill='white') 
+                    canvas.elements.append(line) 
+                    line = canvas.create_line(int(drawX-8*var.zoom), int(drawY-8*var.zoom), int(drawX-8*var.zoom), int(drawY+8*var.zoom), width=int(var.zoom),  fill='white')  
+                    canvas.elements.append(line)
+                    line = canvas.create_line(int(drawX-8*var.zoom), int(drawY+8*var.zoom), int(drawX-4*var.zoom), int(drawY+10*var.zoom), width=int(var.zoom),  fill='white') 
+                    canvas.elements.append(line)
+                    line = canvas.create_line(int(drawX+4*var.zoom), int(drawY-10*var.zoom), int(drawX+8*var.zoom), int(drawY-8*var.zoom), width=int(var.zoom),  fill='white')  
+                    canvas.elements.append(line)
+                    line = canvas.create_line(int(drawX+8*var.zoom), int(drawY-8*var.zoom), int(drawX+8*var.zoom), int(drawY+8*var.zoom), width=int(var.zoom),  fill='white')  
+                    canvas.elements.append(line)
+                    line = canvas.create_line(int(drawX+8*var.zoom), int(drawY+8*var.zoom), int(drawX+4*var.zoom), int(drawY+10*var.zoom), width=int(var.zoom),  fill='white')  
+                    canvas.elements.append(line)
 
 
 def createMask(var,uiMetrics):

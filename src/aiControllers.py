@@ -89,38 +89,61 @@ class aiController():
             (ship.systemSlots[choiceNumber]).energy += 1
             energy-=1
        
+
+       
     def dijstraFill(maskMap,uiMetrics,var):
         prec = var.PFprecision
-        newMaskMap = [[0 for x in range(math.ceil(uiMetrics.canvasHeight/prec))] for y in range(math.ceil(uiMetrics.canvasWidth/prec))]
+        ySpan = math.ceil(uiMetrics.canvasHeight/prec)
+        xSpan = math.ceil(uiMetrics.canvasWidth/prec)
+        newMaskMap = [[0 for x in range(xSpan+1)] for y in range(ySpan)]              # 32 / 22
+   #     print(str(len(newMaskMap)) + " " + str(ySpan) + " " +  str(xSpan))
+        for ship in var.ships:
+            for signature in ship.signatures:
+                if(ship.owner == "player1"):
+                    newMaskMap[round(signature.yPos / prec)][round(signature.xPos / prec)] = int(prec/2)
+
         for ship in var.ships:          #place player markers
-            if(ship.owner == "player1"):
-                newMaskMap[round(ship.yPos / prec)][round(ship.xPos / prec)] = prec/2
-        x = 0
-        y = 0
-        i = prec/2
+            if(ship.owner == "player1" and ship.visible
+            ):
+                newMaskMap[round(ship.yPos / prec)][round(ship.xPos / prec)] = prec
+        i = math.floor(prec/2)
         while(i):           #spread player markers
-            for element in maskMap:
-                adj1 = adj2 = adj3 = adj4 = -1
-                if(i - prec):
-                    adj1 = (i - prec)
-                else:
-                    adj1 = (i + prec * prec)
-                if(not (i%prec == prec - 1)):
-                    adj2 = i+1
-                else:
-                    adj2 = i-prec
-                if(i+prec < prec*prec):
-                    adj3 = i+prec
-                else:
-                    adj3 = i - prec * prec + prec
-                if(not (i%prec == 0)):
-                    adj4 = i-1
-                else:
-                    adj4 = i + prec - 1
-                element1 = element[0] + element[1] + element[2]
-                if(newMaskMap[int(math.floor(adj1/prec))][int(adj1%prec)] < element1 - 1):
-                    newMaskMap[int(math.floor(adj1/prec))][int(adj1%prec)] = element1 - 1
+            idElem = 0
+            for element in newMaskMap:
+                idElemX = 0
+                for elementX in element:
+                    adj1Y = 0
+                    adj2X = 0
+                    adj3Y = 0
+                    adj4X = 0
+                    if(idElem-1 > 0):
+                        adj1Y = idElem-1
+                    if(idElemX+1 <= xSpan):
+                        adj2X = idElemX+1
+                    if(idElem+1 < ySpan):
+                        adj3Y = idElem+1
+                    if(idElemX-1 > 0):
+                        adj4X = idElemX-1
+                  #  print(str(adj1Y) + " "  + str(idElemX))
+                  #  print((adj3Y))
+                    if(newMaskMap[adj1Y][idElemX] < elementX):
+                        newMaskMap[adj1Y][idElemX] = elementX - 1
+#
+                    if(newMaskMap[idElem][adj2X] < elementX):
+                        newMaskMap[idElem][adj2X] = elementX - 1
+#
+                    if(newMaskMap[adj3Y][idElemX] < elementX):
+                        newMaskMap[adj3Y][idElemX] = elementX - 1
+
+                    if(newMaskMap[idElem][adj4X] < elementX):
+                        newMaskMap[idElem][adj4X] = elementX - 1
+                    idElemX += 1
+                idElem += 1
+           # print("next")
             i -= 1
+        
+                    
+
     #   if(colorWeight < 600 and colorWeight > 400):
     #       movementPenality = gameRules.movementPenalityMedium
     #   elif(colorWeight < 400 and colorWeight > 200):
@@ -136,10 +159,13 @@ class aiController():
         return newMaskMap
 
     def moveOrderChoice(ship,ships,var,gameRules,uiMetrics):
-        checksLeft = 40
+        checksLeft = 400
         bestOrderX = 100    #default if everything else fails
         bestOrderY = 100    #default if everything else fails
         bestOrderValue = float('-inf')
+        maskMap = aiController.dijstraFill(var.mask,uiMetrics,var) # change for dijkstra filled map
+        for line in maskMap:
+            print(line)
         while(checksLeft):
             currentOrderValue = random.randint(19000, 21000)
             currentOrderX = ship.xPos + random.randint(-200, 200)
@@ -156,11 +182,13 @@ class aiController():
             currentTracer.moveOrderY = currentOrderY
             currentTracer.ttl = var.turnLength + 800 # +200 to avoid unavoidable collisions next turn
             
-            maskMap = aiController.dijstraFill(var.mask,uiMetrics,var) # change for dijkstra filled map
             while(True):
                 # check for terrain
                 if(currentTracer.ttl % 5 == 0):
-                    colorWeight = maskMap[int(currentTracer.xPos/var.PFprecision)][int(currentTracer.yPos/var.PFprecision)]
+                #    print("mask" + str(len(maskMap)))
+                #    print(str(int(math.floor(currentTracer.xPos/var.PFprecision))) + " " + str(int(math.floor(currentTracer.yPos/var.PFprecision))))         
+                    colorWeight = var.mask[int(currentTracer.xPos)][int(currentTracer.yPos)]
+                    colorScore = maskMap[int(math.floor(currentTracer.yPos/var.PFprecision))][int(math.floor(currentTracer.xPos/var.PFprecision))]
                 # vector normalisation
                 scale = math.sqrt((currentTracer.moveOrderX-currentTracer.xPos)*(currentTracer.moveOrderX-currentTracer.xPos) +
                                     (currentTracer.moveOrderY-currentTracer.yPos)*(currentTracer.moveOrderY-currentTracer.yPos))
@@ -183,6 +211,8 @@ class aiController():
                     currentOrderValue -= 4000
                 else:
                     movementPenality = 0.000001  # change
+
+                currentOrderValue += colorScore * 200
 
                 xVector = currentTracer.xDir*currentTracer.speed/360
                 yVector = currentTracer.yDir*currentTracer.speed/360
@@ -213,3 +243,83 @@ class aiController():
 
 class aiRush(aiController):
     x = 29
+
+
+def oldOrderChoice(ship,ships,var,gameRules,uiMetrics):
+    checksLeft = 40
+    bestOrderX = 100    #default if everything else fails
+    bestOrderY = 100    #default if everything else fails
+    bestOrderValue = float('-inf')
+    maskMap = aiController.dijstraFill(var.mask,uiMetrics,var) # change for dijkstra filled map
+    #   print(var.PFMask)
+    while(checksLeft):
+        currentOrderValue = random.randint(19000, 21000)
+        currentOrderX = ship.xPos + random.randint(-200, 200)
+        currentOrderY = ship.yPos + random.randint(-200, 200)
+        ship.ghostPoints = []
+        currentTracer = tracer()
+        currentTracer.xPos = ship.xPos
+        currentTracer.yPos = ship.yPos
+        currentTracer.xDir = ship.xDir
+        currentTracer.yDir = ship.yDir
+        currentTracer.turnRate = ship.turnRate
+        currentTracer.speed = ship.speed
+        currentTracer.moveOrderX = currentOrderX
+        currentTracer.moveOrderY = currentOrderY
+        currentTracer.ttl = var.turnLength + 800 # +200 to avoid unavoidable collisions next turn
+        
+        while(True):
+            # check for terrain
+            if(currentTracer.ttl % 5 == 0):
+            #    print("mask" + str(len(maskMap)))
+            #    print(str(int(math.floor(currentTracer.xPos/var.PFprecision))) + " " + str(int(math.floor(currentTracer.yPos/var.PFprecision))))
+                colorWeight = maskMap[int(math.floor(currentTracer.yPos/var.PFprecision))][int(math.floor(currentTracer.xPos/var.PFprecision))]
+            # vector normalisation
+            scale = math.sqrt((currentTracer.moveOrderX-currentTracer.xPos)*(currentTracer.moveOrderX-currentTracer.xPos) +
+                                (currentTracer.moveOrderY-currentTracer.yPos)*(currentTracer.moveOrderY-currentTracer.yPos))
+            if(scale == 0):
+                scale = 0.01
+            # move order into normalised vector
+            moveDirX = -(currentTracer.xPos-currentTracer.moveOrderX) / scale
+            moveDirY = -(currentTracer.yPos-currentTracer.moveOrderY) / scale
+
+            degree = currentTracer.turnRate
+            rotateVector(degree, currentTracer, moveDirX, moveDirY)
+
+            if(colorWeight < 600 and colorWeight > 400):
+                movementPenality = gameRules.movementPenalityMedium
+            elif(colorWeight < 400 and colorWeight > 200):
+                movementPenality = gameRules.movementPenalityMedium
+                currentOrderValue -= 400
+            elif(colorWeight <= 200):
+                movementPenality = gameRules.movementPenalityHard
+                currentOrderValue -= 4000
+            else:
+                movementPenality = 0.000001  # change
+
+            xVector = currentTracer.xDir*currentTracer.speed/360
+            yVector = currentTracer.yDir*currentTracer.speed/360
+
+            currentTracer.xPos += xVector - xVector * movementPenality
+            currentTracer.yPos += yVector - yVector * movementPenality
+            if(0 > currentTracer.xPos):
+                currentTracer.xPos += uiMetrics.canvasWidth
+            if(currentTracer.xPos >= uiMetrics.canvasWidth):
+                currentTracer.xPos -= uiMetrics.canvasWidth
+            if(0 > currentTracer.yPos):
+                currentTracer.yPos += uiMetrics.canvasHeight
+            if(currentTracer.yPos >= uiMetrics.canvasHeight):
+                currentTracer.yPos -= uiMetrics.canvasHeight
+            currentTracer.ttl -= 1
+            if(not currentTracer.ttl):
+                break
+        if(currentOrderValue > bestOrderValue):
+            bestOrderX = currentOrderX
+            bestOrderY = currentOrderY
+            bestOrderValue = currentOrderValue
+        del currentTracer
+        checksLeft -= 1
+        if(checksLeft < 360 and bestOrderValue > 0 or not checksLeft):
+            break
+    ship.moveOrderX = bestOrderX
+    ship.moveOrderY = bestOrderY
