@@ -24,6 +24,7 @@ class tracer():
 
 
 def updateLabel(uiElements,shipLookup,var,shipId):
+    t0 = time.time()
     i = 0
     shipCounter = shipId
     targetLabels = [uiElements.playerLabels,uiElements.playerLabels2,uiElements.playerLabels3, 
@@ -49,8 +50,9 @@ def updateLabel(uiElements,shipLookup,var,shipId):
     targetLabel[9].config(text = "Energy: ")
 
     j = 10
-
     while(i<len(shipLookup[shipCounter].systemSlots)):
+        if(time.time() - t0 > 1):
+            return 0
         system = shipLookup[shipCounter].systemSlots[i]
         targetLabel[j].config(text = system.name)
         readiness = round((abs(system.maxCooldown-system.cooldown)/float(system.maxCooldown))*100.0)
@@ -250,7 +252,7 @@ def updateLabels(uiElements,shipLookup,var):
 # Create two threads as follows
     updateLabel(uiElements,shipLookup,var,0)
     i = 0
-    n = 5
+    n = 6
     t1 = []
     while(i<n):
         t1.append(threading.Thread(target=updateLabel, args=(uiElements,shipLookup,var,i,)))
@@ -522,13 +524,19 @@ def killShip(shipId,var,events,shipLookup,uiElements,uiMetrics,root,canvas):
         if shipLookup[missle.target] == ship1.id:
             var.currentMissles.remove(missle)
     noEnemies = True
+    noPlayers = True
     for progressBar in ship1.shieldsLabel:
         progressBar['value'] = 0
     for ship in var.ships:
+        print(ship.owner)
    #     print("id" + str(ship.id))
-        if(not ship.owner == "player1"):
+        if(not ship.owner == "player1" and not ship.killed):
             noEnemies = False
-            break
+            print(ship.name + "enemy")
+        elif(ship.owner == "player1" and not ship.killed):
+            noPlayers = False
+            print(ship.name + "player")
+        print("next")
     if(ship1.id == 0):
         uiElements.RadioElementsList[0].config(state = DISABLED)
         uiElements.RadioElementsList[0].config(text = "Destroyed")
@@ -568,17 +576,21 @@ def killShip(shipId,var,events,shipLookup,uiElements,uiMetrics,root,canvas):
         if(not choiceMade):
             var.shipChosen = 10
 
-
-    if noEnemies and not events.showedWin:
+        ### elimination win condition to put in another file later
+    if (noEnemies and not events.showedWin):
         window = Toplevel()
-        label = Label(window, text='yes, you win')
-        label.place(x=0, y=0)
+        window.config(bg="#202020", width = 600, height = 600)
+        label = ttk.Label(window, style = "Grey.TLabel", text='You Won\n\n'+ var.winMessage+'\n\nPress "Exit to Menu" to continue')
+        label.config(justify='center')
+        label.pack()
         events.showedWin = True
-    elif(ship1.owner == 'player1' and events.playerDestroyed == False):
-        events.playerDestroyed = True
+    if (noPlayers and not events.showedLoose):
         window = Toplevel()
-        label = Label(window, text='yes, you looose')
-        label.place(x=0, y=0)
+        window.config(bg="#202020", width = 600, height = 600)
+        label = ttk.Label(window, style = "Grey.TLabel", text='You Lost\n\n'+ var.looseMessage+'\n\nPress "Exit to Menu" to continue')
+        label.config(justify='center')
+        label.pack()
+        events.showedLoose = True
     for element in var.ships:
         if element.id == shipId:
             (var.ships).remove(element)

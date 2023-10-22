@@ -45,6 +45,7 @@ class ui_icons():
 class _events():
     playerDestroyed = False
     showedWin = False
+    showedLoose = False
 
 
 ############################## AMUNITION #############################################
@@ -60,7 +61,7 @@ class ship():
                  hp=200, maxHp=None, ap=10000, maxAp=None, shields=3, maxShields = 3, xPos=300, yPos=300,energyLimit = 20,
                  ammunitionChoice=0, ammunitionNumberChoice=0, systemSlots = [],systemStatus = [],
                  detectionRange=200, xDir=0.0, yDir=1, turnRate=0.5, ghostPoints = [], signatures = [], speed=40, maxSpeed = 40,
-                 outlineColor="red",id = 1,signatureCounter=0, stance='rush'):
+                 outlineColor="red",id = 1,signatureCounter=0, stance='rush',color = "red"):
         # Init info                                             
         self.name = name
         self.owner = owner
@@ -118,6 +119,7 @@ class ship():
         self.id = id
         self.signatureCounter = 0
         self.killed = False
+        self.color = color
         #ai info
         if(owner=="ai1"):
             self.prefMinRange = 100
@@ -782,12 +784,14 @@ def declareShips(var,config):
         i=0
         for element in creationList:
             targetShipName = nameList[i]
+            color1 = config.get(configList[i], "color")
             if(i<=2):               #change if more ships
                 owner1 = "player1"
             else:
                 owner1 = "ai1"
             creationList[i] = ship(var, 
                     owner=owner1,
+                    color = color1,
                     name=targetShipName, 
                     maxShields = int((config.get(configList[i], "maxShields"))),
                     shields=int((config.get(configList[i], "shields"))), 
@@ -820,7 +824,8 @@ def declareShips(var,config):
                     id = int((config.get(configList[i], "id"))),
                     hp = int((config.get(configList[i], "hp"))), 
                     ap = int((config.get(configList[i], "ap"))),
-                    stance = ((config.get(configList[i], "stance"))))
+                    stance = ((config.get(configList[i], "stance")))
+                    )
             i+=1
 
         var.player = creationList[0]
@@ -1091,10 +1096,12 @@ def resume(config,root,menuUiElements):
         
         uiElements.pausedL = ttk.Label(canvas, style = "Pause.TLabel", text = "Paused")
 
-        uiElements.gameSpeedScale = tk.Scale(root, orient=HORIZONTAL, length=100, from_=1, to=16)
+        uiElements.gameSpeedScale = tk.Scale(root, orient=HORIZONTAL, length=100, from_=3, to=42)
         uiElements.gameSpeedL = ttk.Label(root, style = 'Grey.TLabel', text = "Playback Speed:")
         var.img = tk.PhotoImage(file= os.path.join(cwd, config.get("Images", "img")))
-        (uiElements.gameSpeedScale).set(3)
+        var.winMessage = config.get("Meta", "winMessage")
+        var.looseMessage = config.get("Meta", "looseMessage")
+        (uiElements.gameSpeedScale).set(8)
         uiElements.timeElapsedLabel = ttk.Label(root, style = 'Grey.TLabel', text="Time elapsed")
         uiElements.timeElapsedProgressBar = ttk.Progressbar(root, maximum=var.turnLength, variable=1,  orient='horizontal',
                                                 mode='determinate', length=uiMetrics.shipDataWidth)

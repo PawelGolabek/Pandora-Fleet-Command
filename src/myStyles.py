@@ -14,7 +14,7 @@ def loadStyles(root,s):
   s.configure('GreyBig.TLabelframe', background='#202020',bordercolor = '#505050',lightcolor = "#0F4F0F", darkcolor = "#044404")
   s.configure('GreyBig.TLabelframe.Label', fg = "#EFEFEF", background='#202020',lightcolor = "#0F4F0F", darkcolor = "#FAFAFA",foreground = "#FAFAFA")
   s.configure('Pause.TLabel', background='#202020',lightcolor = "#0F4F0F", darkcolor = "#FAFAFA",foreground = "#bfbfbf", font= ('Calibri 16 normal'),borderwidth=2, relief="groove", bordercolor = "green", width=10, height = 40, padding = 3,anchor=CENTER)
-  s.configure('GreyBig.TLabel', background='#202020',lightcolor = "#0F4F0F", darkcolor = "#FAFAFA",foreground = "#bfbfbf", font= ('Calibri 16 normal'))
+  s.configure('GreyBig.TLabel', background='#202020',lightcolor = "#0F4F0F", darkcolor = "#FAFAFA",foreground = "#bfbfbf", font= ('Calibri 14 normal'))
   s.configure('Green.TLabelframe', background='#202020',bordercolor = '#505050',lightcolor = "#0FAF0F", darkcolor = "#0AAF0A")
   s.configure('Green.TLabelframe.Label', fg = "#EFEFEF", background='#202020',lightcolor = "#0FAF0F", darkcolor = "#FAFAFA",foreground = "#FAFAFA")
   s.configure('DarkRed.TLabelframe', background='#202020',bordercolor = '#505050',lightcolor = "#4F0F0F", darkcolor = "#4F0A0A")

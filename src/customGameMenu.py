@@ -43,12 +43,12 @@ def runGame(info,configIn,root,menuUiElements):
     filePath = os.path.join(cwd, a)
     configIn1.read(filePath)
     
-    ship0 = readShip(configIn,shipName0,x=configIn1.get("spawnLocations","teamBlue1X"),y=configIn1.get("spawnLocations","teamBlue1Y"),outline="white",owner="player1",id = "0")
-    ship1 = readShip(configIn,shipName1,x=configIn1.get("spawnLocations","teamBlue2X"),y=configIn1.get("spawnLocations","teamBlue2Y"),outline="white",owner="player1",id = "1")
-    ship2 = readShip(configIn,shipName2,x=configIn1.get("spawnLocations","teamBlue3X"),y=configIn1.get("spawnLocations","teamBlue3Y"),outline="white",owner="player1",id = "2")
-    ship3 = readShip(configIn,shipName3,x=configIn1.get("spawnLocations","teamRed1X"),y=configIn1.get("spawnLocations","teamRed1Y"),outline="red",owner = "ai1",id = "3")
-    ship4 = readShip(configIn,shipName4,x=configIn1.get("spawnLocations","teamRed2X"),y=configIn1.get("spawnLocations","teamRed2Y"),outline="red",owner = "ai1",id = "4")
-    ship5 = readShip(configIn,shipName5,x=configIn1.get("spawnLocations","teamRed3X"),y=configIn1.get("spawnLocations","teamRed3Y"),outline="red",owner = "ai1",id = "5")
+    ship0 = readShip(configIn,shipName0,x=configIn1.get("spawnLocations","teamBlue1X"),y=configIn1.get("spawnLocations","teamBlue1Y"),outline="white",owner="player1",id = "0", color = "white")
+    ship1 = readShip(configIn,shipName1,x=configIn1.get("spawnLocations","teamBlue2X"),y=configIn1.get("spawnLocations","teamBlue2Y"),outline="white",owner="player1",id = "1", color = "white")
+    ship2 = readShip(configIn,shipName2,x=configIn1.get("spawnLocations","teamBlue3X"),y=configIn1.get("spawnLocations","teamBlue3Y"),outline="white",owner="player1",id = "2", color = "white")
+    ship3 = readShip(configIn,shipName3,x=configIn1.get("spawnLocations","teamRed1X"),y=configIn1.get("spawnLocations","teamRed1Y"),outline="red",owner = "ai1",id = "3",color = "red")
+    ship4 = readShip(configIn,shipName4,x=configIn1.get("spawnLocations","teamRed2X"),y=configIn1.get("spawnLocations","teamRed2Y"),outline="red",owner = "ai1",id = "4",color = "red")
+    ship5 = readShip(configIn,shipName5,x=configIn1.get("spawnLocations","teamRed3X"),y=configIn1.get("spawnLocations","teamRed3Y"),outline="red",owner = "ai1",id = "5",color = "red")
 
     configOut = configparser.ConfigParser()
     cwd = Path(sys.argv[0])
@@ -65,6 +65,10 @@ def runGame(info,configIn,root,menuUiElements):
 
     if(not configOut.has_section("Root")):
         configOut.add_section("Root")
+    if(not configOut.has_section("Meta")):
+        configOut.add_section("Meta")
+    configOut.set("Meta", "winMessage","Blue Team Wins")
+    configOut.set("Meta", "looseMessage","Red Team Wins")
     configOut.set("Root", "title","Custom Game")
     if(not configOut.has_section("Ships")):
         configOut.add_section("Ships")
@@ -74,6 +78,10 @@ def runGame(info,configIn,root,menuUiElements):
     configOut.set("Ships", "enemyName",shipName3)
     configOut.set("Ships", "enemyName2",shipName4)
     configOut.set("Ships", "enemyName3",shipName5)
+
+    if(not configOut.has_section("Options")):
+        configOut.add_section("Options")
+    configOut.set("Options", "fogOfWar",'0')
 
     if(not configOut.has_section("Images")):
         configOut.add_section("Images")
@@ -88,7 +96,7 @@ def runGame(info,configIn,root,menuUiElements):
 
     run(configOut,root,menuUiElements)
 
-def readShip(confIn,shipId,x,y,outline,owner,id):
+def readShip(confIn,shipId,x,y,outline,owner,id,color):
     ship = dynamic_object()
     ship.name = shipId
     ship.shields = str(confIn.get(ship.name,"shields"))
@@ -117,11 +125,14 @@ def readShip(confIn,shipId,x,y,outline,owner,id):
     ship.subsystemSlots7 = str(confIn.get(shipId,"subsystemSlots7"))
     ship.subsystemSlots8 = str(confIn.get(shipId,"subsystemSlots8"))
 
+    ship.stance = str(confIn.get(shipId,"stance"))
+
     ship.xPos = str(x)
     ship.yPos = str(y)
     ship.outline = outline
     ship.owner = str(owner)
     ship.id = str(id)
+    ship.color = str(color)
     return ship
 
 def writeShip(ship,target,configOut):
@@ -162,6 +173,8 @@ def writeShip(ship,target,configOut):
     configOut.set(target, "outline",ship.outline)
     configOut.set(target, "owner",ship.owner)
     configOut.set(target, "id",ship.id)
+    configOut.set(target, "stance",ship.stance)
+    configOut.set(target, "color",ship.color)
 
     
 def updateMissionCanvas(missionCanvas,info,msmVar):
@@ -223,15 +236,15 @@ def customGame(root,config,uiMenuElements,uiMetrics):
         uiElementsList.append(uiElements.startGameButton)
         uiElementsList.append(uiElements.exitToMenuButton)
 
-        uiElements.mapLF = ttk.Labelframe(root,style = 'Grey.TLabelframe', width = 300, height = 100, text = "Map Choice")
+        uiElements.mapLF = ttk.Labelframe(root,style = 'Grey.TLabelframe', width = uiMetrics.customMapLFWidth, height = 100, text = "Map Choice")
         uiElements.mapOM = OptionMenu(uiElements.mapLF, info.mapChoice, *mapOptions, command = lambda _:[updateButton(info, uiElements.startGameButton, info.mapChoice),updateMissionCanvas(uiElements.missionCanvas,info,msmVar)])
 
-        uiElements.blueShipLF0 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = 150, height = 80, text = "Blue team ship 1")
-        uiElements.blueShipLF1 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = 150, height = 80, text = "Blue team ship 2")
-        uiElements.blueShipLF2 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = 150, height = 80, text = "Blue team ship 3")
-        uiElements.redShipLF0 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = 150, height = 80, text = "Red team ship 1")
-        uiElements.redShipLF1 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = 150, height = 80, text = "Red team ship 2")
-        uiElements.redShipLF2 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = 150, height = 80, text = "Red team ship 3")
+        uiElements.blueShipLF0 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = uiMetrics.customShipLF, height = 80, text = "Blue team ship 1")
+        uiElements.blueShipLF1 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = uiMetrics.customShipLF, height = 80, text = "Blue team ship 2")
+        uiElements.blueShipLF2 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = uiMetrics.customShipLF, height = 80, text = "Blue team ship 3")
+        uiElements.redShipLF0 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = uiMetrics.customShipLF, height = 80, text = "Red team ship 1")
+        uiElements.redShipLF1 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = uiMetrics.customShipLF, height = 80, text = "Red team ship 2")
+        uiElements.redShipLF2 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = uiMetrics.customShipLF, height = 80, text = "Red team ship 3")
 
         uiElements.blueShipOM0 = OptionMenu(uiElements.blueShipLF0, info.blueShip0, *shipOptions, command = lambda _: updateButton(info, uiElements.startGameButton, info.blueShip0))
         uiElements.blueShipOM1 = OptionMenu(uiElements.blueShipLF1, info.blueShip1, *shipOptions, command = lambda _: updateButton(info, uiElements.startGameButton, info.blueShip1))

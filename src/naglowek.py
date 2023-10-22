@@ -135,9 +135,11 @@ class ui_metrics():
     editorChoiceMenuY = 150
     shipStatsLFHeight = 430
     shipStatsLFWidth = 350
-    customRedShipX = 1000
-    customBlueShipX = 200
+    customShipLF = 150
+    customRedShipX = rootX-300-customShipLF
+    customBlueShipX = 300+customShipLF
     customBlueShipY = 600
+    customMapLFWidth = 300
     cgShipYoffset = 100
     cgStartButton = customBlueShipY + cgShipYoffset *2
     cgMapChoiceY = cgStartButton - cgShipYoffset *1.5

@@ -164,8 +164,8 @@ class aiController():
         bestOrderY = 100    #default if everything else fails
         bestOrderValue = float('-inf')
         maskMap = aiController.dijstraFill(var.mask,uiMetrics,var) # change for dijkstra filled map
-        for line in maskMap:
-            print(line)
+     #   for line in maskMap:
+     #       print(line)
         while(checksLeft):
             currentOrderValue = random.randint(19000, 21000)
             currentOrderX = ship.xPos + random.randint(-200, 200)

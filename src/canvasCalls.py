@@ -34,7 +34,9 @@ def drawShips(canvas,var,uiMetrics):  # draw ship on the map with all of its acc
                     line = canvas.create_line(drawOrderX-uiMetrics.orderLength, drawOrderY+uiMetrics.orderLength, drawOrderX,
                                     drawOrderY,   fill=fillColor)
                     canvas.elements.append(line)
-
+                else:
+                    fillColor = ship.color
+                    
                 line = canvas.create_line(int(drawX-5*var.zoom), 
                                     int(drawY-5*var.zoom), 
                                     int(drawX +5*var.zoom), 
