@@ -9,6 +9,7 @@ from src.ammunitionType import *
 from src.colorCommands import rgbtohex
 from src.canvasCalls import *
 from src.rootCommands import *
+import src.endConditions as endConditions
 
 
 class tracer():
@@ -37,58 +38,70 @@ def updateLabel(uiElements,shipLookup,var,shipId):
     if(not shipLookup[shipCounter].owner == 'player1'):
         uiElements.systemLFs[shipCounter].config(style = 'DarkRed.TLabelframe')
         
-    targetLabel[0].config(text = "Hull: " )
-    targetLabel[1].config(text = str(shipLookup[shipCounter].hp))
-    targetLabel[2].config(text = "Armor: " )
-    targetLabel[3].config(text = str(shipLookup[shipCounter].ap)) 
-    targetLabel[4].config(text = "") 
-
-    targetLabel[5].config(text = "System: ")
-    targetLabel[6].config(text = "Readiness: ")
-    targetLabel[7].config(text = "Integrity: ")
-    targetLabel[8].config(text = "Heat: ")
-    targetLabel[9].config(text = "Energy: ")
-
+  #  targetLabel[0].config(text = "Hull: " )
+  #  targetLabel[1].config(text = str(shipLookup[shipCounter].hp))
+  #  targetLabel[2].config(text = "Armor: " )
+  #  targetLabel[3].config(text = str(shipLookup[shipCounter].ap)) 
+  #  targetLabel[4].config(text = "") 
+#
+  #  targetLabel[5].config(text = "System: ")
+  #  targetLabel[6].config(text = "Readiness: ")
+  #  targetLabel[7].config(text = "Integrity: ")
+  #  targetLabel[8].config(text = "Heat: ")
+  #  targetLabel[9].config(text = "Energy: ")
+#
     j = 10
     while(i<len(shipLookup[shipCounter].systemSlots)):
         if(time.time() - t0 > 1):
             return 0
         system = shipLookup[shipCounter].systemSlots[i]
-        targetLabel[j].config(text = system.name)
         readiness = round((abs(system.maxCooldown-system.cooldown)/float(system.maxCooldown))*100.0)
+        currentStyle = targetLabel[j+1].cget("style")
+        styleToSet = 0
         if(readiness == 100):
-            targetLabel[j+1].config(style = "Green.TLabel")
+            styleToSet = "Green.TLabel"
         elif(readiness < 30):
-            targetLabel[j+1].config(style = "Red.TLabel")
+            styleToSet = "Red.TLabel"
         elif(readiness > 70):
-            targetLabel[j+1].config(style = "Blue.TLabel")
+            styleToSet = "Blue.TLabel"
         else:
-            targetLabel[j+1].config(style = "Yellow.TLabel")
-        targetLabel[j+1].config(text = str(readiness))
-        integrity = system.integrity
-        if(integrity == system.maxIntegrity):
-            targetLabel[j+2].config(style = "Green.TLabel")
-        elif(integrity < system.maxIntegrity * 0.3):
-            targetLabel[j+2].config(style = "Red.TLabel")
-        elif(integrity > system.maxIntegrity * 0.7):
-            targetLabel[j+2].config(style = "Blue.TLabel")
-        else:
-            targetLabel[j+2].config(style = "Yellow.TLabel")
-        targetLabel[j+2].config(text = str(integrity))
+            styleToSet = "Yellow.TLabel"
+        if(not styleToSet == currentStyle):
+            targetLabel[j+1].config(style = styleToSet)
 
-        if(system.heat < 30):
-            targetLabel[j+3].config(style = "Green.TLabel")
-        elif(system.heat < 70):
-            targetLabel[j+3].config(style = "Blue.TLabel")
-        elif(system.heat > 200):
-            targetLabel[j+3].config(style = "Red.TLabel")
+        integrity = system.integrity
+        currentStyle = targetLabel[j+2].cget("style")
+        styleToSet = 0
+        if(integrity == system.maxIntegrity):
+            styleToSet = "Green.TLabel"
+        elif(integrity < system.maxIntegrity * 0.3):
+            styleToSet = "Red.TLabel"
+        elif(integrity > system.maxIntegrity * 0.7):
+            styleToSet = "Blue.TLabel"
         else:
-            targetLabel[j+3].config(style = "Yellow.TLabel")
+            styleToSet = "Yellow.TLabel"
+        if(not styleToSet == currentStyle):
+            targetLabel[j+2].config(style = styleToSet)
+
+        heat = system.heat
+        currentStyle = targetLabel[j+3].cget("style")
+        if(system.heat < 30):
+            styleToSet = "Green.TLabel"
+        elif(system.heat < 70):
+            styleToSet = "Blue.TLabel"
+        elif(system.heat > 200):
+            styleToSet = "Red.TLabel"
+        else:
+            styleToSet = "Yellow.TLabel"
+        if(not styleToSet == currentStyle):
+            targetLabel[j+3].config(style = styleToSet)
+        targetLabel[j+1].config(text = str(readiness))
+        targetLabel[j+2].config(text = str(integrity))
         targetLabel[j+3].config(text = str(system.heat))
         targetLabel[j+4].config(text = str(system.energy))
-        targetLabel[j+2].config(anchor = E)
-        targetLabel[j+3].config(anchor = E)
-        targetLabel[j+4].config(anchor = E)
+     #   targetLabel[j+2].config(anchor = E)
+     #   targetLabel[j+3].config(anchor = E)
+     #   targetLabel[j+4].config(anchor = E)
         i += 1
         j += 5
     return 0
@@ -287,10 +300,7 @@ def rotateVector(degree, object, moveDirX, moveDirY):
         object.xDir = object.xDir / scale
         object.yDir = object.yDir / scale
       
-def dealDamage(ship, dmg, var, targetSystem, heatDamage,uiElements,shipLookup,root):
-    updateLabel1 = False
-    if(dmg > 4 or heatDamage > 4):
-        updateLabel1 = True
+def dealDamage(ship, dmg, var, targetSystem, heatDamage,uiElements,shipLookup,root,events):
     system = ship.systemSlots[targetSystem]
     if(ship.shields > 0 and dmg > 0):
         tmp = 0
@@ -301,7 +311,7 @@ def dealDamage(ship, dmg, var, targetSystem, heatDamage,uiElements,shipLookup,ro
             tmp += 1
         ship.shields -= 1
     else:
-        armorEffect = math.ceil(ship.ap/20) + 3
+        armorEffect = math.ceil(ship.ap/10) + 3
         if(dmg <= armorEffect):
             if(ship.ap <= dmg):
                 dmg -= ship.ap
@@ -357,8 +367,7 @@ def dealDamage(ship, dmg, var, targetSystem, heatDamage,uiElements,shipLookup,ro
                 system3.integrity = 0
                 dmg -= math.floor(dmgToSystem)
         ship.hp -= dmg
-    #    if(updateLabel1):
-    #        updateLabels(uiElements,shipLookup,var)
+        endConditions.disabledShips(var,events)
         return
 
 
@@ -400,92 +409,6 @@ def createRocket(var,ship,target,targetSystem,_type,offsetX=0,offsetY=0):
     setattr(var.currentMissles[-1], 'targetSystem', targetSystem)
 
 
-def drawRockets(globalVar,ammunitionType,canvas):
-    for missle in globalVar.currentMissles:
-        color = "white"
-        drawX = (missle.xPos - globalVar.left) * \
-            globalVar.zoom
-        drawY = (missle.yPos - globalVar.top) * \
-            globalVar.zoom
-
-        dirLineX = missle.xDir
-        dirLineY = missle.yDir
-        
-        scale = math.sqrt((dirLineX)*(dirLineX) +
-                            (dirLineY)*(dirLineY))
-        dirLineX /= scale
-        dirLineY /= scale
-
-        if(not missle.sort == "kinetic"):
-            if(missle.owner == "ai1"):
-                _fill = "red"
-            elif(missle.owner == "player1"):
-                _fill = "green"
-            line = canvas.create_line(drawX,drawY,drawX+dirLineX*20,drawY+dirLineY*20,fill = _fill)
-            canvas.elements.append(line)
-        
-        if(missle.typeName == ammunitionType.type1adefault):
-            line = canvas.create_line(drawX-2, drawY-2,
-                            drawX+2, drawY+2, fill = color)
-            canvas.elements.append(line)
-        elif(missle.typeName == ammunitionType.type2adefault):
-            line = canvas.create_line(drawX-5, drawY-5,
-                            drawX+5, drawY+5, fill = color)
-            canvas.elements.append(line)
-        elif(missle.typeName == ammunitionType.kinetic1):
-            line = canvas.create_line(drawX-1, drawY-1,
-                            drawX+1, drawY+1, fill = color)
-            canvas.elements.append(line)
-        elif(missle.typeName == ammunitionType.incirination1adefault):
-            line = canvas.create_line(drawX-2, drawY-2,
-                            drawX-7, drawY+2, fill = color)
-            canvas.elements.append(line)
-            line = canvas.create_line(drawX-7, drawY+2,
-                            drawX, drawY+2, fill = color)
-            canvas.elements.append(line)
-            line = canvas.create_line(drawX, drawY+2,
-                            drawX+2, drawY-2, fill = color)
-            canvas.elements.append(line)
-            line = canvas.create_line(drawX+2, drawY-2,
-                            drawX-2, drawY-2, fill = color)
-            canvas.elements.append(line)
-
-        else:
-            line = canvas.create_line(drawX-5, drawY-5,
-                            drawX-7, drawY-5, fill = color)
-            canvas.elements.append(line)
-            line = canvas.create_line(drawX-5, drawY-5,
-                            drawX-7, drawY-5, fill = color)
-            canvas.elements.append(line)
-
-            line = canvas.create_line(drawX+5, drawY+5,
-                            drawX+7, drawY+5)
-            canvas.elements.append(line)
-            line = canvas.create_line(drawX+5, drawY+5,
-                            drawX+5, drawY+7, fill = color)
-            canvas.elements.append(line)
-
-            line = canvas.create_line(drawX+5, drawY-5,
-                            drawX+7, drawY-5, fill = color)
-            canvas.elements.append(line)
-            line = canvas.create_line(drawX+5, drawY-5,
-                            drawX+5, drawY-7, fill = color)
-            canvas.elements.append(line)
-
-            line = canvas.create_line(drawX-5, drawY+5,
-                            drawX-7, drawY+5, fill = color)
-            canvas.elements.append(line)
-            line = canvas.create_line(drawX-5, drawY+5,
-                            drawX-5, drawY+7, fill = color)
-            canvas.elements.append(line)
-
-            line = canvas.create_line(drawX+1, drawY,
-                            drawX-1, drawY, fill = color)
-            canvas.elements.append(line)
-            line = canvas.create_line(drawX, drawY+1,
-                            drawX, drawY-1, fill = color)
-            canvas.elements.append(line)
-
 def drawLandmarks(var,canvas,uiIcons):
     for landmark in var.landmarks:
         drawX = (landmark.xPos - var.left) * \
@@ -523,20 +446,8 @@ def killShip(shipId,var,events,shipLookup,uiElements,uiMetrics,root,canvas):
     for missle in var.currentMissles:
         if shipLookup[missle.target] == ship1.id:
             var.currentMissles.remove(missle)
-    noEnemies = True
-    noPlayers = True
     for progressBar in ship1.shieldsLabel:
         progressBar['value'] = 0
-    for ship in var.ships:
-        print(ship.owner)
-   #     print("id" + str(ship.id))
-        if(not ship.owner == "player1" and not ship.killed):
-            noEnemies = False
-            print(ship.name + "enemy")
-        elif(ship.owner == "player1" and not ship.killed):
-            noPlayers = False
-            print(ship.name + "player")
-        print("next")
     if(ship1.id == 0):
         uiElements.RadioElementsList[0].config(state = DISABLED)
         uiElements.RadioElementsList[0].config(text = "Destroyed")
@@ -577,44 +488,13 @@ def killShip(shipId,var,events,shipLookup,uiElements,uiMetrics,root,canvas):
             var.shipChosen = 10
 
         ### elimination win condition to put in another file later
-    if (noEnemies and not events.showedWin):
-        window = Toplevel()
-        window.config(bg="#202020", width = 600, height = 600)
-        label = ttk.Label(window, style = "Grey.TLabel", text='You Won\n\n'+ var.winMessage+'\n\nPress "Exit to Menu" to continue')
-        label.config(justify='center')
-        label.pack()
-        events.showedWin = True
-    if (noPlayers and not events.showedLoose):
-        window = Toplevel()
-        window.config(bg="#202020", width = 600, height = 600)
-        label = ttk.Label(window, style = "Grey.TLabel", text='You Lost\n\n'+ var.looseMessage+'\n\nPress "Exit to Menu" to continue')
-        label.config(justify='center')
-        label.pack()
-        events.showedLoose = True
+    endConditions.killedShips(var,events)
     for element in var.ships:
         if element.id == shipId:
             (var.ships).remove(element)
             break
     updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas)
 
-def clearUtilityChoice(uiElements,var):
-    for widget in (uiElements.systemsLF).winfo_children():
-        widget.destroy()
-    (uiElements.systemsLF).destroy()
-    uiElements.uiSystems = []
-    uiElements.uiSystemsProgressbars = []
-
-def updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas):
-    clearUtilityChoice(uiElements,var)
-    shipChosen = shipLookup[var.shipChoice]
-    uiElements.systemsLF = ttk.Labelframe(root,style = 'Grey.TLabelframe', width=uiMetrics.canvasWidth*4/5, \
-                                                    height = uiMetrics.systemScalesLFHeight, text= shipChosen.name + " systems", \
-                                                    borderwidth=2, relief="groove")
-
-    var.uiEnergyLabel = ttk.Label(uiElements.systemsLF,style = 'Grey.TLabel', width=20, text = "Energy remaining: " + str(shipChosen.energy), font = "16")
-    hideBattleUi(uiElements.staticUi,uiElements)
-    placeBattleUi(uiElements,uiMetrics,canvas,var,shipLookup,root,uiElements)
-       
 
 def updateShips(var,uiMetrics,gameRules,shipLookup,events,uiElements,root,canvas):  # rotate and move the chosen ship
     for ship in var.ships:
@@ -642,10 +522,10 @@ def updateShips(var,uiMetrics,gameRules,shipLookup,events,uiElements,root,canvas
 
         if(colorWeight < 600 and colorWeight > 200):
             movementPenality = gameRules.movementPenalityMedium
-            dealDamage(shipLookup[ship.id], 0, var,-1, 0.05,uiElements,shipLookup,root)
+            dealDamage(shipLookup[ship.id], 0, var,-1, 0.05,uiElements,shipLookup,root,events)
         elif(colorWeight < 200):
             movementPenality = gameRules.movementPenalityHard
-            dealDamage(shipLookup[ship.id], 1, var,-1, 1,uiElements,shipLookup,root)
+            dealDamage(shipLookup[ship.id], 1, var,-1, 1,uiElements,shipLookup,root,events)
             checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas)
         else:
             movementPenality = 0.000001  # change

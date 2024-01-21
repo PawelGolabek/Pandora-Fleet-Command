@@ -24,6 +24,36 @@ def hideSystemTargets(uiElementsList):
     for uiElement in uiElementsList:
         uiElement.place_forget()
 
+def updateCheckbox(var,shipLookup,uiElements):    
+    shipChosen = shipLookup[var.shipChoice]
+    var.uiTargetOnlyCB =  ttk.Checkbutton(uiElements.systemsLF,variable = shipChosen.CBVar, style = 'Red.TCheckbutton', text = "Target Only", onvalue = 1, offvalue = 0,command=shipChosen.setTargetOnly)
+
+    shipChosen = shipLookup[var.shipChoice]
+    if(shipChosen.targetOnly):
+        shipChosen.CBVar.set(1)
+    else:
+        shipChosen.CBVar.set(0)
+    var.uiTargetOnlyCB.place(x = 300, y = 20)
+    var.uiTargetOnlyCB.invoke()
+    var.uiTargetOnlyCB.invoke()
+
+def clearUtilityChoice(uiElements,var):
+    for widget in (uiElements.systemsLF).winfo_children():
+        widget.destroy()
+    (uiElements.systemsLF).destroy()
+    uiElements.uiSystems = []
+    uiElements.uiSystemsProgressbars = []
+
+       
+def updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas):
+    clearUtilityChoice(uiElements,var)
+    shipChosen = shipLookup[var.shipChoice]
+    uiElements.systemsLF = ttk.Labelframe(root,style = 'Grey.TLabelframe', width=uiMetrics.canvasWidth*4/5, \
+                                                    height = uiMetrics.systemScalesLFHeight, text= shipChosen.name + " systems", \
+                                                    borderwidth=2, relief="groove")
+    var.uiEnergyLabel = ttk.Label(uiElements.systemsLF,style = 'Grey.TLabel', width=20, text = "Energy remaining: " + str(shipChosen.energy), font = "16")
+    hideBattleUi(uiElements.staticUi,uiElements)
+    placeBattleUi(uiElements,uiMetrics,canvas,var,shipLookup,root,uiElements)
 
 def placeBattleUi(staticUi,uiMetrics,canvas,var,shipLookup,root,uiElements):
     
@@ -71,19 +101,29 @@ def placeBattleUi(staticUi,uiMetrics,canvas,var,shipLookup,root,uiElements):
                 tmp += (((lenGap+lenPro)/lenTotal)/tmpShip.maxShields)*(uiMetrics.systemsLFWidth)
                 i+=1
 
-    ########################## SYSTEMS  #######################
+    ######################### ENERGY #################################
+
     var.uiEnergyLabel.place(x = 10, y = 20) 
+
+
+    ######################## TARGET CHECKBOX #########################
+    updateCheckbox(var,shipLookup,uiElements)
+    ########################## SYSTEMS  #######################
 
     options = var.enemies
     shipTarget = StringVar()
     shipTarget.set(shipLookup[var.shipChoice].target)
-    optionMenu = tk.OptionMenu(staticUi.systemsLF, shipTarget, *options.keys(), command=lambda _: [shipLookup[var.shipChoice].setTarget(shipTarget),
-                                                                                                hideSystemTargets(uiElements.systemTargetsList),
-                                                                                                declareSystemsTargets(var,root,shipLookup,staticUi,uiMetrics,shipTarget,uiElements)])
+    optionMenu = tk.OptionMenu(staticUi.systemsLF, shipTarget, *options.keys(), command=lambda _: [shipLookup[var.shipChoice].setTarget(shipTarget),updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas)])
+  #  optionMenu = tk.OptionMenu(staticUi.systemsLF, shipTarget, *options.keys(), command=lambda _: [shipLookup[var.shipChoice].setTarget(shipTarget),
+  #                                                                                              hideSystemTargets(uiElements.systemTargetsList),
+  #                                                                                              updateCheckbox(var,shipLookup,uiElements),
+  #                                                                                              declareSystemsTargets(var,root,shipLookup,staticUi,uiMetrics,shipTarget,uiElements)])
     optionMenu.place(x = 160, y = 20)
     declareSystemsTargets(var,root,shipLookup,staticUi,uiMetrics,shipTarget,uiElements)
+    
 
 def declareSystemsTargets(var,root,shipLookup,staticUi,uiMetrics,shipTarget,uiElements):
+
     shipChosen = shipLookup[var.shipChoice]
     i=0
     sys1 = 0
@@ -250,12 +290,12 @@ def placeShipEditorUi(staticUi,uiMetrics):
 
 
 def placeCustomGameUi(staticUi,uiMetrics):   
-    (staticUi.blueShipLF0).place(x=uiMetrics.customBlueShipX,y=uiMetrics.customBlueShipY)
-    (staticUi.blueShipLF1).place(x=uiMetrics.customBlueShipX,y=uiMetrics.customBlueShipY + uiMetrics.cgShipYoffset)
-    (staticUi.blueShipLF2).place(x=uiMetrics.customBlueShipX,y=uiMetrics.customBlueShipY + uiMetrics.cgShipYoffset * 2)
-    (staticUi.redShipLF0).place(x=uiMetrics.customRedShipX,y=uiMetrics.customBlueShipY)
-    (staticUi.redShipLF1).place(x=uiMetrics.customRedShipX,y=uiMetrics.customBlueShipY + uiMetrics.cgShipYoffset)
-    (staticUi.redShipLF2).place(x=uiMetrics.customRedShipX,y=uiMetrics.customBlueShipY + uiMetrics.cgShipYoffset * 2)
+    (staticUi.blueShipLF0).place(x=uiMetrics.cgBlueShipX,y=uiMetrics.cgBlueShipY)
+    (staticUi.blueShipLF1).place(x=uiMetrics.cgBlueShipX,y=uiMetrics.cgBlueShipY + uiMetrics.cgShipYoffset)
+    (staticUi.blueShipLF2).place(x=uiMetrics.cgBlueShipX,y=uiMetrics.cgBlueShipY + uiMetrics.cgShipYoffset * 2)
+    (staticUi.redShipLF0).place(x=uiMetrics.cgRedShipX,y=uiMetrics.cgBlueShipY)
+    (staticUi.redShipLF1).place(x=uiMetrics.cgRedShipX,y=uiMetrics.cgBlueShipY + uiMetrics.cgShipYoffset)
+    (staticUi.redShipLF2).place(x=uiMetrics.cgRedShipX,y=uiMetrics.cgBlueShipY + uiMetrics.cgShipYoffset * 2)
 
     (staticUi.blueShipOM0).place(x=10,y=10)
     (staticUi.blueShipOM1).place(x=10,y=10)
@@ -264,12 +304,14 @@ def placeCustomGameUi(staticUi,uiMetrics):
     (staticUi.redShipOM1).place(x=10,y=10)
     (staticUi.redShipOM2).place(x=10,y=10)
 
-    (staticUi.startGameButton).place(x=700,y=uiMetrics.cgStartButton)
-    (staticUi.exitToMenuButton).place(x=1200, y = uiMetrics.cgStartButton - 300)
-    (staticUi.mapLF).place(x=600,y=uiMetrics.cgMapChoiceY)
+    (staticUi.startGameButton).place(x=775,y=uiMetrics.cgStartButton)
+    (staticUi.exitToMenuButton).place(x=975, y = uiMetrics.cgStartButton)
+    (staticUi.mapLF).place(x=uiMetrics.cgMapChoiceX,y=uiMetrics.cgMapChoiceY)
     (staticUi.mapOM).place(x=10,y=10)
+    (staticUi.foWLF).place(x=uiMetrics.cgMapChoiceX,y=uiMetrics.cgMapChoiceY+100)
+    (staticUi.foWCB).place(x=10,y=10)
 
-    (staticUi.missionCanvas).place(x=uiMetrics.customBlueShipX + 150,y=10)
+    (staticUi.missionCanvas).place(x=uiMetrics.cgCanvasX,y=10)
     
 def placeSelectMenuUI(staticUi,uiMetrics):
     staticUi.levelOptionMenu.place(x=40,y=100)

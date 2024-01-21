@@ -227,11 +227,11 @@ integrity: {} \nmin energy: {} \nmax energy: {}\ncooling: {} \nmass: {}\ncost: {
         ship.cost -= self.cost
 
 
-class type1aCannon1(weapon):
-    def __init__ (self, id = 0, name = "Type1a Cannon", category = 'weapon', target = 'none', minEnergy=0, maxEnergy=3, energy=0,
+class bolter1(weapon):
+    def __init__ (self, id = 0, name = "Bolter1", category = 'weapon', target = 'none', minEnergy=0, maxEnergy=3, energy=0,
                      maxCooldown = 3000, integrity = 300, maxIntegrity = 300, cooldown = 0, mass = 10, cost = 40, cooling = 2):
-        super(type1aCannon1,self).__init__(id,name,category,target,minEnergy,maxEnergy,energy, maxCooldown, integrity, maxIntegrity,  cooldown, mass, cost, cooling)
-        self.description = ("Type1a Cannon I: \nWeapon System \n\
+        super(bolter1,self).__init__(id,name,category,target,minEnergy,maxEnergy,energy, maxCooldown, integrity, maxIntegrity,  cooldown, mass, cost, cooling)
+        self.description = ("Bolter I: \nWeapon System \n\
 integrity: {} \nmin energy: {} \nmax energy: {}\ncooling: {}  \n\
 missle damage: 90 \n\
 missle heat damage: 7.5 \
@@ -240,7 +240,7 @@ missle heat damage: 7.5 \
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0):
-            if(shoot(var,self,ship1,ammunition_type.type1adefault,ships,uiMetrics,shipLookup)):
+            if(shoot(var,self,ship1,ammunition_type.bolter,ships,uiMetrics,shipLookup)):
                 self.cooldown = self.maxCooldown
                 self.heat += 5
 
@@ -251,11 +251,11 @@ missle heat damage: 7.5 \
         ship.mass -= self.mass
         ship.cost -= self.cost
 
-class type1aCannon1C(type1aCannon1):
-    def __init__ (self, id = 0, name = "Type1a Cannon", category = 'weapon', target = 'none', minEnergy=0, maxEnergy=3, energy=0,
+class bolter1C(bolter1):
+    def __init__ (self, id = 0, name = "Bolter IC", category = 'weapon', target = 'none', minEnergy=0, maxEnergy=3, energy=0,
                      maxCooldown = 3000, integrity = 300, maxIntegrity = 300, cooldown = 0, mass = 10, cost = 40, cooling = 8):
-        super(type1aCannon1C,self).__init__(id,name,category,target,minEnergy,maxEnergy,energy, maxCooldown, integrity, maxIntegrity,  cooldown, mass, cost, cooling)
-        self.description = ("Type1a Cannon I: \nWeapon System \n\
+        super(bolter1C,self).__init__(id,name,category,target,minEnergy,maxEnergy,energy, maxCooldown, integrity, maxIntegrity,  cooldown, mass, cost, cooling)
+        self.description = ("Bolter IC: \nWeapon System \n\
 integrity: {} \nmin energy: {} \nmax energy: {}\ncooling: {}  \n\
 missle damage: 90 \n\
 missle heat damage: 7.5 \
@@ -263,11 +263,11 @@ missle heat damage: 7.5 \
         ").format(self.integrity,self.minEnergy,self.maxEnergy,self.cooling,self.mass,self.cost)
 
 
-class type2aCannon1(weapon):
-    def __init__ (self, id = 0, name = "Type2a Cannon", category = 'weapon', target = 'none', minEnergy=0, maxEnergy=6, energy=0,
+class missleLauncher1(weapon):
+    def __init__ (self, id = 0, name = "Missle Launcher I", category = 'weapon', target = 'none', minEnergy=0, maxEnergy=6, energy=0,
                      maxCooldown = 3000, integrity = 300, maxIntegrity = 300, cooldown = 0, mass = 15, cost = 65, cooling = 2):
-        super(type2aCannon1,self).__init__(id,name,category,target,minEnergy,maxEnergy,energy, maxCooldown, integrity, maxIntegrity,  cooldown, mass, cost, cooling)
-        self.description = ("Type1a Cannon I: \nWeapon System \n\
+        super(missleLauncher1,self).__init__(id,name,category,target,minEnergy,maxEnergy,energy, maxCooldown, integrity, maxIntegrity,  cooldown, mass, cost, cooling)
+        self.description = ("Missle Launcher I: \nWeapon System \n\
 integrity: {} \nmin energy: {} \nmax energy: {}\ncooling: {}  \n\
 missle damage: 160 \n\
 missle heat damage: 10 \
@@ -276,7 +276,7 @@ missle heat damage: 10 \
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0):
-            if(shoot(var,self,ship1,ammunition_type.type2adefault,ships,uiMetrics,shipLookup)):
+            if(shoot(var,self,ship1,ammunition_type.missle,ships,uiMetrics,shipLookup)):
                 self.cooldown = self.maxCooldown
                 self.heat += 10
 
@@ -287,11 +287,11 @@ missle heat damage: 10 \
         ship.mass -= self.mass
         ship.cost -= self.cost
 
-class type3aCannon1(weapon):
-    def __init__ (self, id = 0, name = "Type3a Cannon", category = 'weapon', target = 'none', minEnergy=0, maxEnergy=3, energy=0,
+class atomicCannon1(weapon):
+    def __init__ (self, id = 0, name = "Atomic Cannon I", category = 'weapon', target = 'none', minEnergy=0, maxEnergy=3, energy=0,
                      maxCooldown = 17000, integrity = 450, maxIntegrity = 450, cooldown = 0, mass = 30, cost = 160, cooling = 1):
-        super(type3aCannon1,self).__init__(id,name,category,target,minEnergy,maxEnergy,energy, maxCooldown, integrity, maxIntegrity,  cooldown, mass, cost, cooling)
-        self.description = ("Type3a Cannon I: \nWeapon System \n\
+        super(atomicCannon1,self).__init__(id,name,category,target,minEnergy,maxEnergy,energy, maxCooldown, integrity, maxIntegrity,  cooldown, mass, cost, cooling)
+        self.description = ("Atomic Cannon I: \nWeapon System \n\
 integrity: {} \nmin energy: {} \nmax energy: {}\ncooling: {}  \n\
 missle damage: 1000 \n\
 missle heat damage: 50\
@@ -301,7 +301,7 @@ missle heat damage: 50\
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
         if(self.cooldown <= 0):
-            if(shoot(var,self,ship1,ammunition_type.type3adefault,ships,uiMetrics,shipLookup)):
+            if(shoot(var,self,ship1,ammunition_type.nuke,ships,uiMetrics,shipLookup)):
                 self.cooldown = self.maxCooldown
                 self.heat += 100
         
@@ -316,7 +316,7 @@ class incirination1Cannon1(weapon):
     def __init__ (self, id = 0, name = "Incirination I", category = 'weapon', target = 'none', minEnergy=0, maxEnergy=2, energy=0,
                      maxCooldown = 4000, integrity = 300, maxIntegrity = 300, cooldown = 0, mass = 30, cost = 160, cooling = 5):
         super(incirination1Cannon1,self).__init__(id,name,category,target,minEnergy,maxEnergy,energy, maxCooldown, integrity, maxIntegrity,  cooldown, mass, cost, cooling)
-        self.description = ("Type1a Cannon I: \nWeapon System \n\
+        self.description = ("Incirination Cannon I: \nWeapon System \n\
 integrity: {} \nmin energy: {} \nmax energy: {}\ncooling: {}  \n\
 missle damage: 10 \n\
 missle heat damage: 400\
@@ -341,7 +341,7 @@ class incirination1Cannon1C(incirination1Cannon1):
     def __init__ (self, id = 0, name = "Incirination I", category = 'weapon', target = 'none', minEnergy=0, maxEnergy=2, energy=0,
                      maxCooldown = 4000, integrity = 300, maxIntegrity = 300, cooldown = 0, mass = 30, cost = 160, cooling = 12):
         super(incirination1Cannon1C,self).__init__(id,name,category,target,minEnergy,maxEnergy,energy, maxCooldown, integrity, maxIntegrity,  cooldown, mass, cost, cooling)
-        self.description = ("Type1a Cannon I: \nWeapon System \n\
+        self.description = ("Incirination Cannon I: \nWeapon System \n\
 integrity: {} \nmin energy: {} \nmax energy: {}\ncooling: {}  \n\
 missle damage: 10 \n\
 missle heat damage: 400\
@@ -522,15 +522,20 @@ def shoot(var,system,ship,ammunitionType,ships,uiMetrics,shipLookup,offsetX=0,of
                 for element in list:
                     distance2 = (element.x-ship2.xPos)*(element.x-ship2.xPos) + (element.y-ship2.yPos)*(element.y-ship2.yPos)
                     if(ship2.visible == True and distance2 < (ship.detectionRange*ship.detectionRange)):
-                        if(ship2.name == ship.target):
-                            minDist2 = distance2
-                            shipToShoot = ship2
-                            break1 = True
                         if(distance2 < minDist2):
                             minDist2 = distance2
                             shipToShoot = ship2
+                        if(ship2.name == ship.target):
+                            if(ship.targetOnly):
+                                shipToShoot = ship2
+                                break1 = True
+                                break
+                            minDist2 = distance2
                 if(break1):
                     break
+        print(ship.targetOnly)
+        if(not(ship2.name == ship.target) and ship.targetOnly):
+            shipToShoot = 0
         if(shipToShoot):
             system.shotThisTurn = True
             if(shipToShoot.name == ship.target):
@@ -545,10 +550,10 @@ def shoot(var,system,ship,ammunitionType,ships,uiMetrics,shipLookup,offsetX=0,of
 def declareGlobalSystems():
     naglowek.systemLookup = {           #for system creation
     "throttleBrake1": throttleBrake1,
-    "type1aCannon1": type1aCannon1,
-    "type1aCannon1C": type1aCannon1C,
-    "type2aCannon1": type2aCannon1,
-    "type3aCannon1": type3aCannon1,
+    "bolter1": bolter1,
+    "bolter1C": bolter1C,
+    "missleLauncher1": missleLauncher1,
+    "atomicCannon1": atomicCannon1,
     "incirination1Cannon1": incirination1Cannon1,
     "incirination1Cannon1C": incirination1Cannon1C,
     "antiMissleSystem1": antiMissleSystem1,
@@ -566,9 +571,9 @@ def declareGlobalSystems():
     naglowek.allSystemsList = [           #for dropdown menus
         'none',
         "throttleBrake1",
-        "type1aCannon1",
-        "type2aCannon1",
-        "type3aCannon1",
+        "bolter1",
+        "missleLauncher1",
+        "atomicCannon1",
         "incirination1Cannon1",
         "antiMissleSystem1",
         "antiMissleSystem2",
@@ -580,9 +585,9 @@ def declareGlobalSystems():
         "kinetic1",
         ]
     (naglowek.systemStatsBlueprints).throttleBrake1 = throttleBrake1()           
-    (naglowek.systemStatsBlueprints).type1aCannon1 = type1aCannon1()
-    (naglowek.systemStatsBlueprints).type2aCannon1 = type2aCannon1()
-    (naglowek.systemStatsBlueprints).type3aCannon1 = type3aCannon1()
+    (naglowek.systemStatsBlueprints).bolter1 = bolter1()
+    (naglowek.systemStatsBlueprints).missleLauncher1 = missleLauncher1()
+    (naglowek.systemStatsBlueprints).atomicCannon1 = atomicCannon1()
     (naglowek.systemStatsBlueprints).incirination1Cannon1 = incirination1Cannon1()
     (naglowek.systemStatsBlueprints).antiMissleSystem1 = antiMissleSystem1()
     (naglowek.systemStatsBlueprints).antiMissleSystem2 = antiMissleSystem2()
@@ -598,10 +603,10 @@ def declareGlobalSystems():
     naglowek.systemStats = {                                                  #to lookup statistics without creating
         'none': (naglowek.systemStatsBlueprints).none,
         "throttleBrake1": (naglowek.systemStatsBlueprints).throttleBrake1,
-        "type1aCannon1": (naglowek.systemStatsBlueprints).type1aCannon1,
-        "type2aCannon1": (naglowek.systemStatsBlueprints).type2aCannon1,
-        "type3aCannon1": (naglowek.systemStatsBlueprints).incirination1Cannon1,
-        "incirination1Cannon1":(naglowek.systemStatsBlueprints).type3aCannon1,
+        "bolter1": (naglowek.systemStatsBlueprints).bolter1,
+        "missleLauncher1": (naglowek.systemStatsBlueprints).missleLauncher1,
+        "atomicCannon1": (naglowek.systemStatsBlueprints).atomicCannon1,
+        "incirination1Cannon1":(naglowek.systemStatsBlueprints).incirination1Cannon1,
         "antiMissleSystem1": (naglowek.systemStatsBlueprints).antiMissleSystem1,
         "antiMissleSystem2": (naglowek.systemStatsBlueprints).antiMissleSystem2,
         "gattlingLaser1": (naglowek.systemStatsBlueprints).gattlingLaser1,

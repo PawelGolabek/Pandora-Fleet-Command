@@ -295,8 +295,8 @@ def zeroShip(info):
     (info.ship).cost = 0
     (info.ship).hp = 100
     (info.ship).ap = 100
-    (info.ship).shields = 1
-    (info.ship).maxShields = 1
+    (info.ship).shields = 0
+    (info.ship).maxShields = 0
     (info.ship).detectionRange = 100
     (info.ship).maxSpeed = 0
     (info.ship).turnRate = 0.3

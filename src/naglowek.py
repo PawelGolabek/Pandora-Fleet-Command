@@ -135,14 +135,20 @@ class ui_metrics():
     editorChoiceMenuY = 150
     shipStatsLFHeight = 430
     shipStatsLFWidth = 350
-    customShipLF = 150
-    customRedShipX = rootX-300-customShipLF
-    customBlueShipX = 300+customShipLF
-    customBlueShipY = 600
-    customMapLFWidth = 300
+    #custom game
+    cgShipLF = 150
+    cgRedShipX = rootX-300-cgShipLF
+    cgBlueShipX = 300+cgShipLF
+    cgBlueShipY = 600
+    cgMapLFWidth = 300
     cgShipYoffset = 100
-    cgStartButton = customBlueShipY + cgShipYoffset *2
-    cgMapChoiceY = cgStartButton - cgShipYoffset *1.5
+    cgStartButton = cgBlueShipY + cgShipYoffset *2
+    cgCanvasWidth = 800
+    cgCanvasHeight = 500
+    cgCanvasX = rootX/2 - cgCanvasWidth/2
+    cgMapChoiceY = cgCanvasHeight + 30
+    cgMapChoiceX = rootX/2 - cgMapLFWidth/2
+    #ms
     msCanvasWidth = 800
     msCanvasHeight = 500
     msCanvasX = 440
@@ -187,9 +193,9 @@ def declareGlobals():
     global combatUiReady
     global missionSelectUiReady
     global editorUiReady
-    global customGameUiReady
+    global cgGameUiReady
     global combatSystemInfo
-    global customGameInfo
+    global cgGameInfo
     global editorInfo
     global shipEditorInfo
     global mainInfo
@@ -236,7 +242,7 @@ def declareGlobals():
     radarStatsBlueprints = dynamic_object()
     generatorStatsBlueprints = dynamic_object()
     systemLookup = dynamic_object()
-    customGameInfo = dynamic_object()
+    cgGameInfo = dynamic_object()
     campaignOptions = dynamic_object()
     allSystemsList = []
     allSubsystemsList = []
@@ -248,5 +254,5 @@ def declareGlobals():
     combatUiReady = False
     editorUiReady = False
     missionSelectUiReady = False
-    customGameUiReady = False
+    cgGameUiReady = False
     ovalNumber = 0

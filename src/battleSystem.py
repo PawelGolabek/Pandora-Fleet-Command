@@ -1,7 +1,6 @@
 import configparser
 import math
 import os
-import random
 import sys
 import time
 import tkinter as tk
@@ -14,7 +13,6 @@ from functools import partial
 from pathlib import Path
 from random import randint
 from tabnanny import check
-from tkinter import *
 from tkinter import BOTH, Canvas, Frame, Tk
 from tkinter.filedialog import askopenfilename
 
@@ -46,6 +44,8 @@ class _events():
     playerDestroyed = False
     showedWin = False
     showedLoose = False
+    disabledWin = False
+    disabledLoose = False
 
 
 ############################## AMUNITION #############################################
@@ -57,6 +57,12 @@ class ship():
         self.target = variable.get()
     def setTargetStr(self,variable):
         self.target = variable
+    def setTargetOnly(self):
+        if(self.targetOnly):
+            self.targetOnly = False
+        else:
+            self.targetOnly = True
+        print(self.targetOnly)
     def __init__(self,var, name="MSS Artemis", owner="ai2", target=0,
                  hp=200, maxHp=None, ap=10000, maxAp=None, shields=3, maxShields = 3, xPos=300, yPos=300,energyLimit = 20,
                  ammunitionChoice=0, ammunitionNumberChoice=0, systemSlots = [],systemStatus = [],
@@ -120,6 +126,11 @@ class ship():
         self.signatureCounter = 0
         self.killed = False
         self.color = color
+        self.targetOnly = False
+        self.CBVar = IntVar()
+        self.CBVar.set(0)
+        #for events
+        self.disabled = False
         #ai info
         if(owner=="ai1"):
             self.prefMinRange = 100
@@ -185,7 +196,7 @@ def manageRockets(missles,shipLookup,var,events,uiElements,uiMetrics,root,canvas
     for missle in missles:
         if(missle.sort == 'laser'):
             putLaser(missle,var,shipLookup)
-            dealDamage(shipLookup[missle.target], missle.damage,var,missle.targetSystem, missle.heat,uiElements,shipLookup,root)
+            dealDamage(shipLookup[missle.target], missle.damage,var,missle.targetSystem, missle.heat,uiElements,shipLookup,root,events)
             missles.remove(missle)
             checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas)
             continue
@@ -237,7 +248,7 @@ def manageRockets(missles,shipLookup,var,events,uiElements,uiMetrics,root,canvas
             abs(missle.xPos - targetShipX) +
             abs(missle.yPos - targetShipY) *
             abs(missle.yPos - targetShipY)) < 25):
-            dealDamage(shipLookup[missle.target], missle.damage,var,missle.targetSystem,missle.heat,uiElements,shipLookup,root)
+            dealDamage(shipLookup[missle.target], missle.damage,var,missle.targetSystem,missle.heat,uiElements,shipLookup,root,events)
             missles.remove(missle)
             continue
         if(0 > missle.xPos):
@@ -1019,7 +1030,6 @@ def resume(config,root,menuUiElements):
         events = _events()
         uiElements = naglowek.dynamic_object()
         uiElements.systemsLF = ttk.Labelframe(root,style = 'Grey.TLabelframe', text= "" + " systems",borderwidth=2, width=uiMetrics.canvasWidth*4/5)
-        uiElements.uiEnergyLabel =  ttk.Label(uiElements.systemsLF,style = 'Grey.TLabel', width=20, text = "Energy remaining: ", font = "16")
         uiElements.staticUi = []
         uiIcons.armorIcon = PhotoImage(file=os.path.join(cwd, "icons","armor.png"))
 

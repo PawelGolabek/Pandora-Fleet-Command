@@ -78,7 +78,7 @@ mass: {}\ncost: {}\
         ship.mass += self.mass
         ship.cost += self.cost
         ship.shields += self.shieldBoost
-        ship.maxShields += self.energyCons
+        ship.maxShields += self.shieldBoost
         ship.maxEnergy -= self.energyCons
         ship.minEnergyConsumption += self.energyCons
         ship.maxEnergyConsumption += self.energyCons
@@ -86,7 +86,7 @@ mass: {}\ncost: {}\
         ship.mass -= self.mass
         ship.cost -= self.cost
         ship.shields -= self.shieldBoost
-        ship.maxShields -= self.energyCons
+        ship.maxShields -= self.shieldBoost
         ship.maxEnergy += self.energyCons
         ship.minEnergyConsumption -= self.energyCons
         ship.maxEnergyConsumption -= self.energyCons

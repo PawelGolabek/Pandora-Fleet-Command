@@ -23,30 +23,30 @@ class ammunition():
         self.heat = heat
         
 class ammunition_type:
-    type1adefault = ammunition()
-    type1adefault.name = 'type1a'
-    type1adefault.typeName = 'type1a'
-    type1adefault.damage = 90
-    type1adefault.turnRate = 6
-    type1adefault.speed = 110
-    type1adefault.heat = 7.5
-    type1adefault.color = rgbtohex(250,250,20)
+    bolter = ammunition()
+    bolter.name = 'bolter'
+    bolter.typeName = 'bolter'
+    bolter.damage = 90
+    bolter.turnRate = 6
+    bolter.speed = 110
+    bolter.heat = 7.5
+    bolter.color = rgbtohex(250,250,20)
 
-    type2adefault = ammunition()
-    type2adefault.name = 'type2a'
-    type2adefault.typeName = 'type2a'
-    type2adefault.damage = 160
-    type2adefault.turnRate = 6
-    type2adefault.speed = 100
-    type2adefault.heat = 10
+    missle = ammunition()
+    missle.name = 'missle'
+    missle.typeName = 'missle'
+    missle.damage = 160
+    missle.turnRate = 6
+    missle.speed = 100
+    missle.heat = 10
 
-    type3adefault = ammunition()
-    type3adefault.name = 'type3a'
-    type3adefault.typeName = 'type3a'
-    type3adefault.damage = 1000
-    type3adefault.turnRate = 6
-    type3adefault.speed = 70
-    type3adefault.heat = 50
+    nuke = ammunition()
+    nuke.name = 'nuke'
+    nuke.typeName = 'nuke'
+    nuke.damage = 1000
+    nuke.turnRate = 6
+    nuke.speed = 70
+    nuke.heat = 50
 
     laser1adefault = ammunition()
     laser1adefault.name = 'laser1a'
@@ -89,4 +89,4 @@ class ammunition_type:
     incirination1adefault.turnRate = 6
     incirination1adefault.ttl = 800
     incirination1adefault.heat = 400
-    type1adefault.color = rgbtohex(250,250,20)
+    incirination1adefault.color = rgbtohex(250,250,20)

@@ -1,3 +1,7 @@
+import os
+from pathlib import Path
+import sys,os
+
 import src.naglowek as naglowek
 
 def declareGlobalMaps():
@@ -10,4 +14,16 @@ def declareGlobalMaps():
     "sol25",
     "hadesPortal",
     ]
-    naglowek.campaignOptions = ["1. Exiled-To-Make-A-Stand","2. Warcries-That-Shred-The-Clouds","3. Destination-For-Past-That-Never-Was","4. The-Void-Within","5. Burn-Those-Who-Opose-Us"]
+    cwd = Path(sys.argv[0])
+    cwd = str(cwd.parent)
+    filePath = os.path.join(cwd, "campaignMissions\\")
+    print(filePath)
+    os.walk(filePath)
+    naglowek.campaignOptions = os.listdir(filePath)
+
+    filePath = os.path.join(cwd, "maps\\")
+    print(filePath)
+    os.walk(filePath)
+    naglowek.mapOptions = os.listdir(filePath)
+
+  #  naglowek.campaignOptions = ["1. Exiled-To-Make-A-Stand","2. Warcries-That-Shred-The-Clouds","3. Destination-For-Past-That-Never-Was","4. The-Void-Within","5. Burn-Those-Who-Opose-Us"]

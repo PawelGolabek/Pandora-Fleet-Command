@@ -187,3 +187,89 @@ def createPFMask(var,uiMetrics):
         j=0
         i+=1
     return mapMask
+
+def drawRockets(globalVar,ammunitionType,canvas):
+    for missle in globalVar.currentMissles:
+        color = "white"
+        drawX = (missle.xPos - globalVar.left) * \
+            globalVar.zoom
+        drawY = (missle.yPos - globalVar.top) * \
+            globalVar.zoom
+
+        dirLineX = missle.xDir
+        dirLineY = missle.yDir
+        
+        scale = math.sqrt((dirLineX)*(dirLineX) +
+                            (dirLineY)*(dirLineY))
+        dirLineX /= scale
+        dirLineY /= scale
+
+        if(not missle.sort == "kinetic"):
+            if(missle.owner == "ai1"):
+                _fill = "red"
+            elif(missle.owner == "player1"):
+                _fill = "green"
+            line = canvas.create_line(drawX,drawY,drawX+dirLineX*20,drawY+dirLineY*20,fill = _fill)
+            canvas.elements.append(line)
+        
+        if(missle.typeName == ammunitionType.bolter):
+            line = canvas.create_line(drawX-2, drawY-2,
+                            drawX+2, drawY+2, fill = color)
+            canvas.elements.append(line)
+        elif(missle.typeName == ammunitionType.missle):
+            line = canvas.create_line(drawX-5, drawY-5,
+                            drawX+5, drawY+5, fill = color)
+            canvas.elements.append(line)
+        elif(missle.typeName == ammunitionType.kinetic1):
+            line = canvas.create_line(drawX-1, drawY-1,
+                            drawX+1, drawY+1, fill = color)
+            canvas.elements.append(line)
+        elif(missle.typeName == ammunitionType.incirination1adefault):
+            line = canvas.create_line(drawX-2, drawY-2,
+                            drawX-7, drawY+2, fill = color)
+            canvas.elements.append(line)
+            line = canvas.create_line(drawX-7, drawY+2,
+                            drawX, drawY+2, fill = color)
+            canvas.elements.append(line)
+            line = canvas.create_line(drawX, drawY+2,
+                            drawX+2, drawY-2, fill = color)
+            canvas.elements.append(line)
+            line = canvas.create_line(drawX+2, drawY-2,
+                            drawX-2, drawY-2, fill = color)
+            canvas.elements.append(line)
+
+        else:
+            line = canvas.create_line(drawX-5, drawY-5,
+                            drawX-7, drawY-5, fill = color)
+            canvas.elements.append(line)
+            line = canvas.create_line(drawX-5, drawY-5,
+                            drawX-7, drawY-5, fill = color)
+            canvas.elements.append(line)
+
+            line = canvas.create_line(drawX+5, drawY+5,
+                            drawX+7, drawY+5)
+            canvas.elements.append(line)
+            line = canvas.create_line(drawX+5, drawY+5,
+                            drawX+5, drawY+7, fill = color)
+            canvas.elements.append(line)
+
+            line = canvas.create_line(drawX+5, drawY-5,
+                            drawX+7, drawY-5, fill = color)
+            canvas.elements.append(line)
+            line = canvas.create_line(drawX+5, drawY-5,
+                            drawX+5, drawY-7, fill = color)
+            canvas.elements.append(line)
+
+            line = canvas.create_line(drawX-5, drawY+5,
+                            drawX-7, drawY+5, fill = color)
+            canvas.elements.append(line)
+            line = canvas.create_line(drawX-5, drawY+5,
+                            drawX-5, drawY+7, fill = color)
+            canvas.elements.append(line)
+
+            line = canvas.create_line(drawX+1, drawY,
+                            drawX-1, drawY, fill = color)
+            canvas.elements.append(line)
+            line = canvas.create_line(drawX, drawY+1,
+                            drawX, drawY-1, fill = color)
+            canvas.elements.append(line)

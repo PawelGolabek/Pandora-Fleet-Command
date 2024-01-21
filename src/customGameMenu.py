@@ -81,7 +81,7 @@ def runGame(info,configIn,root,menuUiElements):
 
     if(not configOut.has_section("Options")):
         configOut.add_section("Options")
-    configOut.set("Options", "fogOfWar",'0')
+    configOut.set("Options", "fogOfWar",info.fogOfWar.get())
 
     if(not configOut.has_section("Images")):
         configOut.add_section("Images")
@@ -191,7 +191,7 @@ def updateMissionCanvas(missionCanvas,info,msmVar):
 
 def customGame(root,config,uiMenuElements,uiMetrics):
     root.title("Custom Game Menu")
-    if(not naglowek.customGameUiReady):
+    if(not naglowek.cgGameUiReady):
         configIn = configparser.ConfigParser()
         cwd = Path(sys.argv[0])
         cwd = str(cwd.parent)
@@ -200,7 +200,7 @@ def customGame(root,config,uiMenuElements,uiMetrics):
 
         uiElements = dynamic_object()        
         uiElementsList = []
-        info = naglowek.customGameInfo   
+        info = naglowek.cgGameInfo   
             
         cwd = str(sys.argv[0]).removesuffix("\main.py")
         cwd = str(sys.argv[0]).removesuffix("/main.py")
@@ -208,10 +208,12 @@ def customGame(root,config,uiMenuElements,uiMetrics):
         mapOptions = naglowek.mapOptions
         info.mapChoice = StringVar(root)
         info.mapChoice.set(mapOptions[0])
-        uiElements.missionCanvas = Canvas(root,width = 800, height = 500)
+        uiElements.missionCanvas = Canvas(root,width = uiMetrics.cgCanvasWidth, height = uiMetrics.cgCanvasHeight)
         (uiElements.missionCanvas).config(bg="green")
         msmVar = naglowek.dynamic_object()
         imageToAvoidTrashCollecting = updateMissionCanvas(uiElements.missionCanvas,info,msmVar)
+
+        info.fogOfWar = StringVar(root)
 
         shipOptions = configIn.sections()
         shipOptions = ["none"] + shipOptions
@@ -236,15 +238,18 @@ def customGame(root,config,uiMenuElements,uiMetrics):
         uiElementsList.append(uiElements.startGameButton)
         uiElementsList.append(uiElements.exitToMenuButton)
 
-        uiElements.mapLF = ttk.Labelframe(root,style = 'Grey.TLabelframe', width = uiMetrics.customMapLFWidth, height = 100, text = "Map Choice")
+        uiElements.mapLF = ttk.Labelframe(root,style = 'Grey.TLabelframe', width = uiMetrics.cgMapLFWidth, height = 100, text = "Map Choice")
         uiElements.mapOM = OptionMenu(uiElements.mapLF, info.mapChoice, *mapOptions, command = lambda _:[updateButton(info, uiElements.startGameButton, info.mapChoice),updateMissionCanvas(uiElements.missionCanvas,info,msmVar)])
+        uiElements.foWLF = ttk.Labelframe(root,style = 'Grey.TLabelframe', width = uiMetrics.cgMapLFWidth, height = 70, text = "Special Rules")
+        uiElements.foWCB = ttk.Checkbutton(uiElements.foWLF,style = "Red.TCheckbutton", text = "Fog of War", width = 20)
+        uiElements.foWCB.invoke()
 
-        uiElements.blueShipLF0 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = uiMetrics.customShipLF, height = 80, text = "Blue team ship 1")
-        uiElements.blueShipLF1 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = uiMetrics.customShipLF, height = 80, text = "Blue team ship 2")
-        uiElements.blueShipLF2 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = uiMetrics.customShipLF, height = 80, text = "Blue team ship 3")
-        uiElements.redShipLF0 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = uiMetrics.customShipLF, height = 80, text = "Red team ship 1")
-        uiElements.redShipLF1 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = uiMetrics.customShipLF, height = 80, text = "Red team ship 2")
-        uiElements.redShipLF2 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = uiMetrics.customShipLF, height = 80, text = "Red team ship 3")
+        uiElements.blueShipLF0 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = uiMetrics.cgShipLF, height = 80, text = "Blue team ship 1")
+        uiElements.blueShipLF1 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = uiMetrics.cgShipLF, height = 80, text = "Blue team ship 2")
+        uiElements.blueShipLF2 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = uiMetrics.cgShipLF, height = 80, text = "Blue team ship 3")
+        uiElements.redShipLF0 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = uiMetrics.cgShipLF, height = 80, text = "Red team ship 1")
+        uiElements.redShipLF1 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = uiMetrics.cgShipLF, height = 80, text = "Red team ship 2")
+        uiElements.redShipLF2 = ttk.Labelframe(root, style = 'Grey.TLabelframe', width = uiMetrics.cgShipLF, height = 80, text = "Red team ship 3")
 
         uiElements.blueShipOM0 = OptionMenu(uiElements.blueShipLF0, info.blueShip0, *shipOptions, command = lambda _: updateButton(info, uiElements.startGameButton, info.blueShip0))
         uiElements.blueShipOM1 = OptionMenu(uiElements.blueShipLF1, info.blueShip1, *shipOptions, command = lambda _: updateButton(info, uiElements.startGameButton, info.blueShip1))
@@ -276,10 +281,12 @@ def customGame(root,config,uiMenuElements,uiMetrics):
         uiElementsList.append(uiElements.redShipLF2)
         uiElementsList.append(uiElements.mapLF)
         uiElementsList.append(uiElements.mapOM)
+        uiElementsList.append(uiElements.foWLF)
+        uiElementsList.append(uiElements.foWCB)
 
-        (naglowek.customGameInfo).uiElements = uiElements
-        (naglowek.customGameInfo).uiElementsList = uiElementsList
-        naglowek.customGameUiReady = True
+        (naglowek.cgGameInfo).uiElements = uiElements
+        (naglowek.cgGameInfo).uiElementsList = uiElementsList
+        naglowek.cgGameUiReady = True
 
-    placeCustomGameUi((naglowek.customGameInfo).uiElements,uiMetrics)
+    placeCustomGameUi((naglowek.cgGameInfo).uiElements,uiMetrics)
     mainloop()
