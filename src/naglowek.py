@@ -26,6 +26,7 @@ class global_var():
         self.radio.set(0)
         ## DYNAMIC UI ##
         self.uiSystems = []
+        self.uiSystemsAS = []
         self.uiSystemsProgressbars = []
         ## INPUT HANDLING VARIABLES ##
         self.mouseOnUI = FALSE
@@ -72,6 +73,57 @@ class global_var():
         self.pausedLVisible = False
         self.ovalsList = []
         self.availableOvalsList = []
+        # WIN CONDITIONS
+        self.wonByEliminatingEnemy = False
+        self.lostByEliminatingPlayer = False
+        self.lostByEliminatingEnemy = False
+        self.lostByDisablingPlayer = False
+        self.lostByDisablingEnemy = False
+        self.lostByDisablingEnemyCapital = False
+        self.wonByEliminatingPlayer = False
+        self.wonByEliminatingEnemy = False
+        self.wonByDisablingPlayer = False
+        self.wonByDisablingEnemy = False
+        self.wonByDisablingEnemyCapital = False
+        self.wonByEliminating0 = False
+        self.wonByEliminating1 = False
+        self.wonByEliminating2 = False
+        self.wonByEliminating3 = False
+        self.wonByEliminating4 = False
+        self.wonByEliminating5 = False
+        self.lostByEliminating0 = False
+        self.lostByEliminating1 = False
+        self.lostByEliminating2 = False
+        self.lostByEliminating3 = False
+        self.lostByEliminating4 = False
+        self.lostByEliminating5 = False
+        self.winByDisabling0 = False
+        self.winByDisabling1 = False
+        self.winByDisabling2 = False
+        self.winByDisabling3 = False
+        self.winByDisabling4 = False
+        self.winByDisabling5 = False
+        self.wonByDisabling0 = False
+        self.wonByDisabling1 = False
+        self.wonByDisabling2 = False
+        self.wonByDisabling3 = False
+        self.wonByDisabling4 = False
+        self.wonByDisabling5 = False
+        self.looseByDisabling0 = False
+        self.looseByDisabling1 = False
+        self.looseByDisabling2 = False
+        self.looseByDisabling3 = False
+        self.looseByDisabling4 = False
+        self.looseByDisabling5 = False
+        self.lostByDisabling0 = False
+        self.lostByDisabling1 = False
+        self.lostByDisabling2 = False
+        self.lostByDisabling3 = False
+        self.lostByDisabling4 = False
+        self.lostByDisabling5 = False
+        # DEFAULT WIN CONDITIONS
+        self.winByDisablingEnemyCapital = False
+        self.looseByDisablingEnemyCapital = False
         # ZOOM
         self.mouseX = 0
         self.mouseY = 0
@@ -105,7 +157,7 @@ class ui_metrics():
     systemScalesWidth = 200
     systemScalesMarginTop = 60
     systemScalesOffset = 100
-    systemScalesWidthOffset = 190
+    systemScalesWidthOffset = 250
     systemScalesLFHeight = 300
     systemProgressbarsHeightOffset = 60
     systemsLFWidth = 400

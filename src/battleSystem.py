@@ -451,7 +451,10 @@ def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,a
         var.mouseButton1 = False
         var.mouseButton2 = False
         var.zoomChange = False
+        endConditions.killedShips(var,events)
         endConditions.disabledShips(var,events)
+        endConditions.showWin(var,events)
+        endConditions.showLoose(var,events)
         drawShips(canvas,var,uiMetrics)
         trackMouse(var)
         var.frameTime+=1
@@ -560,6 +563,8 @@ def startTurn(uiElements,var,ships,gameRules,uiMetrics):
             object.config(state=DISABLED)
         for object in uiElements.uiSystems:
             object.config(state = DISABLED, background="#D0D0D0")
+        for object in var.uiSystemsAS:
+            object.config(state = DISABLED, style = 'Disabled.TCheckbutton')
 
 
 def endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons,shipLookup,root): 
@@ -574,6 +579,8 @@ def endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons,shi
         uiElements.RadioElementsList[2].config(state = NORMAL)
     for object in uiElements.uiSystems:
         object.config(state = NORMAL, bg="#4582ec",highlightcolor = "white")
+    for object in var.uiSystemsAS:
+        object.config(state = NORMAL, style = 'Red.TCheckbutton')
     uiElements.gameSpeedScale.config(bg="#4582ec",highlightcolor = "white",fg = "white")
     for ship in var.ships:
         ship.ghostPoints = []
@@ -806,17 +813,13 @@ def declareShips(var,config):
                         config.get(configList[i], "systemSlots3"),
                         config.get(configList[i], "systemSlots4"), 
                         config.get(configList[i], "systemSlots5"),
-                        config.get(configList[i], "systemSlots6"),
-                        config.get(configList[i], "systemSlots7"),
-                        config.get(configList[i], "systemSlots8")),
+                        config.get(configList[i], "systemSlots6")),
                     systemStatus=((config.get(configList[i], "systemStatus1")),
                     (config.get(configList[i], "systemStatus2")),
                     (config.get(configList[i], "systemStatus3")),
                     (config.get(configList[i], "systemStatus4")), 
                     (config.get(configList[i], "systemStatus5")),
-                    (config.get(configList[i], "systemStatus6")),
-                    (config.get(configList[i], "systemStatus7")),
-                    (config.get(configList[i], "systemStatus8"))),
+                    (config.get(configList[i], "systemStatus6"))),
                     speed = config.get(configList[i], "speed"), 
                     ghostPoints = [],
                     signatures = [],
@@ -1145,6 +1148,106 @@ def resume(config,root,menuUiElements):
         else:
             var.looseByDisablingEnemy = True
 
+        if config.get("Meta", "winByEliminating0") == "0":
+            var.winByEliminating0 = False
+        else:
+            var.winByEliminating0 = True
+        if config.get("Meta", "winByEliminating1") == "0":
+            var.winByEliminating1 = False
+        else:
+            var.winByEliminating1 = True
+        if config.get("Meta", "winByEliminating2") == "0":
+            var.winByEliminating2 = False
+        else:
+            var.winByEliminating2 = True
+        if config.get("Meta", "winByEliminating3") == "0":
+            var.winByEliminating3 = False
+        else:
+            var.winByEliminating3 = True
+        if config.get("Meta", "winByEliminating4") == "0":
+            var.winByEliminating4 = False
+        else:
+            var.winByEliminating4 = True
+        if config.get("Meta", "winByEliminating5") == "0":
+            var.winByEliminating5 = False
+        else:
+            var.winByEliminating5 = True
+            
+        if config.get("Meta", "looseByEliminating0") == "0":
+            var.looseByEliminating0 = False
+        else:
+            var.looseByEliminating0 = True
+        if config.get("Meta", "looseByEliminating1") == "0":
+            var.looseByEliminating1 = False
+        else:
+            var.looseByEliminating1 = True
+        if config.get("Meta", "looseByEliminating2") == "0":
+            var.looseByEliminating2 = False
+        else:
+            var.looseByEliminating2 = True
+        if config.get("Meta", "looseByEliminating3") == "0":
+            var.looseByEliminating3 = False
+        else:
+            var.looseByEliminating3 = True
+        if config.get("Meta", "looseByEliminating4") == "0":
+            var.looseByEliminating4 = False
+        else:
+            var.looseByEliminating4 = True
+        if config.get("Meta", "looseByEliminating5") == "0":
+            var.looseByEliminating5 = False
+        else:
+            var.looseByEliminating5 = True
+
+        if config.get("Meta", "looseByDisabling0") == "0":
+            var.looseByDisabling0 = False
+        else:
+            var.looseByDisabling0 = True
+        if config.get("Meta", "looseByDisabling1") == "0":
+            var.looseByDisabling1 = False
+        else:
+            var.looseByDisabling1 = True
+        if config.get("Meta", "looseByDisabling2") == "0":
+            var.looseByDisabling2 = False
+        else:
+            var.looseByDisabling2 = True
+        if config.get("Meta", "looseByDisabling3") == "0":
+            var.looseByDisabling3 = False
+        else:
+            var.looseByDisabling3 = True
+        if config.get("Meta", "looseByDisabling4") == "0":
+            var.looseByDisabling4 = False
+        else:
+            var.looseByDisabling4 = True
+        if config.get("Meta", "looseByDisabling5") == "0":
+            var.looseByDisabling5 = False
+        else:
+            var.looseByDisabling5 = True
+
+        if config.get("Meta", "winByDisabling0") == "0":
+            var.winByDisabling0 = False
+        else:
+            var.looseByDisabling0 = True
+        if config.get("Meta", "winByDisabling1") == "0":
+            var.winByDisabling1 = False
+        else:
+            var.winByDisabling1 = True
+        if config.get("Meta", "winByDisabling2") == "0":
+            var.winByDisabling2 = False
+        else:
+            var.winByDisabling2 = True
+        if config.get("Meta", "winByDisabling3") == "0":
+            var.winByDisabling3 = False
+        else:
+            var.winByDisabling3 = True
+        if config.get("Meta", "winByDisabling4") == "0":
+            var.winByDisabling4 = False
+        else:
+            var.winByDisabling4 = True
+        if config.get("Meta", "winByDisabling5") == "0":
+            var.winByDisabling5 = False
+        else:
+            var.winByDisabling5 = True
+
 
         print(var.winByEliminatingEnemy,
             var.looseByEliminatingEnemy ,
@@ -1184,6 +1287,7 @@ def resume(config,root,menuUiElements):
         uiElements.playerLF = ttk.Labelframe(root, style = 'Grey.TLabelframe',text = shipLookup[0].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
         uiElements.playerLF2 = ttk.Labelframe(root, style = 'Grey.TLabelframe',text = shipLookup[1].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
         uiElements.playerLF3 = ttk.Labelframe(root, style = 'Grey.TLabelframe',text = shipLookup[2].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
+
         var.playerShields = []
         var.playerShields2 = []
         var.playerShields3 = []

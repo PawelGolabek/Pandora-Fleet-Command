@@ -90,12 +90,11 @@ def placeBattleUi(staticUi,uiMetrics,canvas,var,shipLookup,root,uiElements):
             uiElements.RadioElementsList[2].config(state = DISABLED)
         uiElements.RadioElementsList[2].place(x=uiMetrics.canvasX - 120, y=uiMetrics.canvasY + uiMetrics.canvasHeight + 240)
 
-    staticUi.gameSpeedScale.place(x=uiMetrics.canvasX, y=uiMetrics.canvasY - 160)
     canvas.place(x=uiMetrics.canvasX, y=uiMetrics.canvasY)
-    staticUi.timeElapsedProgressBar.place(x=uiMetrics.canvasX+uiMetrics.canvasWidth-160, y=uiMetrics.canvasY + uiMetrics.canvasHeight + 70)
-    staticUi.timeElapsedLabel.place(x=uiMetrics.canvasX+uiMetrics.canvasWidth-160, y=uiMetrics.canvasY + uiMetrics.canvasHeight + 50)
-    staticUi.gameSpeedScale.place(x=uiMetrics.canvasX+uiMetrics.canvasWidth-160, y=uiMetrics.canvasY + uiMetrics.canvasHeight + 30)
     staticUi.gameSpeedL.place(x=uiMetrics.canvasX+uiMetrics.canvasWidth-160, y=uiMetrics.canvasY + uiMetrics.canvasHeight + 10)
+    staticUi.gameSpeedScale.place(x=uiMetrics.canvasX+uiMetrics.canvasWidth-160, y=uiMetrics.canvasY + uiMetrics.canvasHeight + 35)
+    staticUi.timeElapsedLabel.place(x=uiMetrics.canvasX+uiMetrics.canvasWidth-160, y=uiMetrics.canvasY + uiMetrics.canvasHeight + 55)
+    staticUi.timeElapsedProgressBar.place(x=uiMetrics.canvasX+uiMetrics.canvasWidth-160, y=uiMetrics.canvasY + uiMetrics.canvasHeight + 80)
     staticUi.exitToMenuButton.place(x = uiMetrics.canvasX + uiMetrics.canvasWidth -160, y = uiMetrics.canvasY + uiMetrics.canvasHeight + 220)
     staticUi.startTurnButton.place(x = uiMetrics.canvasX + uiMetrics.canvasWidth -160, y = uiMetrics.canvasY + uiMetrics.canvasHeight + 100)
 
@@ -144,9 +143,10 @@ def declareSystemsTargets(var,root,shipLookup,staticUi,uiMetrics,shipTarget,uiEl
     sys1 = 0
     shipChosen.optionMenus = []
     uiElements.systemTargetsList = []
+    var.uiSystemsAS = []
 
     for system in shipChosen.systemSlots:
-        if (i < 4):
+        if (i < 3):
             isDown = 0
         else:
             isDown = 1
@@ -176,9 +176,10 @@ def declareSystemsTargets(var,root,shipLookup,staticUi,uiMetrics,shipTarget,uiEl
             system.alphaStrikeVar = IntVar()
             system.alphaStrikeVar.set(system.alphaStrike)
             anotherCommand2 = partial(system.setAS)
-            shipChosen.systemAS.append(ttk.Checkbutton(staticUi.systemsLF,style = 'Red.TCheckbutton', text='AS', variable=system.alphaStrikeVar, onvalue=1, offvalue=0, command=anotherCommand2))
-            shipChosen.systemAS[-1].place(x = 135 + (i - isDown*4) * uiMetrics.systemScalesWidthOffset, y = uiMetrics.systemScalesMarginTop + 60 + uiMetrics.systemScalesOffset * isDown)
-            shipChosen.optionMenus[sys1].place(x = 10 + (i - isDown*4) * uiMetrics.systemScalesWidthOffset, y = uiMetrics.systemScalesMarginTop + 60 + uiMetrics.systemScalesOffset * isDown)
+            shipChosen.systemAS.append(ttk.Checkbutton(staticUi.systemsLF, text='Synchronise',style = 'Red.TCheckbutton', variable=system.alphaStrikeVar, onvalue=1, offvalue=0, command=anotherCommand2,))
+            shipChosen.systemAS[-1].place(x = 155 + (i - isDown*3) * uiMetrics.systemScalesWidthOffset, y = uiMetrics.systemScalesMarginTop + 60 + uiMetrics.systemScalesOffset * isDown)
+            shipChosen.optionMenus[sys1].place(x = 10 + (i - isDown*3) * uiMetrics.systemScalesWidthOffset, y = uiMetrics.systemScalesMarginTop + 60 + uiMetrics.systemScalesOffset * isDown)
+            (var.uiSystemsAS).append(shipChosen.systemAS[-1]) # ta linijka psuje
             sys1 += 1
         if(var.turnInProgress):
             scale.config(state = 'disabled', background="#D0D0D0")
@@ -186,8 +187,8 @@ def declareSystemsTargets(var,root,shipLookup,staticUi,uiMetrics,shipTarget,uiEl
         progressBar = ttk.Progressbar(staticUi.systemsLF, bootstyle = 'primary', maximum=system.maxCooldown, length=(uiMetrics.systemScaleWidth),variable=(system.maxCooldown-system.cooldown))
 
         (staticUi.uiSystemsProgressbars).append(progressBar)
-        scale.place(x = 10 + (i - isDown*4) * uiMetrics.systemScalesWidthOffset, y = uiMetrics.systemScalesMarginTop + uiMetrics.systemScalesOffset * isDown)
-        progressBar.place(x = 10 + (i - isDown*4) * uiMetrics.systemScalesWidthOffset, y = uiMetrics.systemScalesMarginTop + 42 + uiMetrics.systemScalesOffset * isDown)
+        scale.place(x = 10 + (i - isDown*3) * uiMetrics.systemScalesWidthOffset, y = uiMetrics.systemScalesMarginTop + uiMetrics.systemScalesOffset * isDown)
+        progressBar.place(x = 10 + (i - isDown*3) * uiMetrics.systemScalesWidthOffset, y = uiMetrics.systemScalesMarginTop + 42 + uiMetrics.systemScalesOffset * isDown)
         i += 1
     (staticUi.systemsLF).place(x = uiMetrics.canvasX, y = uiMetrics.canvasY + uiMetrics.canvasHeight + 10)
 
@@ -203,11 +204,13 @@ def declareSystemsTargets(var,root,shipLookup,staticUi,uiMetrics,shipTarget,uiEl
         staticUi.playerLF2.place(x=20, y = uiMetrics.canvasY + 1 * uiMetrics.canvasHeight/5*2)
     if(not shipLookup[2].name.startswith(">Not Available<")):
         staticUi.playerLF3.place(x=20, y = uiMetrics.canvasY + 2 * uiMetrics.canvasHeight/5*2)
+
+
     labelsList = [staticUi.enemyLabels, staticUi.enemyLabels2, staticUi.enemyLabels3, staticUi.playerLabels, staticUi.playerLabels2, staticUi.playerLabels3]
     for target in labelsList:
         i = j = 0
         for element in target:
-            if(i<=5 and j == 0):
+            if(i<=4 and j == 0):
                 element.place(x=10 + i*80,y=30)
                 i+=1
                 if(i%5==0):
@@ -215,12 +218,12 @@ def declareSystemsTargets(var,root,shipLookup,staticUi,uiMetrics,shipTarget,uiEl
                     i=0
             else:
                 if(i > 0 and j > 1):
-                    element.place(x=45 + i*80,y=50+j*17)
+                    element.place(x=65 + i*76,y=50+j*23)
                 else:
                     if(j == 1 and not i == 0):
-                        element.place(x=20 + i*80,y=50+j*17)
+                        element.place(x=20 + i*80,y=50+j*23)
                     else:
-                        element.place(x=10 + i*80,y=50+j*17)
+                        element.place(x=3 + i*80,y=50+j*23)
                 i+=1
                 if(i%5==0):
                     j+=1
@@ -270,8 +273,6 @@ def placeShipEditorUi(staticUi,uiMetrics):
     (staticUi.systemChoiceMenu3).place(x=uiMetrics.editorSystemsX, y = uiMetrics.editorSystemsY + 3 * uiMetrics.editorSystemsYOffset)
     (staticUi.systemChoiceMenu4).place(x=uiMetrics.editorSystemsX, y = uiMetrics.editorSystemsY + 4 * uiMetrics.editorSystemsYOffset)
     (staticUi.systemChoiceMenu5).place(x=uiMetrics.editorSystemsX, y = uiMetrics.editorSystemsY + 5 * uiMetrics.editorSystemsYOffset)
-    (staticUi.systemChoiceMenu6).place(x=uiMetrics.editorSystemsX, y = uiMetrics.editorSystemsY + 6 * uiMetrics.editorSystemsYOffset)
-    (staticUi.systemChoiceMenu7).place(x=uiMetrics.editorSystemsX, y = uiMetrics.editorSystemsY + 7 * uiMetrics.editorSystemsYOffset)
     
     (staticUi.systemChoiceL0).place(x=uiMetrics.editorSystemsX + uiMetrics.editorSystemsLOffsetX, y = uiMetrics.editorSystemsY)
     (staticUi.systemChoiceL1).place(x=uiMetrics.editorSystemsX + uiMetrics.editorSystemsLOffsetX, y = uiMetrics.editorSystemsY + uiMetrics.editorSystemsYOffset)
@@ -279,8 +280,6 @@ def placeShipEditorUi(staticUi,uiMetrics):
     (staticUi.systemChoiceL3).place(x=uiMetrics.editorSystemsX + uiMetrics.editorSystemsLOffsetX, y = uiMetrics.editorSystemsY + 3 * uiMetrics.editorSystemsYOffset)
     (staticUi.systemChoiceL4).place(x=uiMetrics.editorSystemsX + uiMetrics.editorSystemsLOffsetX, y = uiMetrics.editorSystemsY + 4 * uiMetrics.editorSystemsYOffset)
     (staticUi.systemChoiceL5).place(x=uiMetrics.editorSystemsX + uiMetrics.editorSystemsLOffsetX, y = uiMetrics.editorSystemsY + 5 * uiMetrics.editorSystemsYOffset)
-    (staticUi.systemChoiceL6).place(x=uiMetrics.editorSystemsX + uiMetrics.editorSystemsLOffsetX, y = uiMetrics.editorSystemsY + 6 * uiMetrics.editorSystemsYOffset)
-    (staticUi.systemChoiceL7).place(x=uiMetrics.editorSystemsX + uiMetrics.editorSystemsLOffsetX, y = uiMetrics.editorSystemsY + 7 * uiMetrics.editorSystemsYOffset)
     
     (staticUi.subsystemChoiceMenu0).place(x=uiMetrics.editorSystemsX, y = uiMetrics.editorSystemsY)
     (staticUi.subsystemChoiceMenu1).place(x=uiMetrics.editorSystemsX, y = uiMetrics.editorSystemsY + uiMetrics.editorSystemsYOffset)

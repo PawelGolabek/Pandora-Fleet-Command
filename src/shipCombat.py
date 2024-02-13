@@ -501,6 +501,11 @@ def killShip(shipId,var,events,shipLookup,uiElements,uiMetrics,root,canvas):
         if element.id == shipId:
             (var.ships).remove(element)
             break
+
+
+    setattr(var, f"wonByEliminating{ship1.id}", 1)
+    setattr(var, f"lostByEliminating{ship1.id}", 1)
+    print()
     updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas)
 
 

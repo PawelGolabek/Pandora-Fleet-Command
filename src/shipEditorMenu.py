@@ -191,8 +191,6 @@ def saveShip(info,uiElements,filePath, cp):
         cp.set(shipName, "systemslots4",str((info.systemChoice3).get()))
         cp.set(shipName, "systemslots5",str((info.systemChoice4).get()))
         cp.set(shipName, "systemslots6",str((info.systemChoice5).get()))
-        cp.set(shipName, "systemslots7",str((info.systemChoice6).get()))
-        cp.set(shipName, "systemslots8",str((info.systemChoice7).get()))
         
         cp.set(shipName, "subsystemslots1",str((info.subsystemChoice0).get()))
         cp.set(shipName, "subsystemslots2",str((info.subsystemChoice1).get()))
@@ -200,8 +198,6 @@ def saveShip(info,uiElements,filePath, cp):
         cp.set(shipName, "subsystemslots4",str((info.subsystemChoice3).get()))
         cp.set(shipName, "subsystemslots5",str((info.subsystemChoice4).get()))
         cp.set(shipName, "subsystemslots6",str((info.subsystemChoice5).get()))
-        cp.set(shipName, "subsystemslots7",str((info.subsystemChoice6).get()))
-        cp.set(shipName, "subsystemslots8",str((info.subsystemChoice7).get()))
 
         cp.set(shipName, "engine",str((info.engineChoice).get()))
         cp.set(shipName, "thrusters",str((info.thrustersChoice).get()))
@@ -282,8 +278,6 @@ def clearShip(info,uiElements):
     info.systemChoice3.set(systemOptions[0])
     info.systemChoice4.set(systemOptions[0])
     info.systemChoice5.set(systemOptions[0])
-    info.systemChoice6.set(systemOptions[0])
-    info.systemChoice7.set(systemOptions[0])
     zeroShip(info)
     updateShipStats(uiElements,info)
 
@@ -431,8 +425,6 @@ def shipEditor(root,config,uiMenuElements,uiMetrics,menuUiElements):
         info.systemChoice3 = StringVar(root)
         info.systemChoice4 = StringVar(root)
         info.systemChoice5 = StringVar(root)
-        info.systemChoice6 = StringVar(root)
-        info.systemChoice7 = StringVar(root)
 
         info.systemChoice0.set(systemOptions[0])
         info.systemChoice1.set(systemOptions[0])
@@ -440,8 +432,6 @@ def shipEditor(root,config,uiMenuElements,uiMetrics,menuUiElements):
         info.systemChoice3.set(systemOptions[0])
         info.systemChoice4.set(systemOptions[0])
         info.systemChoice5.set(systemOptions[0])
-        info.systemChoice6.set(systemOptions[0])
-        info.systemChoice7.set(systemOptions[0])
 
         info.subsystemChoice0 = StringVar(root)
         info.subsystemChoice1 = StringVar(root)
@@ -471,9 +461,7 @@ def shipEditor(root,config,uiMenuElements,uiMetrics,menuUiElements):
         uiElements.systemChoiceMenu3 = ttk.OptionMenu(uiElements.systemChoiceLF, info.systemChoice3, systemOptions[0], *systemOptions, style = "TMenubutton",  command=lambda _: systemChoiceCommand(info.systemChoice3,uiElements,uiElements.systemChoiceL3,info,3))
         uiElements.systemChoiceMenu4 = ttk.OptionMenu(uiElements.systemChoiceLF, info.systemChoice4, systemOptions[0], *systemOptions, style = "TMenubutton",  command=lambda _: systemChoiceCommand(info.systemChoice4,uiElements,uiElements.systemChoiceL4,info,4))
         uiElements.systemChoiceMenu5 = ttk.OptionMenu(uiElements.systemChoiceLF, info.systemChoice5, systemOptions[0], *systemOptions, style = "TMenubutton",  command=lambda _: systemChoiceCommand(info.systemChoice5,uiElements,uiElements.systemChoiceL5,info,5))
-        uiElements.systemChoiceMenu6 = ttk.OptionMenu(uiElements.systemChoiceLF, info.systemChoice6, systemOptions[0], *systemOptions, style = "TMenubutton",  command=lambda _: systemChoiceCommand(info.systemChoice6,uiElements,uiElements.systemChoiceL6,info,6))
-        uiElements.systemChoiceMenu7 = ttk.OptionMenu(uiElements.systemChoiceLF, info.systemChoice7, systemOptions[0], *systemOptions, style = "TMenubutton",  command=lambda _: systemChoiceCommand(info.systemChoice7,uiElements,uiElements.systemChoiceL7,info,7))
-
+ 
         uiElements.systemChoiceL0 = ttk.Label(uiElements.systemChoiceLF,style = 'Grey.TLabel', text = "Mass: 0, Cost: 0")
         uiElements.systemChoiceL1 = ttk.Label(uiElements.systemChoiceLF,style = 'Grey.TLabel', text = "Mass: 0, Cost: 0")
         uiElements.systemChoiceL2 = ttk.Label(uiElements.systemChoiceLF,style = 'Grey.TLabel', text = "Mass: 0, Cost: 0")
@@ -489,8 +477,6 @@ def shipEditor(root,config,uiMenuElements,uiMetrics,menuUiElements):
         systemChoiceCommand(info.systemChoice3,uiElements,uiElements.systemChoiceL3,info,3)
         systemChoiceCommand(info.systemChoice4,uiElements,uiElements.systemChoiceL4,info,4)
         systemChoiceCommand(info.systemChoice5,uiElements,uiElements.systemChoiceL5,info,5)
-        systemChoiceCommand(info.systemChoice6,uiElements,uiElements.systemChoiceL6,info,6)
-        systemChoiceCommand(info.systemChoice7,uiElements,uiElements.systemChoiceL7,info,7)
             
         uiElementsList.append(uiElements.systemChoiceMenu0)
         uiElementsList.append(uiElements.systemChoiceMenu1)
@@ -498,8 +484,6 @@ def shipEditor(root,config,uiMenuElements,uiMetrics,menuUiElements):
         uiElementsList.append(uiElements.systemChoiceMenu3)
         uiElementsList.append(uiElements.systemChoiceMenu4)
         uiElementsList.append(uiElements.systemChoiceMenu5)
-        uiElementsList.append(uiElements.systemChoiceMenu6)
-        uiElementsList.append(uiElements.systemChoiceMenu7)
 
         uiElementsList.append(uiElements.systemChoiceL0)
         uiElementsList.append(uiElements.systemChoiceL1)
@@ -507,8 +491,6 @@ def shipEditor(root,config,uiMenuElements,uiMetrics,menuUiElements):
         uiElementsList.append(uiElements.systemChoiceL3)
         uiElementsList.append(uiElements.systemChoiceL4)
         uiElementsList.append(uiElements.systemChoiceL5)
-        uiElementsList.append(uiElements.systemChoiceL6)
-        uiElementsList.append(uiElements.systemChoiceL7)
 
         uiElements.subsystemChoiceLF = ttk.Labelframe(root, style = 'Grey.TLabelframe',width = uiMetrics.editorSystemsWidth,text = "Subsystems (optional)", height = 450)
         uiElementsList.append(uiElements.subsystemChoiceLF)

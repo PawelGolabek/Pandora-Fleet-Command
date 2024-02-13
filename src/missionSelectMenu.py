@@ -60,9 +60,10 @@ def missionSelectScreen(root,config,uiMenuElements,uiMetrics):
     
     uiElements = naglowek.dynamic_object()
     desLabelVar = StringVar(root)
+
     uiElements.desLabelFrame = ttk.Labelframe(style = 'GreyBig.TLabelframe', width = 800,height = 350, text = 'Mission Briefing')
     desLabelVar.set("Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
-    uiElements.desLabel = ttk.Label(uiElements.desLabelFrame,style = 'GreyBig.TLabel', textvariable=desLabelVar,anchor='w',justify = LEFT,wraplength=500)
+    uiElements.desLabel = ttk.Label(uiElements.desLabelFrame,style = 'GreyBig.TLabel', textvariable=desLabelVar,anchor='w',justify = LEFT,wraplength=790)
     uiElements.desLabel.place(x=0,y=0)
 
     cryptonymLVar = StringVar(root)
