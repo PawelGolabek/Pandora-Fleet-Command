@@ -1,4 +1,3 @@
-
 from tkinter import *
 import tkinter.ttk as ttk
 
@@ -83,7 +82,19 @@ def disabledShips(var,events):
         if (disabledEnemy and not gameEnded):
             var.lostByDisablingEnemy = True
     
-            
+
+def foundLandmarks(var,events):
+    gameEnded = ((events.showedLoose) or events.showedWin)
+    if(var.winBySeeingLandmarks):
+        noInvisibleLandmarks = True
+        for landmark in var.landmarks:
+            if(not landmark.visible):
+                noInvisibleLandmarks = False
+                break
+        if (noInvisibleLandmarks and not gameEnded):
+            var.wonBySeeingLandmarks = True 
+
+
 def showWin(var,events):
     gameEnded = ((events.showedLoose) or events.showedWin)
 
@@ -135,7 +146,8 @@ def showWin(var,events):
             disWin = False
             break
 
-    if((disWin and elimWin) and not gameEnded):
+    landmarkWin = var.wonBySeeingLandmarks or not var.winBySeeingLandmarks
+    if((disWin and elimWin and landmarkWin) and not gameEnded):
         window = Toplevel()
         window.config(bg="#202020", width = 600, height = 600)
         label = ttk.Label(window, style = "Grey.TLabel", text='You Won\n\n'+ var.winMessage+'\n\nPress "Exit to Menu" to continue')
@@ -199,3 +211,4 @@ def showLoose(var,events):
         label.config(justify='center')
         label.pack()
         events.showedLoose = True
+

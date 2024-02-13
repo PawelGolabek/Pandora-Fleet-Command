@@ -121,6 +121,8 @@ class global_var():
         self.lostByDisabling3 = False
         self.lostByDisabling4 = False
         self.lostByDisabling5 = False
+        self.winBySeeingLandmarks = False
+        self.wonBySeeingLandmarks = False
         # DEFAULT WIN CONDITIONS
         self.winByDisablingEnemyCapital = False
         self.looseByDisablingEnemyCapital = False
@@ -215,13 +217,14 @@ class dynamic_object():
     x=10
 
 class landmark():
-    def __init__(self, xPos=100, yPos=100, cooldown=800, defaultCooldown=800, radius=100, boost='none'):
+    def __init__(self, xPos=100, yPos=100, cooldown=800, defaultCooldown=800, radius=100, boost='none',visible = True):
         self.xPos = xPos
         self.yPos = yPos
         self.cooldown = cooldown
         self.defaultCooldown = defaultCooldown
         self.radius = radius
         self.boost = boost
+        self.visible = visible
 
 class tracer():
     def __init__(self, xPos=300, yPos=300, xDir=0.0, yDir=1.0, turnRate=0.5, speed=40): 

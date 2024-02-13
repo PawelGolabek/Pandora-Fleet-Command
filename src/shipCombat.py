@@ -309,7 +309,6 @@ def dealDamage(ship, dmg, var, targetSystem, heatDamage,uiElements,shipLookup,ro
     if(ship.uiHeatBuildup > 30):
         toUpdate = True
         ship.uiHeatBuildup = 0
-    system = ship.systemSlots[targetSystem]
     if(ship.shields > 0 and dmg > 0):
         tmp = 0
         while (tmp < len(ship.shieldsState)):
@@ -411,31 +410,12 @@ def createRocket(var,ship,target,targetSystem,_type,offsetX=0,offsetY=0):
     setattr(var.currentMissles[-1], 'xDir', ship.xDir)
     setattr(var.currentMissles[-1], 'yDir', ship.yDir)
     setattr(var.currentMissles[-1], 'owner', ship.owner)
-    setattr(var.currentMissles[-1], 'speed',missleClass.speed)
-    setattr(var.currentMissles[-1], 'turnRate',
-            missleClass.turnRate)
+    setattr(var.currentMissles[-1], 'speed', missleClass.speed)
+    setattr(var.currentMissles[-1], 'turnRate', missleClass.turnRate)
     setattr(var.currentMissles[-1], 'target', target.id)
     setattr(var.currentMissles[-1], 'heat', missleClass.heat)
     setattr(var.currentMissles[-1], 'targetSystem', targetSystem)
 
-
-def drawLandmarks(var,canvas,uiIcons):
-    for landmark in var.landmarks:
-        drawX = (landmark.xPos - var.left) * \
-            var.zoom   # change ###
-        drawY = (landmark.yPos - var.top) * \
-            var.zoom    # change ###
-
-        radius = landmark.radius * var.zoom
-        text = canvas.create_text(drawX, drawY+20,
-                           text=math.ceil(landmark.cooldown/100), fill = "white")              
-        canvas.elements.append(text)
-        canvas.create_oval(drawX-radius, drawY-radius, drawX+radius, drawY+radius, outline = "yellow", dash=(2,3))       
-        iconX = drawX
-        iconY = drawY
-        if(landmark.boost == 'armor'):
-            image = canvas.create_image(iconX, iconY, image=uiIcons.armorIcon)
-            canvas.elements.append(image)
 
 
 def checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas):
@@ -450,6 +430,7 @@ def checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas):
 def killShip(shipId,var,events,shipLookup,uiElements,uiMetrics,root,canvas):
     #print(shipId)
     ship1 = shipLookup[shipId]
+    shipLookup[shipId].visible = False
     shipLookup[shipId].killed = True
     for missle in var.currentMissles:
         if shipLookup[missle.target] == ship1.id:
@@ -502,10 +483,8 @@ def killShip(shipId,var,events,shipLookup,uiElements,uiMetrics,root,canvas):
             (var.ships).remove(element)
             break
 
-
     setattr(var, f"wonByEliminating{ship1.id}", 1)
     setattr(var, f"lostByEliminating{ship1.id}", 1)
-    print()
     updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas)
 
 

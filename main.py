@@ -84,13 +84,6 @@ if __name__ == '__main__':
     uiMenuElementsList.append(customGameButton)
     uiMenuElementsList.append(exitButton)
 
-  #tmp
-    """
-    # button 1
-    btn1 = ttk.Button(root, text = 'Quit !', command = root.destroy, style = "Custom.TButton")
-    btn1.place(x=100,y=200)
-    """
     placeMenuUi(root,uiMenuElements,uiMetrics)
-    # button 2
-######
+    
     root.mainloop()

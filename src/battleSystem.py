@@ -26,6 +26,7 @@ from src.shipCombat import *
 from src.systems import *
 from src.aiControllers import *
 import src.endConditions as endConditions
+import src.respawns as respawns
 
 #   Artemis 2021
 #   Project by Pawel Golabek
@@ -47,10 +48,7 @@ class _events():
     disabledWin = False
     disabledLoose = False
 
-
 ############################## AMUNITION #############################################
-
-
 
 class ship():
     def setTarget(self,variable):
@@ -62,25 +60,8 @@ class ship():
             self.targetOnly = False
         else:
             self.targetOnly = True
-    def __init__(self,var, name="MSS Artemis", owner="ai2", target=0,
-                 hp=200, maxHp=None, ap=10000, maxAp=None, shields=3, maxShields = 3, xPos=300, yPos=300,energyLimit = 20,
-                 ammunitionChoice=0, ammunitionNumberChoice=0, systemSlots = [],systemStatus = [],
-                 detectionRange=200, xDir=0.0, yDir=1, turnRate=0.5, ghostPoints = [], signatures = [], speed=40, maxSpeed = 40,
-                 outlineColor="red",id = 1,signatureCounter=0, stance='rush',color = "red"):
-        # Init info                                             
-        self.name = name
-        self.owner = owner
-        self.target = target
-        self.xPos = xPos
-        self.yPos = yPos
-        self.energyLimit = energyLimit
-        self.tmpEnergyLimit = energyLimit
-        self.energy = energyLimit
-        self.ammunitionChoice = ammunitionChoice
-        self.ammunitionNumberChoice = ammunitionNumberChoice
-        self.signatureCounter = signatureCounter
 
-        self.systemSlots = []
+    def declareSystemSlots(self,systemSlots,systemStatus):
         for tmp in systemSlots:
             if(not tmp == 'none'):
                 targetClass =  naglowek.systemLookup[tmp]
@@ -91,6 +72,37 @@ class ship():
             if(i < len(self.systemSlots)):
                 self.systemSlots[i].cooldown = int(tmp)
                 i+=1
+
+    def declareShieldState(self,shields,maxShields,var):
+        self.shields = shields
+        self.maxShields = maxShields
+        self.shieldsState = []
+        tmp = 0
+        while(tmp < maxShields):
+            self.shieldsState.append(var.shieldMaxState)
+            tmp += 1
+
+    def __init__(self,var, name="MSS Artemis", owner="ai2", target=0,
+                 hp=0, maxHp=None, ap=0, maxAp=None, shields=0, maxShields = 0, xPos=300, yPos=300,energy = 0,
+                 ammunitionChoice=0, ammunitionNumberChoice=0, systemSlots = [], systemStatus = [],
+                 detectionRange=1, xDir=0, yDir=1, turnRate=0, ghostPoints = [], signatures = [], speed=0, maxSpeed = 0,
+                 outlineColor="red",id = 9999,signatureCounter=0, stance='rush',color = "red"):
+        # Init info                                             
+        self.name = name
+        self.owner = owner
+        self.target = target
+        self.xPos = xPos
+        self.yPos = yPos
+
+        self.energyLimit = energy
+        self.tmpEnergyLimit = energy
+        self.energy = energy
+        self.ammunitionChoice = ammunitionChoice
+        self.ammunitionNumberChoice = ammunitionNumberChoice
+        self.signatureCounter = signatureCounter
+        self.systemSlots = []
+        self.declareSystemSlots(systemSlots,systemStatus)
+
         self.detectionRange = detectionRange
         self.xDir = xDir
         self.yDir = yDir
@@ -110,13 +122,7 @@ class ship():
             self.maxAp = ap
         else:
             self.maxAp = maxAp
-        self.shields = shields
-        self.maxShields = maxShields
-        self.shieldsState = []
-        tmp = 0
-        while(tmp < maxShields):
-            self.shieldsState.append(var.shieldMaxState)
-            tmp += 1
+        self.declareShieldState(shields,maxShields,var)
         # Mid-round info
         self.visible = False
         self.moveOrderX = xPos+0.01
@@ -178,6 +184,7 @@ def manageLandmarks(landmarks, ships):
             dist = ((landmark.xPos - ship.xPos)*(landmark.xPos - ship.xPos) +
                     (landmark.yPos - ship.yPos)*(landmark.yPos - ship.yPos))
             if(dist < landmark.radius*landmark.radius and landmark.cooldown == 0):
+                landmark.visible = True
                 getBonus(ship, landmark.boost)
                 landmark.cooldown = landmark.defaultCooldown
 
@@ -453,6 +460,7 @@ def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,a
         var.zoomChange = False
         endConditions.killedShips(var,events)
         endConditions.disabledShips(var,events)
+        endConditions.foundLandmarks(var,events)
         endConditions.showWin(var,events)
         endConditions.showLoose(var,events)
         drawShips(canvas,var,uiMetrics)
@@ -771,14 +779,7 @@ def mouseOnCanvas(var,uiMetrics):
     else:
         return False
 
-def declareShips(var,config):
-        var.playerName =  config.get("Ships", "playerName")
-        var.playerName2 = config.get("Ships", "playerName2")
-        var.playerName3 = config.get("Ships", "playerName3")
-
-        var.enemyName =  config.get("Ships", "enemyName")
-        var.enemyName2 = config.get("Ships", "enemyName2")
-        var.enemyName3 = config.get("Ships", "enemyName3")
+def declareShips(var,config,events,shipLookup,uiElements,uiMetrics,root,canvas):
 
         var.player = 0
         var.player2 = 0
@@ -789,65 +790,91 @@ def declareShips(var,config):
         var.enemy3 = 0
 
         creationList = [var.player, var.player2,var.player3,var.enemy,var.enemy2,var.enemy3]
-        nameList = [var.playerName, var.playerName2, var.playerName3, var.enemyName, var.enemyName2, var.enemyName3]
         configList = ["Player", "Player2", "Player3", "Enemy", "Enemy2", "Enemy3"]
         i=0
         for element in creationList:
-            targetShipName = nameList[i]
-            color1 = config.get(configList[i], "color")
             if(i<=2):               #change if more ships
                 owner1 = "player1"
             else:
                 owner1 = "ai1"
-            creationList[i] = ship(var, 
-                    owner=owner1,
-                    color = color1,
-                    name=targetShipName, 
-                    maxShields = int((config.get(configList[i], "maxShields"))),
-                    shields=int((config.get(configList[i], "shields"))), 
-                    energyLimit=int((config.get(configList[i], "energyLimit"))), 
-                    xPos=int((config.get(configList[i], "xPos"))), 
-                    yPos=int((config.get(configList[i], "yPos"))),
-                    systemSlots=((config.get(configList[i], "systemSlots1")),
-                        config.get(configList[i], "systemSlots2"),
-                        config.get(configList[i], "systemSlots3"),
-                        config.get(configList[i], "systemSlots4"), 
-                        config.get(configList[i], "systemSlots5"),
-                        config.get(configList[i], "systemSlots6")),
-                    systemStatus=((config.get(configList[i], "systemStatus1")),
+            creationList[i] = ship(var, owner=owner1, name=">Not Available<")
+            creationList[i].id = i
+            creationList[i].hp = 0
+            if(config.has_section(configList[i])):
+             #   print("has")
+                creationList[i].name = config.get(configList[i], "name")
+                creationList[i].color = config.get(configList[i], "color")
+                creationList[i].declareShieldState(int((config.get(configList[i], "shields"))),int((config.get(configList[i], "maxShields"))),var)
+                creationList[i].energyLimit=int((config.get(configList[i], "energyLimit")))
+                creationList[i].tmpEnergyLimit=int((config.get(configList[i], "energyLimit")))
+                creationList[i].energy=int((config.get(configList[i], "energyLimit")))        
+                creationList[i].xPos=int((config.get(configList[i], "xPos")))
+                creationList[i].yPos=int((config.get(configList[i], "yPos")))
+                creationList[i].declareSystemSlots(
+                    [(config.get(configList[i], "systemSlots1")),
+                    config.get(configList[i], "systemSlots2"),
+                    config.get(configList[i], "systemSlots3"),
+                    config.get(configList[i], "systemSlots4"),
+                    config.get(configList[i], "systemSlots5"),
+                    config.get(configList[i], "systemSlots6")],
+                    [(config.get(configList[i], "systemStatus1")),
                     (config.get(configList[i], "systemStatus2")),
                     (config.get(configList[i], "systemStatus3")),
-                    (config.get(configList[i], "systemStatus4")), 
+                    (config.get(configList[i], "systemStatus4")),
                     (config.get(configList[i], "systemStatus5")),
-                    (config.get(configList[i], "systemStatus6"))),
-                    speed = config.get(configList[i], "speed"), 
-                    ghostPoints = [],
-                    signatures = [],
-                    detectionRange=int(config.get(configList[i], "detectionRange")), 
-                    turnRate = float(config.get(configList[i], "turnRate")),
-                    maxSpeed = config.get(configList[i], "maxSpeed"),
-                    outlineColor = ((config.get(configList[i], "outlineColor"))),
-                    id = int((config.get(configList[i], "id"))),
-                    hp = int((config.get(configList[i], "hp"))), 
-                    ap = int((config.get(configList[i], "ap"))),
-                    stance = ((config.get(configList[i], "stance")))
+                    (config.get(configList[i], "systemStatus6"))]
                     )
+                creationList[i].speed = float(config.get(configList[i], "speed"))
+                creationList[i].ghostPoints = []
+                creationList[i].signatures = []
+                creationList[i].detectionRange=int(config.get(configList[i], "detectionRange"))
+                creationList[i].turnRate = float(config.get(configList[i], "turnRate"))
+                creationList[i].maxSpeed = float(config.get(configList[i], "maxSpeed"))
+                creationList[i].outlineColor = ((config.get(configList[i], "outlineColor")))
+                creationList[i].hp = int((config.get(configList[i], "hp")))
+                creationList[i].ap = int((config.get(configList[i], "ap")))
+                creationList[i].stance = ((config.get(configList[i], "stance")))
+                creationList[i].killed = False
             i+=1
-
+        checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas)
+        
         var.player = creationList[0]
-        var.player2 = creationList[1]
-        var.player3 = creationList[2]
-        var.enemy = creationList[3]
-        var.enemy2 = creationList[4]
-        var.enemy3 = creationList[5]
         var.ships.append(var.player)
+        var.player2 = creationList[1]
         var.ships.append(var.player2)
+        var.player3 = creationList[2]
         var.ships.append(var.player3)
+        var.enemy = creationList[3]
         var.ships.append(var.enemy)
+        var.enemy2 = creationList[4]
         var.ships.append(var.enemy2)
+        var.enemy3 = creationList[5]
         var.ships.append(var.enemy3)
 
 
+def declareLandmarks(var,config):
+        configList = ["Landmark0", "Landmark1", "Landmark2", "Landmark3","Landmark4", "Landmark5", "Landmark6","Landmark7"]
+        i=0
+        while (i < 8):
+            if(config.has_section(configList[i])):
+
+                if(config.get(configList[i], "visible") == 0):
+                    _visible = True
+                else:
+                    _visible = False
+
+                var.landmarks.append(naglowek.landmark( xPos = float(config.get(configList[i], "xPos")),
+                yPos = float(config.get(configList[i], "yPos")),
+                cooldown = float(config.get(configList[i], "cooldown")),
+                defaultCooldown = float(config.get(configList[i], "cooldown")),
+                radius = float(config.get(configList[i], "radius")),
+                boost = config.get(configList[i], "boost"),
+                visible = _visible
+                ))
+                
+
+            i+=1
+        
 ############################################ INPUTS #############################################
 
 def bindInputs(root,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType):
@@ -1027,6 +1054,7 @@ def resume(config,root,menuUiElements):
         uiElements.systemsLF = ttk.Labelframe(root,style = 'Grey.TLabelframe', text= "" + " systems",borderwidth=2, width=uiMetrics.canvasWidth*4/5)
         uiElements.staticUi = []
         uiIcons.armorIcon = PhotoImage(file=os.path.join(cwd, "icons","armor.png"))
+        uiIcons.spotterIcon = PhotoImage(file=os.path.join(cwd, "icons","spotter.png"))
 
         # canvas
         var.image = PIL.Image.open(os.path.join(cwd, config.get("Images", "img")))
@@ -1054,7 +1082,7 @@ def resume(config,root,menuUiElements):
         canvas.imageID = canvas.create_image(0,0,image = tmp)
         getZoomMetrics(var,uiMetrics)
         (uiElements.staticUi).append(canvas)
-        declareShips(var,config)
+        declareShips(var,config,events,shipLookup,uiElements,uiMetrics,root,canvas)
         uiElements.rootTitle = (config.get("Root", "title"))
         fog = (config.get("Options", "fogOfWar"))
         if(fog == '0'):
@@ -1077,10 +1105,8 @@ def resume(config,root,menuUiElements):
         var.enemies,var.players = declareTargets(var)
         declareShipsTargets(var)
         declareSystemTargets(var,shipLookup)
+        declareLandmarks(var,config)
 
-    #    land1 = landmark(200, 200, 3200, 3200, 50, 'armor')
-    #    (var.landmarks).append(land1)
-        
         var.resizedImage = var.image
         canvas.imageList = []
         canvas.elements = []
@@ -1095,10 +1121,7 @@ def resume(config,root,menuUiElements):
         var.PFMask = createPFMask(var,uiMetrics)
 
         uiElements.UIElementsList = []
-        uiElements.RadioElementsList = []    
-        
-        
-        
+        uiElements.RadioElementsList = []            
         uiElements.pausedL = ttk.Label(canvas, style = "Pause.TLabel", text = "Paused")
 
         uiElements.gameSpeedScale = tk.Scale(root, orient=HORIZONTAL, length=100, from_=3, to=30)
@@ -1248,17 +1271,14 @@ def resume(config,root,menuUiElements):
         else:
             var.winByDisabling5 = True
 
-
-        print(var.winByEliminatingEnemy,
-            var.looseByEliminatingEnemy ,
-            var.winByEliminatingPlayer ,
-            var.looseByEliminatingPlayer,
-            var.winByDisablingEnemy ,
-            var.looseByDisablingEnemy , 
-            var.winByDisablingPlayer ,
-            var.looseByDisablingPlayer)
+        if config.has_option('Meta', 'winBySeeingLandmarks'):
+            if config.get("Meta", "winBySeeingLandmarks") == "0":
+                var.winBySeeingLandmarks = False
+            else:
+                var.winBySeeingLandmarks = True
 
         var.winMessage = config.get("Meta", "winMessage")
+        
         (uiElements.gameSpeedScale).set(8)
         uiElements.timeElapsedLabel = ttk.Label(root, style = 'Grey.TLabel', text="Time elapsed")
         uiElements.timeElapsedProgressBar = ttk.Progressbar(root, maximum=var.turnLength, variable=1,  orient='horizontal',
@@ -1366,7 +1386,7 @@ def resume(config,root,menuUiElements):
         shipID = 0
         for target,targetLF in zip(targets,targetLFs):
             i = 0
-            system = shipLookup[shipID].systemSlots[i] 
+      #      system = shipLookup[shipID].systemSlots[i] 
             target.append(ttk.Label(targetLF, style='Grey.TLabel', text = "Hull: "))
             target.append(ttk.Label(targetLF, style='Grey.TLabel', text = str(shipLookup[shipID].hp)))
             target.append(ttk.Label(targetLF, style='Grey.TLabel', text = "Armor: "))
@@ -1418,7 +1438,6 @@ def resume(config,root,menuUiElements):
         (uiElements.staticUi).append(uiElements.RadioElementsList[2])
 
         radioBox(shipLookup,uiElements,var,uiMetrics,root,canvas)
-
         bindInputs(root,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType)
         
         # first update 

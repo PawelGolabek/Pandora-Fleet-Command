@@ -273,3 +273,25 @@ def drawRockets(globalVar,ammunitionType,canvas):
             line = canvas.create_line(drawX, drawY+1,
                             drawX, drawY-1, fill = color)
             canvas.elements.append(line)
+
+def drawLandmarks(var,canvas,uiIcons):
+    for landmark in var.landmarks:
+        if(landmark.visible):
+            drawX = (landmark.xPos - var.left) * \
+                var.zoom   # change ###
+            drawY = (landmark.yPos - var.top) * \
+                var.zoom    # change ###
+
+            radius = landmark.radius * var.zoom
+            text = canvas.create_text(drawX, drawY+20,
+                            text=math.ceil(landmark.cooldown/100), fill = "white")              
+            canvas.elements.append(text)
+            canvas.create_oval(drawX-radius, drawY-radius, drawX+radius, drawY+radius, outline = "yellow", dash=(2,3))       
+            iconX = drawX
+            iconY = drawY
+            if(landmark.boost == 'armor'):
+                image = canvas.create_image(iconX, iconY, image=uiIcons.armorIcon)
+                canvas.elements.append(image)
+            elif(landmark.boost == 'spotter'):
+                image = canvas.create_image(iconX, iconY, image=uiIcons.spotterIcon)
+                canvas.elements.append(image)
