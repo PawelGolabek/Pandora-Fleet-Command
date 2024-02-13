@@ -52,22 +52,22 @@ class ammunition_type:
     laser1adefault.name = 'laser1a'
     laser1adefault.typeName = 'laser1a'
     laser1adefault.sort = 'laser'
-    laser1adefault.damage = 4
+    laser1adefault.damage = 1
     laser1adefault.turnRate = 25
     laser1adefault.speed = 1000
     laser1adefault.ttl = 600
     laser1adefault.color = rgbtohex(120,120,250)
-    laser1adefault.heat = 3.5
+    laser1adefault.heat = 6
 
     highEnergyLaser1 = ammunition()
     highEnergyLaser1.name = 'highEnergyLaser1'
     highEnergyLaser1.typeName = 'highEnergyLaser1'
     highEnergyLaser1.sort = 'laser'
-    highEnergyLaser1.damage = 80
+    highEnergyLaser1.damage = 10
     highEnergyLaser1.speed = 1000
     highEnergyLaser1.ttl = 800
     highEnergyLaser1.color = rgbtohex(200,20,125)
-    highEnergyLaser1.heat = 40
+    highEnergyLaser1.heat = 240
 
     kinetic1 = ammunition()
     kinetic1.name = 'kinetic1'

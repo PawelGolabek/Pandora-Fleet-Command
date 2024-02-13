@@ -237,9 +237,6 @@ def saveShip(info,uiElements,filePath, cp):
         button = ttk.Button(window,style = 'Grey.TButton', text = "Ok",command=closeWindowCommand)
         label.place(relx=0.5, rely=0.2,anchor=CENTER)
         button.place(relx=0.5, rely=0.5,anchor=CENTER)
-        print(info.engineChoice.get() + "none")
-        print(info.engineChoice.get() == "none")
-        print(info.thrustersChoice.get() == "none")
     elif(len(shipName) < 13):
         (uiElements.shipNameInput).delete(0, END)
         (uiElements.shipNameInput).insert(0, "Ship must have a name. Insert the name to continue.") 
@@ -417,7 +414,6 @@ def shipEditor(root,config,uiMenuElements,uiMetrics,menuUiElements):
         uiElements.radarChoiceMenu = ttk.OptionMenu(uiElements.radarChoiceMenuLF,info.radarChoice,radarOptions[0], *radarOptions, style = "TMenubutton",command=lambda _: radarChoiceCommand(info.radarChoice,uiElements,uiElements.radarChoiceMenuL,info))
         uiElements.generatorChoiceMenu = ttk.OptionMenu(uiElements.generatorChoiceMenuLF,info.generatorChoice,generatorOptions[0], *generatorOptions, style = "TMenubutton",command=lambda _: generatorChoiceCommand(info.generatorChoice,uiElements,uiElements.generatorChoiceMenuL,info))
     
-        print(info.engineChoice.get())
         engineChoiceCommand(info.engineChoice,uiElements,uiElements.engineChoiceMenuL,info)
         thrustersChoiceCommand(info.thrustersChoice,uiElements,uiElements.thrustersChoiceMenuL,info)
         radarChoiceCommand(info.radarChoice,uiElements,uiElements.radarChoiceMenuL,info)

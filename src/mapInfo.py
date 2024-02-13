@@ -17,12 +17,10 @@ def declareGlobalMaps():
     cwd = Path(sys.argv[0])
     cwd = str(cwd.parent)
     filePath = os.path.join(cwd, "campaignMissions\\")
-    print(filePath)
     os.walk(filePath)
     naglowek.campaignOptions = os.listdir(filePath)
 
     filePath = os.path.join(cwd, "maps\\")
-    print(filePath)
     os.walk(filePath)
     naglowek.mapOptions = os.listdir(filePath)
 

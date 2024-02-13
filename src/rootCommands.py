@@ -37,6 +37,16 @@ def updateCheckbox(var,shipLookup,uiElements):
     var.uiTargetOnlyCB.invoke()
     var.uiTargetOnlyCB.invoke()
 
+def showPausedText(var,uiElements,uiMetrics):
+    if(var.pausedLVisible == False):
+        uiElements.pausedL.place(x = uiMetrics.canvasWidth/2-uiMetrics.pausedLWidth/2 - 2, y = uiMetrics.canvasHeight/2-uiMetrics.pausedLHeight/2 - 2)
+        var.pausedLVisible = True
+
+def hidePausedText(var,uiElements):
+    if(var.pausedLVisible == True):
+        uiElements.pausedL.place_forget()
+        var.pausedLVisible = False
+
 def clearUtilityChoice(uiElements,var):
     for widget in (uiElements.systemsLF).winfo_children():
         widget.destroy()
@@ -52,8 +62,13 @@ def updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas):
                                                     height = uiMetrics.systemScalesLFHeight, text= shipChosen.name + " systems", \
                                                     borderwidth=2, relief="groove")
     var.uiEnergyLabel = ttk.Label(uiElements.systemsLF,style = 'Grey.TLabel', width=20, text = "Energy remaining: " + str(shipChosen.energy), font = "16")
+    var.paused = True
+    showPausedText(var,uiElements,uiMetrics)
     hideBattleUi(uiElements.staticUi,uiElements)
     placeBattleUi(uiElements,uiMetrics,canvas,var,shipLookup,root,uiElements)
+    hidePausedText(var,uiElements)
+    var.paused = False
+    return
 
 def placeBattleUi(staticUi,uiMetrics,canvas,var,shipLookup,root,uiElements):
     
@@ -151,6 +166,8 @@ def declareSystemsTargets(var,root,shipLookup,staticUi,uiMetrics,shipTarget,uiEl
                 system.targetDict.update({element.name : system.elementID})
                 system.elementID += 1
             system.variable = StringVar(root)
+            if(system.target >= len((list(system.targetDict.keys())))):
+                system.target = 0
             system.variable.set((list(system.targetDict.keys())[system.target]))
             anotherCommand = partial((system.setTarget),(system.targetDict[system.variable.get()]))
             a = tk.OptionMenu(staticUi.systemsLF, system.variable, *system.targetDict.keys() , command = anotherCommand)

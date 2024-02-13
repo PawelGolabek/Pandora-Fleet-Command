@@ -15,7 +15,6 @@ from random import randint
 from tabnanny import check
 from tkinter import BOTH, Canvas, Frame, Tk
 from tkinter.filedialog import askopenfilename
-
 import PIL.Image
 from PIL import Image, ImageTk
 
@@ -26,6 +25,7 @@ from src.rootCommands import *
 from src.shipCombat import *
 from src.systems import *
 from src.aiControllers import *
+import src.endConditions as endConditions
 
 #   Artemis 2021
 #   Project by Pawel Golabek
@@ -62,7 +62,6 @@ class ship():
             self.targetOnly = False
         else:
             self.targetOnly = True
-        print(self.targetOnly)
     def __init__(self,var, name="MSS Artemis", owner="ai2", target=0,
                  hp=200, maxHp=None, ap=10000, maxAp=None, shields=3, maxShields = 3, xPos=300, yPos=300,energyLimit = 20,
                  ammunitionChoice=0, ammunitionNumberChoice=0, systemSlots = [],systemStatus = [],
@@ -131,6 +130,8 @@ class ship():
         self.CBVar.set(0)
         #for events
         self.disabled = False
+        #ui
+        self.uiHeatBuildup = 0
         #ai info
         if(owner=="ai1"):
             self.prefMinRange = 100
@@ -318,6 +319,7 @@ def drawLasers(var,canvas,uiMetrics):
         if laser.ttl>0:
             drawX = (laser.xPos - var.left) * var.zoom
             drawY = (laser.yPos - var.top) * var.zoom
+
          #       
          #   drawX2 = (laser.targetXPos - var.left) * \
          #       var.zoom
@@ -392,6 +394,7 @@ def drawLasers(var,canvas,uiMetrics):
                 canvas.elements.append(line)
         else:
             (var.lasers).remove(laser)
+            del laser
 
 
 def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root):
@@ -399,10 +402,10 @@ def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,a
     #    print(str(ship.name) + " " + str(ship.killed))
     if(var.drag=='' and not var.paused):
         canvas.delete('all')
+        if(var.frameTime % 10 == 0):
+            updateLabels(uiElements,shipLookup,var)
         hidePausedText(var,uiElements)
         updateScales(uiElements,var,shipLookup)
-        if(var.frameTime % 15 == 0):
-            updateLabels(uiElements,shipLookup,var)
         updateEnergy(var,uiElements,shipLookup)
         var.gameSpeed = float((uiElements.gameSpeedScale).get())
         if(not var.turnInProgress):
@@ -448,6 +451,7 @@ def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,a
         var.mouseButton1 = False
         var.mouseButton2 = False
         var.zoomChange = False
+        endConditions.disabledShips(var,events)
         drawShips(canvas,var,uiMetrics)
         trackMouse(var)
         var.frameTime+=1
@@ -591,23 +595,10 @@ def endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons,shi
     updateShields(var.ships,var)
     updateLabels(uiElements,shipLookup,var)
 
-def showPausedText(var,uiElements,uiMetrics):
-    if(var.pausedLVisible == False):
-        uiElements.pausedL.place(x = uiMetrics.canvasWidth/2-uiMetrics.pausedLWidth/2 - 2, y = uiMetrics.canvasHeight/2-uiMetrics.pausedLHeight/2 - 2)
-        var.pausedLVisible = True
-
-def hidePausedText(var,uiElements):
-    if(var.pausedLVisible == True):
-        uiElements.pausedL.place_forget()
-        var.pausedLVisible = False
-
 def updateScales(uiElements,var,shipLookup):
-
     var.tmpCounter += 1
     shipChosen = shipLookup[var.shipChoice]
-
     uiElements.timeElapsedProgressBar.config(maximum=var.turnLength)
-
     i = 0 
     for system in uiElements.uiSystemsProgressbars:
         if(i>=len(shipChosen.systemSlots)):
@@ -762,6 +753,7 @@ def radioBox(shipLookup,uiElements,var,uiMetrics,root,canvas):
     if(var.selection == 2):
         var.shipChoice = shipLookup[2].id
     updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas)
+    updateLabels(uiElements,shipLookup,var)
 
 
 def mouseOnCanvas(var,uiMetrics):
@@ -1106,11 +1098,64 @@ def resume(config,root,menuUiElements):
         
         uiElements.pausedL = ttk.Label(canvas, style = "Pause.TLabel", text = "Paused")
 
-        uiElements.gameSpeedScale = tk.Scale(root, orient=HORIZONTAL, length=100, from_=3, to=42)
+        uiElements.gameSpeedScale = tk.Scale(root, orient=HORIZONTAL, length=100, from_=3, to=30)
         uiElements.gameSpeedL = ttk.Label(root, style = 'Grey.TLabel', text = "Playback Speed:")
         var.img = tk.PhotoImage(file= os.path.join(cwd, config.get("Images", "img")))
         var.winMessage = config.get("Meta", "winMessage")
         var.looseMessage = config.get("Meta", "looseMessage")
+        
+        if config.get("Meta", "winByEliminatingEnemy") == "0":
+            var.winByEliminatingEnemy = False
+        else:
+            var.winByEliminatingEnemy = True
+
+
+        if config.get("Meta", "looseByEliminatingEnemy") == "0":
+            var.looseByEliminatingEnemy = False
+        else:
+            var.looseByEliminatingEnemy = True
+
+        if config.get("Meta", "winByEliminatingPlayer") == "0":
+            var.winByEliminatingPlayer = False
+        else:
+            var.winByEliminatingPlayer = True
+
+        if config.get("Meta", "looseByEliminatingPlayer") == "0":
+            var.looseByEliminatingPlayer = False
+        else:
+            var.looseByEliminatingPlayer = True
+
+        if config.get("Meta", "winByDisablingEnemy") == "0":
+            var.winByDisablingEnemy = False
+        else:
+            var.winByDisablingEnemy = True
+
+        if config.get("Meta", "winByDisablingPlayer") == "0":
+            var.winByDisablingPlayer = False
+        else:
+            var.winByDisablingPlayer = True
+
+        if config.get("Meta", "looseByDisablingPlayer") == "0":
+            var.looseByDisablingPlayer = False
+        else:
+            var.looseByDisablingPlayer = True
+
+        if config.get("Meta", "looseByDisablingEnemy") == "0":
+            var.looseByDisablingEnemy = False
+        else:
+            var.looseByDisablingEnemy = True
+
+
+        print(var.winByEliminatingEnemy,
+            var.looseByEliminatingEnemy ,
+            var.winByEliminatingPlayer ,
+            var.looseByEliminatingPlayer,
+            var.winByDisablingEnemy ,
+            var.looseByDisablingEnemy , 
+            var.winByDisablingPlayer ,
+            var.looseByDisablingPlayer)
+
+        var.winMessage = config.get("Meta", "winMessage")
         (uiElements.gameSpeedScale).set(8)
         uiElements.timeElapsedLabel = ttk.Label(root, style = 'Grey.TLabel', text="Time elapsed")
         uiElements.timeElapsedProgressBar = ttk.Progressbar(root, maximum=var.turnLength, variable=1,  orient='horizontal',

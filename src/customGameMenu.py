@@ -70,6 +70,17 @@ def runGame(info,configIn,root,menuUiElements):
     configOut.set("Meta", "winMessage","Blue Team Wins")
     configOut.set("Meta", "looseMessage","Red Team Wins")
     configOut.set("Root", "title","Custom Game")
+    
+    configOut.set("Meta", "winByEliminatingEnemy","1")
+    configOut.set("Meta", "looseByEliminatingEnemy","0")
+    configOut.set("Meta", "winByEliminatingPlayer","0")
+    configOut.set("Meta", "looseByEliminatingPlayer","1")
+    
+    configOut.set("Meta", "winByDisablingEnemy","0")
+    configOut.set("Meta", "looseByDisablingEnemy","0")
+    configOut.set("Meta", "winByDisablingPlayer","0")
+    configOut.set("Meta", "looseByDisablingPlayer","0")
+
     if(not configOut.has_section("Ships")):
         configOut.add_section("Ships")
     configOut.set("Ships", "playerName",shipName0)

@@ -355,8 +355,8 @@ class gattlingLaser1(weapon):
         super(gattlingLaser1,self).__init__(id,name,category,target,minEnergy,maxEnergy,energy, maxCooldown, integrity, maxIntegrity,  cooldown, mass, cost, cooling)
         self.description = ("Gattling Laser I: \nWeapon System \n\
 integrity: {} \nmin energy: {} \nmax energy: {}\ncooling: {} \n\
-laser damage: 4 \n\
-laser heat damage: 3.5 \n\
+laser damage: 1 \n\
+laser heat damage: 6 \n\
 mass: {}\ncost: {}\
 ").format(self.integrity,self.minEnergy,self.maxEnergy,self.cooling,self.mass,self.cost)
 
@@ -380,8 +380,8 @@ class gattlingLaser1C(gattlingLaser1):
         super(gattlingLaser1C,self).__init__(id,name,category,target,minEnergy,maxEnergy,energy, maxCooldown, integrity, maxIntegrity,  cooldown, mass, cost, cooling) 
         self.description = ("Gattling Laser I: \nWeapon System \n\
 integrity: {} \nmin energy: {} \nmax energy: {}\ncooling: {} \n\
-laser damage: 4 \n\
-laser heat damage: 3.5 \n\
+laser damage: 1 \n\
+laser heat damage: 6 \n\
 mass: {}\ncost: {}\
 ").format(self.integrity,self.minEnergy,self.maxEnergy,self.cooling,self.mass,self.cost)
 
@@ -392,8 +392,8 @@ class gattlingLaser2(weapon):
         super(gattlingLaser2,self).__init__(id,name,category,target,minEnergy,maxEnergy,energy, maxCooldown, integrity, maxIntegrity,  cooldown, mass, cost, cooling)
         self.description = ("Gattling Laser II: \nWeapon System \n\
 integrity: {} \nmin energy: {} \nmax energy: {}\ncooling: {}  \n\
-laser damage: 4 \n\
-laser heat damage: 3.5 \n\
+laser damage: 1 \n\
+laser heat damage: 6 \n\
 mass: {}\ncost: {}\
 ").format(self.integrity,self.minEnergy,self.maxEnergy,self.cooling,self.mass,self.cost)
 
@@ -418,8 +418,8 @@ class highEnergyLaser1(weapon):
         super(highEnergyLaser1,self).__init__(id,name,category,target,minEnergy,maxEnergy,energy, maxCooldown, integrity, maxIntegrity,  cooldown, mass, cost, cooling)
         self.description = ("Gattling Laser II: \nWeapon System \n\
 integrity: {} \nmin energy: {} \nmax energy: {}\ncooling: {} \n\
-laser damage: 80 \n\
-laser heat damage: 40 \n\
+laser damage: 10 \n\
+laser heat damage: 200 \n\
 mass: {}\ncost: {}\
 ").format(self.integrity,self.minEnergy,self.maxEnergy,self.cooling,self.mass,self.cost)
 
@@ -520,7 +520,11 @@ def shoot(var,system,ship,ammunitionType,ships,uiMetrics,shipLookup,offsetX=0,of
                 ghostShip.y = ship.yPos + uiMetrics.canvasHeight
                 list.append(ghostShip)
                 for element in list:
-                    distance2 = (element.x-ship2.xPos)*(element.x-ship2.xPos) + (element.y-ship2.yPos)*(element.y-ship2.yPos)
+                    x = element.x
+                    y = element.y
+                    enemyX = ship2.xPos
+                    enemyY = ship2.yPos
+                    distance2 = (x-enemyX)*(x-enemyX) + (y-enemyY)*(y-enemyY)
                     if(ship2.visible == True and distance2 < (ship.detectionRange*ship.detectionRange)):
                         if(distance2 < minDist2):
                             minDist2 = distance2
@@ -533,7 +537,6 @@ def shoot(var,system,ship,ammunitionType,ships,uiMetrics,shipLookup,offsetX=0,of
                             minDist2 = distance2
                 if(break1):
                     break
-        print(ship.targetOnly)
         if(not(ship2.name == ship.target) and ship.targetOnly):
             shipToShoot = 0
         if(shipToShoot):
