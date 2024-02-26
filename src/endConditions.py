@@ -1,5 +1,6 @@
 from tkinter import *
 import tkinter.ttk as ttk
+import src.loadGame as loadGame
 
 def killedShips(var,events):
     noEnemies = True
@@ -210,5 +211,6 @@ def showLoose(var,events):
         label = ttk.Label(window, style = "Grey.TLabel", text='You Lost\n\n'+ var.looseMessage+'\n\nPress "Exit to Menu" to continue')
         label.config(justify='center')
         label.pack()
+        button = ttk.Button(window, style = "Grey.TButton", text='Replay',command = loadGame.run())
         events.showedLoose = True
 

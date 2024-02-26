@@ -13,7 +13,7 @@ from pathlib import Path
 from src.naglowek import dynamic_object
 from src.rootCommands import *
 import src.naglowek as naglowek
-from src.battleSystem import run
+from src.loadGame import run
 
 def shipChoiceCommand():
     x=10

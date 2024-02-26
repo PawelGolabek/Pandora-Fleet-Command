@@ -1,13 +1,11 @@
 import math
 from tkinter import *
-import tkinter.ttk as ttk
 import threading
 import time
 
 import src.naglowek as naglowek
 from src.ammunitionType import *
 from src.colorCommands import rgbtohex
-from src.canvasCalls import *
 from src.rootCommands import *
 import src.endConditions as endConditions
 

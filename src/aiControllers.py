@@ -100,7 +100,13 @@ class aiController():
         for ship in var.ships:
             for signature in ship.signatures:
                 if(ship.owner == "player1"):
-                    newMaskMap[round(signature.yPos / prec)][round(signature.xPos / prec)] = int(prec/2)
+                    # precise point of interest on player
+                    newMaskMap[round(signature.yPos / prec)][round(signature.xPos / prec)] = int(prec*2/3) 
+                    # imprecise points of interest to make it more interesting
+                    newMaskMap[round(signature.yPos + 50 / prec)%(ySpan)][round(signature.xPos + 50 / prec)%(xSpan+1)] = int(prec*2/3) 
+                    newMaskMap[round(signature.yPos / prec)%(ySpan)][round(signature.xPos / prec)%(xSpan+1)] = int(prec*2/3)
+                    newMaskMap[round(signature.yPos - 50 / prec)%(ySpan)][round(signature.xPos - 50 / prec)%(xSpan+1)] = int(prec*2/3)
+                    newMaskMap[round(signature.yPos / prec)%(ySpan)][round(signature.xPos / prec)%(xSpan+1)] = int(prec*2/3)
 
         for ship in var.ships:          #place player markers
             if(ship.owner == "player1" and ship.visible

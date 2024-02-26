@@ -7,7 +7,7 @@ from PIL import Image, ImageTk
 import PIL.Image
 from pathlib import Path
 
-from src.battleSystem import run
+from src.loadGame import run
 import src.naglowek as naglowek
 from src.rootCommands import *
 

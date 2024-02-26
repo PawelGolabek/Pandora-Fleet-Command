@@ -14,6 +14,17 @@ import tkinter.ttk as ttk
 import sys,os
 from pathlib import Path
 
+class ui_icons():
+    x=10
+
+class _events():
+    playerDestroyed = False
+    showedWin = False
+    showedLoose = False
+    disabledWin = False
+    disabledLoose = False
+
+    
 class global_var():
     def __init__(self,config,root):
         self.finished = False
@@ -217,7 +228,7 @@ class dynamic_object():
     x=10
 
 class landmark():
-    def __init__(self, xPos=100, yPos=100, cooldown=800, defaultCooldown=800, radius=100, boost='none',visible = True):
+    def __init__(self, xPos=100, yPos=100, cooldown=800, defaultCooldown=800, radius=100, boost='none',visible = True,id = 999):
         self.xPos = xPos
         self.yPos = yPos
         self.cooldown = cooldown
@@ -225,6 +236,7 @@ class landmark():
         self.radius = radius
         self.boost = boost
         self.visible = visible
+        self.id = id
 
 class tracer():
     def __init__(self, xPos=300, yPos=300, xDir=0.0, yDir=1.0, turnRate=0.5, speed=40): 

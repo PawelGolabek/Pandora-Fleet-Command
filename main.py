@@ -8,7 +8,7 @@ from pathlib import Path
 
 from src.myStyles import loadStyles,ttk
 from src.missionSelectMenu import missionSelectScreen
-from src.battleSystem import run,resume
+from src.loadGame import run,resume
 from src.naglowek import declareGlobals, dynamic_object, ui_metrics
 from src.rootCommands import hideMenuUi, placeMenuUi
 from src.customGameMenu import customGame
