@@ -14,9 +14,9 @@ import src.naglowek as naglowek
 from src.rootCommands import placeMenuUi,hideMenuUi,placeSelectMenuUI
 
 
-def hideSelectScreenUi(uiElements):
+def destroySelectScreenUi(uiElements):
     for uiElement in uiElements:
-      uiElement.place_forget()
+      uiElement.destroy()
 
 def optionCommand(variable,desLabelVar,objLabelVar,missionCanvas,msmVar,uiMetrics,dateLVar,unitLVar,codeLVar,threatVar,reconLVar,cryptonymLVar):
     cwd = Path(sys.argv[0])
@@ -138,8 +138,8 @@ def missionSelectScreen(root,config,uiMenuElements,uiMetrics):
     a = imageToAvoidTrashCollecting
 
     uiElementsList = []
-    startButtonCommand = partial(start,variable,root,uiMenuElements)
-    uiElements.button = tk.Button(root, text="Start", width = 20, height = 3, command= lambda: [hideSelectScreenUi(uiElementsList),startButtonCommand()])        
+    startButtonCommand = partial(start,variable,root,uiMenuElements,uiElementsList)
+    uiElements.button = tk.Button(root, text="Start", width = 20, height = 3, command= lambda: [destroySelectScreenUi(uiElementsList),startButtonCommand()])        
     uiElements.exitToMenuButton = tk.Button(root, width = 20, height = 3, text="Exit to menu", command=lambda:[placeMenuUi(root,uiMenuElements,uiMetrics), hideMenuUi(uiElementsList)])
     uiElementsList.append(uiElements.dateLF)
     uiElementsList.append(uiElements.cryptonymLF)
@@ -161,7 +161,9 @@ def missionSelectScreen(root,config,uiMenuElements,uiMetrics):
     placeSelectMenuUI(uiElements,uiMetrics)
     mainloop()
 
-def start(variable,root,uiMenuElements):
+def start(variable,root,uiMenuElements,uiElementsList):
+    for element in uiElementsList:
+        element.destroy()
     config = configparser.ConfigParser()
     cwd = Path(sys.argv[0])
     cwd = str(cwd.parent)

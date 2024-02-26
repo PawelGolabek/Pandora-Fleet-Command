@@ -65,6 +65,8 @@ class global_var():
         self.zoom = 1
         self.shieldRegen = 1
         self.shieldMaxState = 1000
+        self.respawns = 0
+        self.enemyRespawns = 0
         # GAME DATA
         self.labelCounter = 0
         self.choices = StringVar()
@@ -186,9 +188,14 @@ class ui_metrics():
     pausedLHeight = 100
     canvasX = 440
     canvasY = 10
+    systemsLFHeight = canvasY + canvasHeight + 10
     shipDataX = canvasX
     shipDataY = canvasY + 20
     orderLength = 3
+    objectivesLFX = canvasX + canvasWidth + 20
+    objectivesLFY = canvasY + canvasHeight + 20 + 1/2 *systemScalesLFHeight
+    objectivesLFWidth = systemsLFWidth
+    objectivesLFHeight = 1/2 * systemScalesLFHeight
     #editor
     editorSystemsFrameX = 100
     editorSystemsFrameY = 500

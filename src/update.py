@@ -1,18 +1,15 @@
 import math
 import time
-from ctypes import pointer
-from dis import dis
-from ensurepip import bootstrap
-from faulthandler import disable
 from functools import partial
-from random import randint
-from tabnanny import check
-from tkinter.filedialog import askopenfilename
+from tkinter import NORMAL,DISABLED
 import PIL.Image
-from PIL import Image, ImageTk
+from PIL import ImageTk
 
 import src.canvasCalls as canvasCalls
-from src.shipCombat import *
+import src.naglowek as naglowek
+import src.endConditions as endConditions
+from src.shipCombat import checkForKilledShips,dealDamage,putTracer,updateBattleUi,detectionCheck,updateLabels,putLaser, \
+    updateShipsLocation,rotateVector,updateShipsStatus,updateSignatures
 from src.aiControllers import aiController
 from src.inputs import mouseOnCanvas,trackMouse
 from src.rootCommands import hidePausedText,showPausedText
@@ -38,7 +35,6 @@ def getOrders(ship,var,gameRules,uiMetrics,forced=False):
                 ((var.pointerX-uiMetrics.canvasX)/var.zoom)
             ship.moveOrderY = var.top + \
                 ((var.pointerY-uiMetrics.canvasY)/var.zoom)
-            print(ship.moveOrderX,ship.moveOrderY)
             tracered = True
             putTracer(ship,var,gameRules,uiMetrics)
     if(not tracered and ship.owner == "player1" and forced ):
@@ -202,8 +198,13 @@ def updateScales(uiElements,var,shipLookup):
     for system in uiElements.uiSystemsProgressbars:
         if(i>=len(shipChosen.systemSlots)):
             break
-        (shipChosen.systemSlots[i]).energy = (uiElements.uiSystems[i]).get()
         system1 = shipChosen.systemSlots[i]
+        if(system1.integrity < 1):
+            uiElements.uiSystems[i].config(state=DISABLED, background="#D0D0D0")
+            system1.energy = 0
+            i+=1
+            continue
+        (shipChosen.systemSlots[i]).energy = (uiElements.uiSystems[i]).get()
         system['value'] = (system1.maxCooldown-system1.cooldown)
         cldwn = round((abs(system1.maxCooldown-system1.cooldown)/float(system1.maxCooldown))*100.0)
         if(cldwn == 100):
@@ -337,10 +338,11 @@ def manageRockets(missles,shipLookup,var,events,uiElements,uiMetrics,root,canvas
             missles.remove(missle)
             continue
         if(missle.sort == 'laser'):
-            putLaser(missle,var,shipLookup)
-            dealDamage(shipLookup[missle.target], missle.damage,var,missle.targetSystem, missle.heat,uiElements,shipLookup,root,events)
+            if(not missle.owner == 'none'):
+                putLaser(missle,var,shipLookup)
+                dealDamage(shipLookup[missle.target], missle.damage,var,missle.targetSystem, missle.heat,uiElements,shipLookup,root,events)
+                checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas)
             missles.remove(missle)
-            checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas)
             continue
         
         # check for terrain

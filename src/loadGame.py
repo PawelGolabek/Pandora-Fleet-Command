@@ -9,21 +9,21 @@ from ensurepip import bootstrap
 from faulthandler import disable
 from functools import partial
 from pathlib import Path
-from random import randint
 from tabnanny import check
 from tkinter import BOTH, Canvas
 from tkinter.filedialog import askopenfilename
 import random as random
-from random import randint
 from tabnanny import check
 from tkinter.filedialog import askopenfilename
 import PIL.Image
-from tkinter import *
-import random as random
+from tkinter import PhotoImage,HORIZONTAL
+import gc
+
 
 import src.naglowek as naglowek
 from src.ship import ship
-from src.update import dragging,checkForKilledShips,update,getZoomMetrics,newWindow,putTracer,updateLabels,radioBox,endTurn,updateBattleUi,detectionCheck
+from src.update import dragging,checkForKilledShips,update,newWindow,putTracer,updateLabels,radioBox,endTurn,updateBattleUi,detectionCheck
+from src.shipCombat import getZoomMetrics
 from src.aiControllers import aiController
 from src.turnManagers import startTurn,pauseGame
 from src.inputs import mouseButton3,mouseWheel,motion,mouseButton1,mouseButton3up
@@ -150,6 +150,7 @@ def declareShips(var,config,events,shipLookup,uiElements,uiMetrics,root,canvas):
                 creationList[i].maxSpeed = float(config.get(configList[i], "maxSpeed"))
                 creationList[i].outlineColor = ((config.get(configList[i], "outlineColor")))
                 creationList[i].hp = int((config.get(configList[i], "hp")))
+                creationList[i].maxHp = int((config.get(configList[i], "hp")))
                 creationList[i].ap = int((config.get(configList[i], "ap")))
                 creationList[i].stance = ((config.get(configList[i], "stance")))
                 creationList[i].killed = False
@@ -238,7 +239,8 @@ def saveCurrentGame(var):
     hd.close()
         #### wip
 def run(config,root,menuUiElements):
-    print(naglowek.combatUiReady)
+ #   tracemalloc.start()
+   # print(naglowek.combatUiReady)
     if(naglowek.combatUiReady):
         cinfo = naglowek.combatSystemInfo
         naglowek.combatUiReady = False
@@ -266,28 +268,69 @@ def run(config,root,menuUiElements):
             element.destroy()
         for element in ((cinfo.uiElements).UIElementsList):
             element.destroy()
+        for key, element in cinfo.shipLookup.items():
+            del element
+        for element in cinfo.uiElements.uiSystemsProgressbars:
+            element.destroy()
+
+        cinfo.var.uiTargetOnlyCB.destroy()
+        del cinfo.uiElementsToPlace      
+        del cinfo.var.mask 
+        del cinfo.var.PFMask 
+        cinfo.uiElements.enemyLF.destroy()
+        cinfo.uiElements.enemyLF2.destroy()
+        cinfo.uiElements.enemyLF3.destroy()
+        cinfo.uiElements.playerLF.destroy()
+        cinfo.uiElements.playerLF2.destroy()
+        cinfo.uiElements.playerLF3.destroy()
+
+        cinfo.uiElements.systemsLF.destroy()
         del cinfo.uiElements.systemsLF
+        cinfo.var.uiEnergyLabel.destroy()
+        del cinfo.var.uiEnergyLabel
         del (cinfo.var).img
+        del (cinfo.var).imgg
         del (cinfo.var).radio
         (cinfo.uiElements).uiSystems = []
         (cinfo.uiElements).uiSystemsProgressbars = []
+        del(cinfo.var.image)
+        del(cinfo.var.imageMask)
         del (cinfo.var)
         del (cinfo.gameRules)
         del (cinfo.ammunitionType)
-        del (cinfo.uiIcons)
+        del (cinfo.uiIcons.armorIcon)
+        del (cinfo.uiIcons.spotterIcon)
+        del (cinfo.uiIcons.controlIconP)
+        del (cinfo.uiIcons.controlIconE)
+        del (cinfo.uiIcons.controlIconN)
+        del cinfo.uiIcons
         del (cinfo.shipLookup)
         del (cinfo.events)
         del (cinfo.uiElements)
-        del (cinfo.uiElementsToPlace)
+        gc.collect()
         del cinfo   ## par nowych sprawdz
-
+  #      for child in root.winfo_children():
+  #         print(str(child.winfo_height()) + str(child.winfo_parent()) + str(child) + '\n')
+  #         #child.place(x=10,y=10)
+  #      snapshot = tracemalloc.take_snapshot()
+  #      top_stats = snapshot.statistics('traceback')
+  #      i = 0
+  #      stat = top_stats[i]
+  #      while(True):
+  #          try:
+  #              stat = top_stats[i]
+  #              for line in stat.traceback.format():
+  #                  print(line)
+  #              tracemalloc.stop()
+  #              print("\n\n\n\n")
+  #              i+=1
+  #          except:
+  #              break
     root.after_cancel("all")
     resume(config,root,menuUiElements)
 # main
 def resume(config,root,menuUiElements):
-
     if(not naglowek.combatUiReady):
-        print("loading ui")
         cwd = Path(sys.argv[0])
         cwd = str(cwd.parent)
         """
@@ -305,6 +348,9 @@ def resume(config,root,menuUiElements):
         events = naglowek._events()
         uiElements = naglowek.dynamic_object()
         uiElements.systemsLF = ttk.Labelframe(root,style = 'Grey.TLabelframe', text= "" + " systems",borderwidth=2, width=uiMetrics.canvasWidth*4/5)
+        uiElements.objectivesLF = ttk.Labelframe(root,style = 'Grey.TLabelframe', text= "Current objectives",borderwidth=2, width=uiMetrics.objectivesLFWidth,height = uiMetrics.objectivesLFHeight)
+        uiElements.objectivesL = ttk.Label(uiElements.objectivesLF,style = 'Grey.TLabel',justify = "left", text= "")
+        uiElements.objectivesL.config(text = config.get("Meta", "objectives", fallback = "Objective 1\nObjective 2\nObjective 3"))
         uiElements.staticUi = []
         uiIcons.armorIcon = PhotoImage(file=os.path.join(cwd, "icons","armor.png"))
         uiIcons.spotterIcon = PhotoImage(file=os.path.join(cwd, "icons","spotter.png"))
@@ -404,18 +450,19 @@ def resume(config,root,menuUiElements):
         (uiElements.staticUi).append(uiElements.startTurnButton)
         (uiElements.staticUi).append(uiElements.exitButton)
         (uiElements.staticUi).append(uiElements.exitToMenuButton)
+        (uiElements.staticUi).append(uiElements.objectivesLF)
 
         for ship1 in var.ships:
             if(ship1.owner == "player1"):
                 putTracer(ship1,var,gameRules,uiMetrics)
 
-        uiElements.enemyLF = ttk.Labelframe(root, style = 'Grey.TLabelframe',text = shipLookup[3].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
-        uiElements.enemyLF2 = ttk.Labelframe(root, style = 'Grey.TLabelframe',text = shipLookup[4].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
-        uiElements.enemyLF3 = ttk.Labelframe(root, style = 'Grey.TLabelframe',text = shipLookup[5].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
         uiElements.playerLF = ttk.Labelframe(root, style = 'Grey.TLabelframe',text = shipLookup[0].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
         uiElements.playerLF2 = ttk.Labelframe(root, style = 'Grey.TLabelframe',text = shipLookup[1].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
         uiElements.playerLF3 = ttk.Labelframe(root, style = 'Grey.TLabelframe',text = shipLookup[2].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
-
+        uiElements.enemyLF = ttk.Labelframe(root, style = 'Grey.TLabelframe',text = shipLookup[3].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
+        uiElements.enemyLF2 = ttk.Labelframe(root, style = 'Grey.TLabelframe',text = shipLookup[4].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
+        uiElements.enemyLF3 = ttk.Labelframe(root, style = 'Grey.TLabelframe',text = shipLookup[5].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
+    
         var.playerShields = []
         var.playerShields2 = []
         var.playerShields3 = []

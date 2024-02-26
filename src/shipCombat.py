@@ -1,8 +1,7 @@
 import math
-from tkinter import *
+from tkinter import DISABLED
 import threading
 import time
-import random as random
 
 import src.naglowek as naglowek
 from src.ammunitionType import ammunition
@@ -395,6 +394,17 @@ def checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas):
 
 def killShip(shipId,var,events,shipLookup,uiElements,uiMetrics,root,canvas):
     ship1 = shipLookup[shipId]
+    respawned = False
+    if(ship1.owner == 'player1'):
+        if(var.respawns):
+            ship1.respawn(var,var.respawns,uiMetrics)
+            respawned = True
+    else:
+        if(var.enemyRespawns):
+            ship1.respawn(var,var.enemyRespawns,uiMetrics)
+            respawned = True
+    if(respawned):
+        return
     shipLookup[shipId].visible = False
     shipLookup[shipId].killed = True
     for missle in var.currentMissles:

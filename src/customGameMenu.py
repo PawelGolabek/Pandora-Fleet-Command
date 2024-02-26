@@ -8,6 +8,7 @@ from decimal import *
 from PIL import ImageTk
 import PIL.Image
 from pathlib import Path
+import sys
 
 
 from src.naglowek import dynamic_object

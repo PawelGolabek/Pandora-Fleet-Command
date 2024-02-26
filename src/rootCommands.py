@@ -25,7 +25,7 @@ def hideSystemTargets(uiElementsList):
 
 def updateCheckbox(var,shipLookup,uiElements):    
     shipChosen = shipLookup[var.shipChoice]
-    var.uiTargetOnlyCB =  ttk.Checkbutton(uiElements.systemsLF,variable = shipChosen.CBVar, style = 'Red.TCheckbutton', text = "Target Only", onvalue = 1, offvalue = 0,command=shipChosen.setTargetOnly)
+    var.uiTargetOnlyCB = ttk.Checkbutton(uiElements.systemsLF,variable = shipChosen.CBVar, style = 'Red.TCheckbutton', text = "Target Only", onvalue = 1, offvalue = 0,command=shipChosen.setTargetOnly)
 
     shipChosen = shipLookup[var.shipChoice]
     if(shipChosen.targetOnly):
@@ -97,6 +97,8 @@ def placeBattleUi(staticUi,uiMetrics,canvas,var,shipLookup,root,uiElements,uiEle
     staticUi.timeElapsedProgressBar.place(x=uiMetrics.canvasX+uiMetrics.canvasWidth-160, y=uiMetrics.canvasY + uiMetrics.canvasHeight + 80)
     staticUi.exitToMenuButton.place(x = uiMetrics.canvasX + uiMetrics.canvasWidth -160, y = uiMetrics.canvasY + uiMetrics.canvasHeight + 220)
     staticUi.startTurnButton.place(x = uiMetrics.canvasX + uiMetrics.canvasWidth -160, y = uiMetrics.canvasY + uiMetrics.canvasHeight + 100)
+    staticUi.objectivesLF.place(x=uiMetrics.canvasX+uiMetrics.canvasWidth + 20, y = uiMetrics.objectivesLFY)
+    staticUi.objectivesL.place(x=10, y = 10)
 
     # place shields
     for tmpShip,shieldArray in zip(var.ships,staticUi.tmpShieldsLabel):
@@ -128,10 +130,6 @@ def placeBattleUi(staticUi,uiMetrics,canvas,var,shipLookup,root,uiElements,uiEle
     shipTarget = StringVar()
     shipTarget.set(shipLookup[var.shipChoice].target)
     optionMenu = tk.OptionMenu(staticUi.systemsLF, shipTarget, *options.keys(), command=lambda _: [shipLookup[var.shipChoice].setTarget(shipTarget),updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas,uiElementsList)])
-  #  optionMenu = tk.OptionMenu(staticUi.systemsLF, shipTarget, *options.keys(), command=lambda _: [shipLookup[var.shipChoice].setTarget(shipTarget),
-  #                                                                                              hideSystemTargets(uiElements.systemTargetsList),
-  #                                                                                              updateCheckbox(var,shipLookup,uiElements),
-  #                                                                                              declareSystemsTargets(var,root,shipLookup,staticUi,uiMetrics,shipTarget,uiElements)])
     optionMenu.place(x = 160, y = 20)
     declareSystemsTargets(var,root,shipLookup,staticUi,uiMetrics,shipTarget,uiElements)
     
@@ -191,20 +189,20 @@ def declareSystemsTargets(var,root,shipLookup,staticUi,uiMetrics,shipTarget,uiEl
         scale.place(x = 10 + (i - isDown*3) * uiMetrics.systemScalesWidthOffset, y = uiMetrics.systemScalesMarginTop + uiMetrics.systemScalesOffset * isDown)
         progressBar.place(x = 10 + (i - isDown*3) * uiMetrics.systemScalesWidthOffset, y = uiMetrics.systemScalesMarginTop + 42 + uiMetrics.systemScalesOffset * isDown)
         i += 1
-    (staticUi.systemsLF).place(x = uiMetrics.canvasX, y = uiMetrics.canvasY + uiMetrics.canvasHeight + 10)
+    staticUi.systemsLF.place(x = uiMetrics.canvasX, y = uiMetrics.systemsLFHeight)
 
-    if(not shipLookup[3].name.startswith(">Not Available<")):
-        staticUi.enemyLF.place(x=uiMetrics.canvasX + uiMetrics.canvasWidth + 10, y = uiMetrics.canvasY)
-    if(not shipLookup[4].name.startswith(">Not Available<")):
-        staticUi.enemyLF2.place(x=uiMetrics.canvasX + uiMetrics.canvasWidth + 10, y = uiMetrics.canvasY + 1 * uiMetrics.canvasHeight/5*2)
-    if(not shipLookup[5].name.startswith(">Not Available<")):
-        staticUi.enemyLF3.place(x=uiMetrics.canvasX + uiMetrics.canvasWidth + 10, y = uiMetrics.canvasY + 2 * uiMetrics.canvasHeight/5*2)
     if(not shipLookup[0].name.startswith(">Not Available<")):
         staticUi.playerLF.place(x=20, y = uiMetrics.canvasY)
     if(not shipLookup[1].name.startswith(">Not Available<")):
         staticUi.playerLF2.place(x=20, y = uiMetrics.canvasY + 1 * uiMetrics.canvasHeight/5*2)
     if(not shipLookup[2].name.startswith(">Not Available<")):
         staticUi.playerLF3.place(x=20, y = uiMetrics.canvasY + 2 * uiMetrics.canvasHeight/5*2)
+    if(not shipLookup[3].name.startswith(">Not Available<")):
+        staticUi.enemyLF.place(x=uiMetrics.canvasX + uiMetrics.canvasWidth + 10, y = uiMetrics.canvasY)
+    if(not shipLookup[4].name.startswith(">Not Available<")):
+        staticUi.enemyLF2.place(x=uiMetrics.canvasX + uiMetrics.canvasWidth + 10, y = uiMetrics.canvasY + 1 * uiMetrics.canvasHeight/5*2)
+    if(not shipLookup[5].name.startswith(">Not Available<")):
+        staticUi.enemyLF3.place(x=uiMetrics.canvasX + uiMetrics.canvasWidth + 10, y = uiMetrics.canvasY + 2 * uiMetrics.canvasHeight/5*2)
 
 
     labelsList = [staticUi.enemyLabels, staticUi.enemyLabels2, staticUi.enemyLabels3, staticUi.playerLabels, staticUi.playerLabels2, staticUi.playerLabels3]

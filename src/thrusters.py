@@ -19,7 +19,7 @@ class thrusters(object):
         ship.cost -= self.cost
 
 class none(thrusters):
-    def __init__ (self,name = "none", mass = 0, cost = 10):
+    def __init__ (self,name = "none", mass = 0, cost = 0):
         super(none,self).__init__(name,mass,cost)
     def onAdding(self,ship):
         ship.mass += self.mass

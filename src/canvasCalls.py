@@ -52,7 +52,7 @@ def drawShips(canvas,var,uiMetrics):  # draw ship on the map with all of its acc
                 if(ship.owner == "player1"):
                     _fill = 'white'
                     if(ship.stealth):
-                        _fill = 'blue'
+                        _fill = 'deepSkyBlue2'
                     if(drawX < uiMetrics.canvasWidth - 50 * var.zoom):
                         line = canvas.create_text(drawX + 12 * var.zoom, drawY + 10, anchor=W,
                                     font=("Purisa", 8 + floor(var.zoom)), text=ship.name, fill = _fill)
@@ -65,7 +65,7 @@ def drawShips(canvas,var,uiMetrics):  # draw ship on the map with all of its acc
                 else:
                     _fill = 'white'
                     if(ship.stealth):
-                        _fill = 'navyblue'
+                        _fill = 'deepSkyBlue4'
                     if(drawX < uiMetrics.canvasWidth - 50 * var.zoom):
                         line = canvas.create_text(drawX + 12 * var.zoom, drawY + 10, anchor=W,
                                     font=("Purisa", 8 + floor(var.zoom)), text=ship.name, fill = _fill)
@@ -188,13 +188,13 @@ def createPFMask(var,uiMetrics):
         i+=1
     return mapMask
 
-def drawRockets(globalVar,ammunitionType,canvas):
-    for missle in globalVar.currentMissles:
+def drawRockets(var,ammunitionType,canvas):
+    for missle in var.currentMissles:
         color = "white"
-        drawX = (missle.xPos - globalVar.left) * \
-            globalVar.zoom
-        drawY = (missle.yPos - globalVar.top) * \
-            globalVar.zoom
+        drawX = (missle.xPos - var.left) * \
+            var.zoom
+        drawY = (missle.yPos - var.top) * \
+            var.zoom
 
         dirLineX = missle.xDir
         dirLineY = missle.yDir
@@ -216,65 +216,65 @@ def drawRockets(globalVar,ammunitionType,canvas):
             canvas.elements.append(line)
         
         if(missle.typeName == ammunitionType.bolter):
-            line = canvas.create_line(drawX-2, drawY-2,
-                            drawX+2, drawY+2, fill = color)
+            line = canvas.create_line(drawX-2*var.zoom, drawY-2*var.zoom,
+                            drawX+2*var.zoom, drawY+2*var.zoom, fill = color, width=int(var.zoom))
             canvas.elements.append(line)
         elif(missle.typeName == ammunitionType.missle):
-            line = canvas.create_line(drawX-5, drawY-5,
-                            drawX+5, drawY+5, fill = color)
+            line = canvas.create_line(drawX-5*var.zoom, drawY-5*var.zoom,
+                            drawX+5*var.zoom, drawY+5*var.zoom, fill = color, width=int(var.zoom))
             canvas.elements.append(line)
         elif(missle.typeName == ammunitionType.kinetic1):
-            line = canvas.create_line(drawX-1, drawY-1,
-                            drawX+1, drawY+1, fill = color)
+            line = canvas.create_line(drawX-1*var.zoom, drawY-1*var.zoom,
+                            drawX+1*var.zoom, drawY+1*var.zoom, fill = color, width=int(var.zoom))
             canvas.elements.append(line)
         elif(missle.typeName == ammunitionType.incirination1adefault):
-            line = canvas.create_line(drawX-2, drawY-2,
-                            drawX-7, drawY+2, fill = color)
+            line = canvas.create_line(drawX-2*var.zoom, drawY-2*var.zoom,
+                            drawX-7*var.zoom, drawY+2*var.zoom, fill = color, width=int(var.zoom))
             canvas.elements.append(line)
-            line = canvas.create_line(drawX-7, drawY+2,
-                            drawX, drawY+2, fill = color)
+            line = canvas.create_line(drawX-7*var.zoom, drawY+2*var.zoom,
+                            drawX, drawY+2*var.zoom, fill = color, width=int(var.zoom))
             canvas.elements.append(line)
-            line = canvas.create_line(drawX, drawY+2,
-                            drawX+2, drawY-2, fill = color)
+            line = canvas.create_line(drawX, drawY+2*var.zoom,
+                            drawX+2*var.zoom, drawY-2*var.zoom, fill = color, width=int(var.zoom))
             canvas.elements.append(line)
-            line = canvas.create_line(drawX+2, drawY-2,
-                            drawX-2, drawY-2, fill = color)
+            line = canvas.create_line(drawX+2*var.zoom, drawY-2*var.zoom,
+                            drawX-2*var.zoom, drawY-2*var.zoom, fill = color, width=int(var.zoom))
             canvas.elements.append(line)
 
         else:
-            line = canvas.create_line(drawX-5, drawY-5,
-                            drawX-7, drawY-5, fill = color)
+            line = canvas.create_line(drawX-5*var.zoom, drawY-5*var.zoom,
+                            drawX-7*var.zoom, drawY-5*var.zoom, fill = color, width=int(var.zoom))
             canvas.elements.append(line)
-            line = canvas.create_line(drawX-5, drawY-5,
-                            drawX-7, drawY-5, fill = color)
-            canvas.elements.append(line)
-
-            line = canvas.create_line(drawX+5, drawY+5,
-                            drawX+7, drawY+5)
-            canvas.elements.append(line)
-            line = canvas.create_line(drawX+5, drawY+5,
-                            drawX+5, drawY+7, fill = color)
+            line = canvas.create_line(drawX-5*var.zoom, drawY-5*var.zoom,
+                            drawX-7*var.zoom, drawY-5*var.zoom, fill = color, width=int(var.zoom))
             canvas.elements.append(line)
 
-            line = canvas.create_line(drawX+5, drawY-5,
-                            drawX+7, drawY-5, fill = color)
+            line = canvas.create_line(drawX+5*var.zoom, drawY+5*var.zoom,
+                            drawX+7*var.zoom, drawY+5*var.zoom)
             canvas.elements.append(line)
-            line = canvas.create_line(drawX+5, drawY-5,
-                            drawX+5, drawY-7, fill = color)
-            canvas.elements.append(line)
-
-            line = canvas.create_line(drawX-5, drawY+5,
-                            drawX-7, drawY+5, fill = color)
-            canvas.elements.append(line)
-            line = canvas.create_line(drawX-5, drawY+5,
-                            drawX-5, drawY+7, fill = color)
+            line = canvas.create_line(drawX+5*var.zoom, drawY+5*var.zoom,
+                            drawX+5*var.zoom, drawY+7*var.zoom, fill = color, width=int(var.zoom))
             canvas.elements.append(line)
 
-            line = canvas.create_line(drawX+1, drawY,
-                            drawX-1, drawY, fill = color)
+            line = canvas.create_line(drawX+5*var.zoom, drawY-5*var.zoom,
+                            drawX+7*var.zoom, drawY-5*var.zoom, fill = color, width=int(var.zoom))
             canvas.elements.append(line)
-            line = canvas.create_line(drawX, drawY+1,
-                            drawX, drawY-1, fill = color)
+            line = canvas.create_line(drawX+5*var.zoom, drawY-5*var.zoom,
+                            drawX+5*var.zoom, drawY-7*var.zoom, fill = color, width=int(var.zoom))
+            canvas.elements.append(line)
+
+            line = canvas.create_line(drawX-5*var.zoom, drawY+5*var.zoom,
+                            drawX-7*var.zoom, drawY+5*var.zoom, fill = color, width=int(var.zoom))
+            canvas.elements.append(line)
+            line = canvas.create_line(drawX-5*var.zoom, drawY+5*var.zoom,
+                            drawX-5*var.zoom, drawY+7*var.zoom, fill = color, width=int(var.zoom))
+            canvas.elements.append(line)
+
+            line = canvas.create_line(drawX+1*var.zoom, drawY,
+                            drawX-1*var.zoom, drawY, fill = color, width=int(var.zoom))
+            canvas.elements.append(line)
+            line = canvas.create_line(drawX, drawY+1*var.zoom,
+                            drawX, drawY-1*var.zoom, fill = color, width=int(var.zoom))
             canvas.elements.append(line)
 
 def drawLandmarks(var,canvas,uiIcons,uiMetrics):

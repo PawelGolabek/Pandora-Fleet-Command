@@ -1,38 +1,9 @@
-import src.naglowek as naglowek
 import tkinter as tk
+import random
+
+import src.naglowek as naglowek
 
 class ship():
-    def setTarget(self,variable):
-        self.target = variable.get()
-    def setTargetStr(self,variable):
-        self.target = variable
-    def setTargetOnly(self):
-        if(self.targetOnly):
-            self.targetOnly = False
-        else:
-            self.targetOnly = True
-
-    def declareSystemSlots(self,systemSlots,systemStatus):
-        for tmp in systemSlots:
-            if(not tmp == 'none'):
-                targetClass =  naglowek.systemLookup[tmp]
-                tmpSystem = targetClass()
-                self.systemSlots.append(tmpSystem)
-        i = 0
-        for tmp in systemStatus:
-            if(i < len(self.systemSlots)):
-                self.systemSlots[i].cooldown = int(tmp)
-                i+=1
-
-    def declareShieldState(self,shields,maxShields,var):
-        self.shields = shields
-        self.maxShields = maxShields
-        self.shieldsState = []
-        tmp = 0
-        while(tmp < maxShields):
-            self.shieldsState.append(var.shieldMaxState)
-            tmp += 1
-
     def __init__(self,var, name="MSS Artemis", owner="ai2", target=0,
                  hp=0, maxHp=None, ap=0, maxAp=None, shields=0, maxShields = 0, xPos=300, yPos=300,energy = 0,
                  ammunitionChoice=0, ammunitionNumberChoice=0, systemSlots = [], systemStatus = [],
@@ -96,3 +67,67 @@ class ship():
             self.prefAverageRange = 200
             self.prefMaxRange = 300
             self.stance = stance
+
+    def setTarget(self,variable):
+        self.target = variable.get()
+    def setTargetStr(self,variable):
+        self.target = variable
+    def setTargetOnly(self):
+        if(self.targetOnly):
+            self.targetOnly = False
+        else:
+            self.targetOnly = True
+
+    def declareSystemSlots(self,systemSlots,systemStatus):
+        for tmp in systemSlots:
+            if(not tmp == 'none'):
+                targetClass =  naglowek.systemLookup[tmp]
+                tmpSystem = targetClass()
+                self.systemSlots.append(tmpSystem)
+        i = 0
+        for tmp in systemStatus:
+            if(i < len(self.systemSlots)):
+                self.systemSlots[i].cooldown = int(tmp)
+                i+=1
+
+    def declareShieldState(self,shields,maxShields,var):
+        self.shields = shields
+        self.maxShields = maxShields
+        self.shieldsState = []
+        tmp = 0
+        while(tmp < maxShields):
+            self.shieldsState.append(var.shieldMaxState)
+            tmp += 1
+
+    def respawn(self,var,respawns,uiMetrics):
+        for system in self.systemSlots:
+            system.integrity = system.maxIntegrity
+            system.heat = 0
+        self.hp = self.maxHp
+        self.ap = self.maxAp
+        i = 0
+        for shieldState in self.shieldsState:
+            shieldState = var.shieldMaxState
+            i+=1
+            self.shields += 1
+        for tmp in self.systemSlots:
+            tmp.cooldown = 0
+            # find pos
+        tmpPosX = 100
+        tmpPosY = 100
+        bestPosX = 100
+        bestPosY = 100
+        checksLeft = 100
+        while(checksLeft):
+            tmpPosX = random.randrange(uiMetrics.canvasWidth)
+            tmpPosY = random.randrange(uiMetrics.canvasHeight)
+            maxDist2 = 0
+            for ship2 in var.ships:
+                dist2 = abs(tmpPosX - ship2.xPos) * abs(tmpPosX - ship2.xPos) + abs(tmpPosY - ship2.yPos) * abs(tmpPosY - ship2.yPos)
+                if(maxDist2 < dist2):
+                    bestPosX = tmpPosX
+                    bestPosY = tmpPosY
+            checksLeft -= 1
+        self.xPos = bestPosX
+        self.yPos = bestPosY
+        respawns -= 1

@@ -31,7 +31,7 @@ class armorPlate1(subsystem):
     def __init__ (self,name = "Armor Plate",mass = 45, cost = 20):
         super(armorPlate1,self).__init__(name,mass,cost)
         self.armorBonus = 30
-        self.description = ("Armor plate:\n Adds +{} to your ship armor \n\
+        self.description = ("Armor plate:\nAdds +{} to your ship armor \n\
 mass: {}\ncost: {}\
 ").format(self.armorBonus,self.mass,self.cost)
     def onAdding(self,ship):
@@ -48,7 +48,7 @@ class extendedSensors(subsystem):
         super(extendedSensors,self).__init__(name,mass,cost)
         self.energyCons = 1
         self.detectionBoost = 10
-        self.description = ("Extended Sensors:\n Adds +{} to your ship sensor range for {} energy consumption \n\
+        self.description = ("Extended Sensors:\nAdds +{} to your ship sensor range \nfor {} energy consumption \n\
 mass: {}\ncost: {}\
 ").format(self.detectionBoost,self.energyCons,self.mass,self.cost)
     def onAdding(self,ship):
@@ -71,7 +71,7 @@ class shieldCell1(subsystem):
         super(shieldCell1,self).__init__(name,mass,cost)
         self.energyCons = 2
         self.shieldBoost = 1
-        self.description = ("Shield Cell I:\n Adds +{} shields to your ship for {} energy consumption \n\
+        self.description = ("Shield Cell I:\nAdds +{} shields to your ship \nfor {} energy consumption \n\
 mass: {}\ncost: {}\
 ").format(self.shieldBoost,self.energyCons,self.mass,self.cost)
     def onAdding(self,ship):
@@ -96,7 +96,7 @@ class shieldCell2(subsystem):
         super(shieldCell2,self).__init__(name,mass,cost)
         self.energyCons = 5
         self.shieldBoost = 2
-        self.description = ("Shield Cell II:\n Adds +{} to your ship shields for {} energy consumption \n\
+        self.description = ("Shield Cell II:\nAdds +{} to your ship shields \nfor {} energy consumption \n\
 mass: {}\ncost: {}\
 ").format(self.shieldBoost, self.energyCons,self.mass,self.cost)
     def onAdding(self,ship):
@@ -120,7 +120,7 @@ class energyExtension1(subsystem):
     def __init__ (self,name = "Energy Extension I ",mass = 5, cost = 20):
         super(energyExtension1,self).__init__(name,mass,cost)
         self.energyExt = 1
-        self.description = ("Energy Extension I:\n Adds +{} maximum energy to your ship\n\
+        self.description = ("Energy Extension I:\nAdds +{} maximum energy to your ship\n\
 mass: {}\ncost: {}\
 ").format(self.energyExt,self.mass,self.cost)
     def onAdding(self,ship):
