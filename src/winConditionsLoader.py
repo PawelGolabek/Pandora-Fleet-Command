@@ -159,5 +159,10 @@ def loadWinConditions(var,config):
                 var.looseByDomination = False
             else:
                 var.looseByDomination = True
+                
+        if config.has_option('Meta', 'playerRespawns'):
+            var.enemyRespawns = int(config.get("Meta", "playerRespawns"))
+        if config.has_option('Meta', 'enemyRespawns'):
+            var.enemyRespawns = int(config.get("Meta", "enemyRespawns"))
 
         var.winMessage = config.get("Meta", "winMessage")
