@@ -347,7 +347,7 @@ def resume(config,root,menuUiElements):
         shipLookup = dict
         events = naglowek._events()
         uiElements = naglowek.dynamic_object()
-        uiElements.systemsLF = ttk.Labelframe(root,style = 'Grey.TLabelframe', text= "" + " systems",borderwidth=2, width=uiMetrics.canvasWidth*4/5)
+        uiElements.systemsLF = ttk.Labelframe(root,style = 'Grey.TLabelframe', text= "" + " systems",borderwidth=2, width=uiMetrics.canvasWidth)
         uiElements.objectivesLF = ttk.Labelframe(root,style = 'Grey.TLabelframe', text= "Current objectives",borderwidth=2, width=uiMetrics.objectivesLFWidth,height = uiMetrics.objectivesLFHeight)
         uiElements.objectivesL = ttk.Label(uiElements.objectivesLF,style = 'Grey.TLabel',justify = "left", text= "")
         uiElements.objectivesL.config(text = config.get("Meta", "objectives", fallback = "Objective 1\nObjective 2\nObjective 3"))

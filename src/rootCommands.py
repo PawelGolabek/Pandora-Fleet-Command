@@ -57,7 +57,7 @@ def clearUtilityChoice(uiElements,var):
 def updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas,uiElementsList):
     clearUtilityChoice(uiElements,var)
     shipChosen = shipLookup[var.shipChoice]
-    uiElements.systemsLF = ttk.Labelframe(root,style = 'Grey.TLabelframe', width=uiMetrics.canvasWidth*4/5, \
+    uiElements.systemsLF = ttk.Labelframe(root,style = 'Grey.TLabelframe', width=uiMetrics.canvasWidth, \
                                                     height = uiMetrics.systemScalesLFHeight, text= shipChosen.name + " systems", \
                                                     borderwidth=2, relief="groove")
     var.uiEnergyLabel = ttk.Label(uiElements.systemsLF,style = 'Grey.TLabel', width=20, text = "Energy remaining: " + str(shipChosen.energy), font = "16")
@@ -91,13 +91,13 @@ def placeBattleUi(staticUi,uiMetrics,canvas,var,shipLookup,root,uiElements,uiEle
         uiElements.RadioElementsList[2].place(x=uiMetrics.canvasX - 120, y=uiMetrics.canvasY + uiMetrics.canvasHeight + 240)
 
     canvas.place(x=uiMetrics.canvasX, y=uiMetrics.canvasY)
-    staticUi.gameSpeedL.place(x=uiMetrics.canvasX+uiMetrics.canvasWidth-160, y=uiMetrics.canvasY + uiMetrics.canvasHeight + 10)
-    staticUi.gameSpeedScale.place(x=uiMetrics.canvasX+uiMetrics.canvasWidth-160, y=uiMetrics.canvasY + uiMetrics.canvasHeight + 35)
-    staticUi.timeElapsedLabel.place(x=uiMetrics.canvasX+uiMetrics.canvasWidth-160, y=uiMetrics.canvasY + uiMetrics.canvasHeight + 55)
-    staticUi.timeElapsedProgressBar.place(x=uiMetrics.canvasX+uiMetrics.canvasWidth-160, y=uiMetrics.canvasY + uiMetrics.canvasHeight + 80)
-    staticUi.exitToMenuButton.place(x = uiMetrics.canvasX + uiMetrics.canvasWidth -160, y = uiMetrics.canvasY + uiMetrics.canvasHeight + 220)
-    staticUi.startTurnButton.place(x = uiMetrics.canvasX + uiMetrics.canvasWidth -160, y = uiMetrics.canvasY + uiMetrics.canvasHeight + 100)
-    staticUi.objectivesLF.place(x=uiMetrics.canvasX+uiMetrics.canvasWidth + 20, y = uiMetrics.objectivesLFY)
+    staticUi.gameSpeedL.place(x = uiMetrics.gameSpeedLX, y = uiMetrics.gameSpeedLY)
+    staticUi.gameSpeedScale.place(x = uiMetrics.gameSpeedSCX, y= uiMetrics.gameSpeedSCY)
+    staticUi.timeElapsedLabel.place(x = uiMetrics.timeElapsedLX, y = uiMetrics.timeElapsedLY)
+    staticUi.timeElapsedProgressBar.place(x=uiMetrics.timeElapsedPBX, y=uiMetrics.timeElapsedPBY)
+    staticUi.exitToMenuButton.place(x = uiMetrics.exitBX , y = uiMetrics.exitBY)
+    staticUi.startTurnButton.place(x = uiMetrics.startTurnBX, y = uiMetrics.startTurnBY)
+    staticUi.objectivesLF.place(x=uiMetrics.objectivesLFX, y = uiMetrics.objectivesLFY)
     staticUi.objectivesL.place(x=10, y = 10)
 
     # place shields

@@ -178,7 +178,7 @@ class ui_metrics():
     systemScalesWidth = 200
     systemScalesMarginTop = 60
     systemScalesOffset = 100
-    systemScalesWidthOffset = 250
+    systemScalesWidthOffset = 350
     systemScalesLFHeight = 300
     systemProgressbarsHeightOffset = 60
     systemsLFWidth = 400
@@ -192,10 +192,22 @@ class ui_metrics():
     shipDataX = canvasX
     shipDataY = canvasY + 20
     orderLength = 3
-    objectivesLFX = canvasX + canvasWidth + 20
+    objectivesLFX = 20
     objectivesLFY = canvasY + canvasHeight + 20 + 1/2 *systemScalesLFHeight
-    objectivesLFWidth = systemsLFWidth
+    objectivesLFWidth = systemsLFWidth*2/3
     objectivesLFHeight = 1/2 * systemScalesLFHeight
+    exitBX = canvasX + canvasWidth - 20
+    exitBY = canvasY + canvasHeight + 220
+    startTurnBX = exitBX + 160
+    startTurnBY = exitBY 
+    timeElapsedPBX = canvasX + canvasWidth - 130
+    timeElapsedPBY = canvasY + canvasHeight + 240
+    timeElapsedLX = timeElapsedPBX
+    timeElapsedLY = timeElapsedPBY - 30
+    gameSpeedLX = timeElapsedPBX
+    gameSpeedLY = timeElapsedPBY + 30
+    gameSpeedSCX = timeElapsedPBX
+    gameSpeedSCY = timeElapsedPBY + 60
     #editor
     editorSystemsFrameX = 100
     editorSystemsFrameY = 500

@@ -132,6 +132,8 @@ def readShip(confIn,shipId,x,y,outline,owner,id,color):
     ship.subsystemSlots4 = str(confIn.get(shipId,"subsystemSlots4"))
     ship.subsystemSlots5 = str(confIn.get(shipId,"subsystemSlots5"))
     ship.subsystemSlots6 = str(confIn.get(shipId,"subsystemSlots6"))
+    ship.subsystemSlots7 = str(confIn.get(shipId,"subsystemSlots7"))
+    ship.subsystemSlots8 = str(confIn.get(shipId,"subsystemSlots8"))
 
     ship.stance = str(confIn.get(shipId,"stance"))
 
