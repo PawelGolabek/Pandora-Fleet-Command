@@ -2,7 +2,6 @@ from functools import partial
 from tkinter import *
 import tkinter.ttk as ttk
 import tkinter as tk
-import sys,os
 from turtle import isdown
 
 import src.naglowek as naglowek
@@ -55,7 +54,7 @@ def clearUtilityChoice(uiElements,var):
     uiElements.uiSystemsProgressbars = []
 
        
-def updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas):
+def updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas,uiElementsList):
     clearUtilityChoice(uiElements,var)
     shipChosen = shipLookup[var.shipChoice]
     uiElements.systemsLF = ttk.Labelframe(root,style = 'Grey.TLabelframe', width=uiMetrics.canvasWidth*4/5, \
@@ -63,14 +62,15 @@ def updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas):
                                                     borderwidth=2, relief="groove")
     var.uiEnergyLabel = ttk.Label(uiElements.systemsLF,style = 'Grey.TLabel', width=20, text = "Energy remaining: " + str(shipChosen.energy), font = "16")
     var.paused = True
+  #  uiElementsList.append(uiElements.systemsLF)
     showPausedText(var,uiElements,uiMetrics)
     hideBattleUi(uiElements.staticUi,uiElements)
-    placeBattleUi(uiElements,uiMetrics,canvas,var,shipLookup,root,uiElements)
+    placeBattleUi(uiElements,uiMetrics,canvas,var,shipLookup,root,uiElements,uiElementsList)
     hidePausedText(var,uiElements)
     var.paused = False
     return
 
-def placeBattleUi(staticUi,uiMetrics,canvas,var,shipLookup,root,uiElements):
+def placeBattleUi(staticUi,uiMetrics,canvas,var,shipLookup,root,uiElements,uiElementsList):
     
     if(not shipLookup[0].name.startswith(">Not Available<") or not shipLookup[0].killed):
         disable = var.radio0Hidden
@@ -127,7 +127,7 @@ def placeBattleUi(staticUi,uiMetrics,canvas,var,shipLookup,root,uiElements):
     options = var.enemies
     shipTarget = StringVar()
     shipTarget.set(shipLookup[var.shipChoice].target)
-    optionMenu = tk.OptionMenu(staticUi.systemsLF, shipTarget, *options.keys(), command=lambda _: [shipLookup[var.shipChoice].setTarget(shipTarget),updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas)])
+    optionMenu = tk.OptionMenu(staticUi.systemsLF, shipTarget, *options.keys(), command=lambda _: [shipLookup[var.shipChoice].setTarget(shipTarget),updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas,uiElementsList)])
   #  optionMenu = tk.OptionMenu(staticUi.systemsLF, shipTarget, *options.keys(), command=lambda _: [shipLookup[var.shipChoice].setTarget(shipTarget),
   #                                                                                              hideSystemTargets(uiElements.systemTargetsList),
   #                                                                                              updateCheckbox(var,shipLookup,uiElements),
@@ -155,32 +155,33 @@ def declareSystemsTargets(var,root,shipLookup,staticUi,uiMetrics,shipTarget,uiEl
         scale = tk.Scale(staticUi.systemsLF, orient=HORIZONTAL, length=uiMetrics.systemScaleWidth, \
                             label=system.name, from_ = system.minEnergy, to=system.maxEnergy, relief=RIDGE,fg="white", bg="#4582ec",highlightcolor = "white")
         scale.set(system.energy)
-        if(system.category == 'weapon'):
-            system.options = shipLookup[var.enemies[shipTarget.get()]].systemSlots
-            system.targetDict = {}
-            system.elementID = 0
-            system.systemTargets = []
+        if(not system.category == 'module'):
             shipChosen.systemAS = []
-            for element in system.options:
-                system.systemTargets.append(system.elementID)
-                system.targetDict.update({element.name : system.elementID})
-                system.elementID += 1
-            system.variable = StringVar(root)
-            if(system.target >= len((list(system.targetDict.keys())))):
-                system.target = 0
-            system.variable.set((list(system.targetDict.keys())[system.target]))
-            anotherCommand = partial((system.setTarget),(system.targetDict[system.variable.get()]))
-            a = tk.OptionMenu(staticUi.systemsLF, system.variable, *system.targetDict.keys() , command = anotherCommand)
-            shipChosen.optionMenus.append(a)
-            uiElements.systemTargetsList.append(a)
-            system.alphaStrikeVar = IntVar()
-            system.alphaStrikeVar.set(system.alphaStrike)
-            anotherCommand2 = partial(system.setAS)
-            shipChosen.systemAS.append(ttk.Checkbutton(staticUi.systemsLF, text='Synchronise',style = 'Red.TCheckbutton', variable=system.alphaStrikeVar, onvalue=1, offvalue=0, command=anotherCommand2,))
-            shipChosen.systemAS[-1].place(x = 155 + (i - isDown*3) * uiMetrics.systemScalesWidthOffset, y = uiMetrics.systemScalesMarginTop + 60 + uiMetrics.systemScalesOffset * isDown)
-            shipChosen.optionMenus[sys1].place(x = 10 + (i - isDown*3) * uiMetrics.systemScalesWidthOffset, y = uiMetrics.systemScalesMarginTop + 60 + uiMetrics.systemScalesOffset * isDown)
-            (var.uiSystemsAS).append(shipChosen.systemAS[-1]) # ta linijka psuje
-            sys1 += 1
+            if(system.category == 'weapon'):
+                system.options = shipLookup[var.enemies[shipTarget.get()]].systemSlots
+                system.targetDict = {}
+                system.elementID = 0
+                system.systemTargets = []
+                for element in system.options:
+                    system.systemTargets.append(system.elementID)
+                    system.targetDict.update({element.name : system.elementID})
+                    system.elementID += 1
+                system.variable = StringVar(root)
+                if(system.target >= len((list(system.targetDict.keys())))):
+                    system.target = 0
+                system.variable.set((list(system.targetDict.keys())[system.target]))
+                anotherCommand = partial((system.setTarget),(system.targetDict[system.variable.get()]))
+                a = tk.OptionMenu(staticUi.systemsLF, system.variable, *system.targetDict.keys() , command = anotherCommand)
+                shipChosen.optionMenus.append(a)
+                uiElements.systemTargetsList.append(a)   
+                shipChosen.optionMenus[sys1].place(x = 10 + (i - isDown*3) * uiMetrics.systemScalesWidthOffset, y = uiMetrics.systemScalesMarginTop + 60 + uiMetrics.systemScalesOffset * isDown)
+                sys1 += 1
+                system.alphaStrikeVar = IntVar()
+                system.alphaStrikeVar.set(system.alphaStrike)
+                anotherCommand2 = partial(system.setAS)
+                shipChosen.systemAS.append(ttk.Checkbutton(staticUi.systemsLF, text='Synchronise',style = 'Red.TCheckbutton', variable=system.alphaStrikeVar, onvalue=1, offvalue=0, command=anotherCommand2,))
+                shipChosen.systemAS[-1].place(x = 155 + (i - isDown*3) * uiMetrics.systemScalesWidthOffset, y = uiMetrics.systemScalesMarginTop + 60 + uiMetrics.systemScalesOffset * isDown)
+                (var.uiSystemsAS).append(shipChosen.systemAS[-1])
         if(var.turnInProgress):
             scale.config(state = 'disabled', background="#D0D0D0")
         (staticUi.uiSystems).append(scale)

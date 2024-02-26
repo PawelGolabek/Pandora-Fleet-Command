@@ -2,11 +2,12 @@ import math
 from tkinter import *
 import threading
 import time
+import random as random
 
 import src.naglowek as naglowek
-from src.ammunitionType import *
+from src.ammunitionType import ammunition
 from src.colorCommands import rgbtohex
-from src.rootCommands import *
+from src.rootCommands import updateBattleUi
 import src.endConditions as endConditions
 import src.tracer as tracer
 
@@ -106,8 +107,6 @@ def getZoomMetrics(var,uiMetrics):
     var.yellowY = 0
     var.zoomChange = False
 
-def finishSetTrue(var):
-    var.finished = True
 
 def detectionCheck(globalVar,uiMetrics):
     for ship in globalVar.ships:
@@ -399,8 +398,8 @@ def killShip(shipId,var,events,shipLookup,uiElements,uiMetrics,root,canvas):
     shipLookup[shipId].visible = False
     shipLookup[shipId].killed = True
     for missle in var.currentMissles:
-        if shipLookup[missle.target] == ship1.id:
-            var.currentMissles.remove(missle)
+        if missle.target == ship1.id:
+            missle.looseTarget()
     for progressBar in ship1.shieldsLabel:
         progressBar['value'] = 0
     if(ship1.id == 0):
@@ -451,10 +450,17 @@ def killShip(shipId,var,events,shipLookup,uiElements,uiMetrics,root,canvas):
 
     setattr(var, f"wonByEliminating{ship1.id}", 1)
     setattr(var, f"lostByEliminating{ship1.id}", 1)
-    updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas)
+    updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas,uiElements.UIElementsList)
 
 
-def updateShips(var,uiMetrics,gameRules,shipLookup,events,uiElements,root,canvas):  # rotate and move the chosen ship
+def updateShipsStatus(var,uiMetrics,gameRules,shipLookup,events,uiElements,root,canvas):
+    for ship in var.ships:
+        if(ship.stealth):
+            ship.visible = False
+            ship.stealth -= 1
+
+
+def updateShipsLocation(var,uiMetrics,gameRules,shipLookup,events,uiElements,root,canvas):  # rotate and move the chosen ship
     for ship in var.ships:
         # check for terrain
         if(0 > ship.xPos):

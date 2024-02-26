@@ -286,6 +286,7 @@ def declareGlobals():
     global mapOptions
     global campaignOptions
     global ovalNumber
+    global loadingCombat
     combatSystemInfo = dynamic_object()
     shipEditorInfo = dynamic_object()
     editorInfo = dynamic_object()
@@ -319,3 +320,4 @@ def declareGlobals():
     missionSelectUiReady = False
     cgGameUiReady = False
     ovalNumber = 0
+    loadingCombat = False

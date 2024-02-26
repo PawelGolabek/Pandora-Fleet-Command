@@ -6,10 +6,12 @@ from functools import partial
 from PIL import Image, ImageTk
 import PIL.Image
 from pathlib import Path
+import tkinter.ttk as ttk
+import tkinter as tk
 
 from src.loadGame import run
 import src.naglowek as naglowek
-from src.rootCommands import *
+from src.rootCommands import placeMenuUi,hideMenuUi,placeSelectMenuUI
 
 
 def hideSelectScreenUi(uiElements):

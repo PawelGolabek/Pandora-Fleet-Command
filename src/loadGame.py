@@ -1,5 +1,6 @@
 import configparser
 import sys
+import os
 import tkinter as tk
 import tkinter.ttk as ttk
 from ctypes import pointer
@@ -10,12 +11,27 @@ from functools import partial
 from pathlib import Path
 from random import randint
 from tabnanny import check
-from tkinter import BOTH, Canvas, Frame, Tk
+from tkinter import BOTH, Canvas
 from tkinter.filedialog import askopenfilename
+import random as random
+from random import randint
+from tabnanny import check
+from tkinter.filedialog import askopenfilename
+import PIL.Image
+from tkinter import *
+import random as random
 
+import src.naglowek as naglowek
 from src.ship import ship
-from src.update import *
-from src.turnManagers import *
+from src.update import dragging,checkForKilledShips,update,getZoomMetrics,newWindow,putTracer,updateLabels,radioBox,endTurn,updateBattleUi,detectionCheck
+from src.aiControllers import aiController
+from src.turnManagers import startTurn,pauseGame
+from src.inputs import mouseButton3,mouseWheel,motion,mouseButton1,mouseButton3up
+from src.canvasCalls import createMask,createPFMask
+from src.endConditions import finishSetTrue
+from src.winConditionsLoader import loadWinConditions
+from src.ammunitionType import ammunition_type
+from src.rootCommands import placeMenuUi,hideBattleUi
 
 def declareTargets(var):
     list1 = {}
@@ -222,13 +238,14 @@ def saveCurrentGame(var):
     hd.close()
         #### wip
 def run(config,root,menuUiElements):
+    print(naglowek.combatUiReady)
     if(naglowek.combatUiReady):
         cinfo = naglowek.combatSystemInfo
         naglowek.combatUiReady = False
         for element in ((naglowek.combatSystemInfo).canvas).imageList :
             del element
-        del (naglowek.combatSystemInfo).canvas                # theoretically not necessary but avoids accidental memory leaks
-        del (naglowek.combatSystemInfo).uiMetrics             # or carrying over data from previous games
+        del (naglowek.combatSystemInfo).canvas           
+        del (naglowek.combatSystemInfo).uiMetrics        
         for element in ((naglowek.combatSystemInfo).uiElements).staticUi:
             element.destroy()
         for element in (cinfo.var).playerShields:
@@ -249,6 +266,7 @@ def run(config,root,menuUiElements):
             element.destroy()
         for element in ((cinfo.uiElements).UIElementsList):
             element.destroy()
+        del cinfo.uiElements.systemsLF
         del (cinfo.var).img
         del (cinfo.var).radio
         (cinfo.uiElements).uiSystems = []
@@ -261,11 +279,15 @@ def run(config,root,menuUiElements):
         del (cinfo.events)
         del (cinfo.uiElements)
         del (cinfo.uiElementsToPlace)
+        del cinfo   ## par nowych sprawdz
 
+    root.after_cancel("all")
     resume(config,root,menuUiElements)
 # main
 def resume(config,root,menuUiElements):
+
     if(not naglowek.combatUiReady):
+        print("loading ui")
         cwd = Path(sys.argv[0])
         cwd = str(cwd.parent)
         """
@@ -361,168 +383,9 @@ def resume(config,root,menuUiElements):
         uiElements.gameSpeedScale = tk.Scale(root, orient=HORIZONTAL, length=100, from_=3, to=30)
         uiElements.gameSpeedL = ttk.Label(root, style = 'Grey.TLabel', text = "Playback Speed:")
         var.img = tk.PhotoImage(file= os.path.join(cwd, config.get("Images", "img")))
-        var.winMessage = config.get("Meta", "winMessage")
-        var.looseMessage = config.get("Meta", "looseMessage")
-        
-        if config.get("Meta", "winByEliminatingEnemy") == "0":
-            var.winByEliminatingEnemy = False
-        else:
-            var.winByEliminatingEnemy = True
 
 
-        if config.get("Meta", "looseByEliminatingEnemy") == "0":
-            var.looseByEliminatingEnemy = False
-        else:
-            var.looseByEliminatingEnemy = True
-
-        if config.get("Meta", "winByEliminatingPlayer") == "0":
-            var.winByEliminatingPlayer = False
-        else:
-            var.winByEliminatingPlayer = True
-
-        if config.get("Meta", "looseByEliminatingPlayer") == "0":
-            var.looseByEliminatingPlayer = False
-        else:
-            var.looseByEliminatingPlayer = True
-
-        if config.get("Meta", "winByDisablingEnemy") == "0":
-            var.winByDisablingEnemy = False
-        else:
-            var.winByDisablingEnemy = True
-
-        if config.get("Meta", "winByDisablingPlayer") == "0":
-            var.winByDisablingPlayer = False
-        else:
-            var.winByDisablingPlayer = True
-
-        if config.get("Meta", "looseByDisablingPlayer") == "0":
-            var.looseByDisablingPlayer = False
-        else:
-            var.looseByDisablingPlayer = True
-
-        if config.get("Meta", "looseByDisablingEnemy") == "0":
-            var.looseByDisablingEnemy = False
-        else:
-            var.looseByDisablingEnemy = True
-
-        if config.get("Meta", "winByEliminating0") == "0":
-            var.winByEliminating0 = False
-        else:
-            var.winByEliminating0 = True
-        if config.get("Meta", "winByEliminating1") == "0":
-            var.winByEliminating1 = False
-        else:
-            var.winByEliminating1 = True
-        if config.get("Meta", "winByEliminating2") == "0":
-            var.winByEliminating2 = False
-        else:
-            var.winByEliminating2 = True
-        if config.get("Meta", "winByEliminating3") == "0":
-            var.winByEliminating3 = False
-        else:
-            var.winByEliminating3 = True
-        if config.get("Meta", "winByEliminating4") == "0":
-            var.winByEliminating4 = False
-        else:
-            var.winByEliminating4 = True
-        if config.get("Meta", "winByEliminating5") == "0":
-            var.winByEliminating5 = False
-        else:
-            var.winByEliminating5 = True
-            
-        if config.get("Meta", "looseByEliminating0") == "0":
-            var.looseByEliminating0 = False
-        else:
-            var.looseByEliminating0 = True
-        if config.get("Meta", "looseByEliminating1") == "0":
-            var.looseByEliminating1 = False
-        else:
-            var.looseByEliminating1 = True
-        if config.get("Meta", "looseByEliminating2") == "0":
-            var.looseByEliminating2 = False
-        else:
-            var.looseByEliminating2 = True
-        if config.get("Meta", "looseByEliminating3") == "0":
-            var.looseByEliminating3 = False
-        else:
-            var.looseByEliminating3 = True
-        if config.get("Meta", "looseByEliminating4") == "0":
-            var.looseByEliminating4 = False
-        else:
-            var.looseByEliminating4 = True
-        if config.get("Meta", "looseByEliminating5") == "0":
-            var.looseByEliminating5 = False
-        else:
-            var.looseByEliminating5 = True
-
-        if config.get("Meta", "looseByDisabling0") == "0":
-            var.looseByDisabling0 = False
-        else:
-            var.looseByDisabling0 = True
-        if config.get("Meta", "looseByDisabling1") == "0":
-            var.looseByDisabling1 = False
-        else:
-            var.looseByDisabling1 = True
-        if config.get("Meta", "looseByDisabling2") == "0":
-            var.looseByDisabling2 = False
-        else:
-            var.looseByDisabling2 = True
-        if config.get("Meta", "looseByDisabling3") == "0":
-            var.looseByDisabling3 = False
-        else:
-            var.looseByDisabling3 = True
-        if config.get("Meta", "looseByDisabling4") == "0":
-            var.looseByDisabling4 = False
-        else:
-            var.looseByDisabling4 = True
-        if config.get("Meta", "looseByDisabling5") == "0":
-            var.looseByDisabling5 = False
-        else:
-            var.looseByDisabling5 = True
-
-        if config.get("Meta", "winByDisabling0") == "0":
-            var.winByDisabling0 = False
-        else:
-            var.looseByDisabling0 = True
-        if config.get("Meta", "winByDisabling1") == "0":
-            var.winByDisabling1 = False
-        else:
-            var.winByDisabling1 = True
-        if config.get("Meta", "winByDisabling2") == "0":
-            var.winByDisabling2 = False
-        else:
-            var.winByDisabling2 = True
-        if config.get("Meta", "winByDisabling3") == "0":
-            var.winByDisabling3 = False
-        else:
-            var.winByDisabling3 = True
-        if config.get("Meta", "winByDisabling4") == "0":
-            var.winByDisabling4 = False
-        else:
-            var.winByDisabling4 = True
-        if config.get("Meta", "winByDisabling5") == "0":
-            var.winByDisabling5 = False
-        else:
-            var.winByDisabling5 = True
-
-        if config.has_option('Meta', 'winBySeeingLandmarks'):
-            if config.get("Meta", "winBySeeingLandmarks") == "0":
-                var.winBySeeingLandmarks = False
-            else:
-                var.winBySeeingLandmarks = True
-
-        if config.has_option('Meta', 'winByDomination'):
-            if config.get("Meta", "winByDomination") == "0":
-                var.winByDomination = False
-            else:
-                var.winByDomination = True
-        if config.has_option('Meta', 'looseByDomination'):
-            if config.get("Meta", "looseByDomination") == "0":
-                var.looseByDomination = False
-            else:
-                var.looseByDomination = True
-
-        var.winMessage = config.get("Meta", "winMessage")
+        loadWinConditions(var,config)
         
         (uiElements.gameSpeedScale).set(8)
         uiElements.timeElapsedLabel = ttk.Label(root, style = 'Grey.TLabel', text="Time elapsed")
@@ -605,8 +468,6 @@ def resume(config,root,menuUiElements):
 
         uiElementsToPlace = uiElements
         
-
-
 ##################################
 
         uiElements.playerLabels = []
@@ -663,7 +524,7 @@ def resume(config,root,menuUiElements):
 
         # ships choice
         var.shipChoiceRadioButtons = []
-        radioCommand = partial(radioBox,shipLookup , uiElements,var,uiMetrics,root,canvas)
+        radioCommand = partial(radioBox,shipLookup , uiElements,var,uiMetrics,root,canvas,uiElements.UIElementsList)
         var.shipChoice = (var.player).name
 
         (uiElements.RadioElementsList).append(ttk.Radiobutton(root, style = "Grey.TRadiobutton", text=(shipLookup[0]).name, variable=var.radio, value=0, command=radioCommand))
@@ -682,7 +543,7 @@ def resume(config,root,menuUiElements):
         (uiElements.staticUi).append(uiElements.RadioElementsList[1])
         (uiElements.staticUi).append(uiElements.RadioElementsList[2])
 
-        radioBox(shipLookup,uiElements,var,uiMetrics,root,canvas)
+        radioBox(shipLookup,uiElements,var,uiMetrics,root,canvas,uiElements.UIElementsList)
         bindInputs(root,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,config,menuUiElements)
         
         # first update 
@@ -705,8 +566,9 @@ def resume(config,root,menuUiElements):
         (naglowek.combatSystemInfo).canvas = canvas
         (naglowek.combatSystemInfo).uiElementsToPlace = uiElementsToPlace
         naglowek.combatUiReady = True
+        naglowek.loadingCombat = False
     else:
         ((naglowek.combatSystemInfo).var).finished = False
         ((naglowek.combatSystemInfo).uiElements).systemsLF = ttk.Labelframe(root,text= "" + " systems",borderwidth=2,style='Grey.TLabelframe.Label')
-        updateBattleUi((naglowek.combatSystemInfo).shipLookup,(naglowek.combatSystemInfo).uiMetrics,(naglowek.combatSystemInfo).var,root,(naglowek.combatSystemInfo).uiElements,(naglowek.combatSystemInfo).canvas)
+        updateBattleUi((naglowek.combatSystemInfo).shipLookup,(naglowek.combatSystemInfo).uiMetrics,(naglowek.combatSystemInfo).var,root,(naglowek.combatSystemInfo).uiElements,(naglowek.combatSystemInfo).canvas,(naglowek.combatSystemInfo).uiElements.UIElementsList)
     update((naglowek.combatSystemInfo).var,(naglowek.combatSystemInfo).uiElements,(naglowek.combatSystemInfo).uiMetrics,(naglowek.combatSystemInfo).uiIcons,(naglowek.combatSystemInfo).canvas,(naglowek.combatSystemInfo).events,(naglowek.combatSystemInfo).shipLookup,(naglowek.combatSystemInfo).gameRules,(naglowek.combatSystemInfo).ammunitionType,root,config,menuUiElements)

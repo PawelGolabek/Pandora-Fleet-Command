@@ -1,6 +1,3 @@
-from functools import partial
-
-
 def mouseButton1(event, var):  # get left mouse button and set it in var
     if event:
         var.mouseButton1 = True

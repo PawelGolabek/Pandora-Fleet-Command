@@ -63,6 +63,28 @@ class weapon(system):
         self.alphaStrike = not self.alphaStrike
 
 
+class mixedSystem(system):
+    def __init__(self, id = 0,  name = "system", category = 'weapon', minEnergy=0, maxEnergy=5,energy=0,
+                     maxCooldown = 2000, integrity = 300, maxIntegrity = 300, cooldown = 0, mass = 10, cost = 0, cooling = 2):
+        super(mixedSystem,self).__init__(id,name,category,minEnergy,maxEnergy,energy, maxCooldown, integrity, maxIntegrity, cooldown, mass, cost, cooling) 
+        self.ASButton = 0
+        self.alphaStrike = False
+        self.shotThisTurn = False
+        self.description = "default mixed module text"
+    def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
+        pass
+    def activate(self,ship,var,gameRules,uiMetrics):
+        pass
+    def onAdding(self,ship):
+        ship.mass += self.mass
+        ship.cost += self.cost
+    def onRemoving(self,ship):
+        ship.mass -= self.mass
+        ship.cost -= self.cost
+    def setAS(self):
+        self.alphaStrike = not self.alphaStrike
+
+
 class none(weapon):
     def __init__ (self, id = 0,  name = "noneSystem", category = 'weapon', target = 'none', minEnergy=0, maxEnergy=0, energy=0,
                      maxCooldown = 10, integrity = 300, maxIntegrity = 300, cooldown = 0, mass = 0, cost = 0, cooling = 2):
@@ -94,6 +116,40 @@ integrity: {} \nmin energy: {} \nmax energy: {}\ncooling: {} \nmass: {}\ncost: {
         value = ship.maxSpeed/4
         ship.speed = ship.maxSpeed - self.energy*value
         putTracer(ship,var,gameRules,uiMetrics)
+        pass
+    def onAdding(self,ship):
+        ship.mass += self.mass
+        ship.cost += self.cost
+    def onRemoving(self,ship):
+        ship.mass -= self.mass
+        ship.cost -= self.cost
+
+
+class stealth1(mixedSystem):
+    def __init__ (self, id = 0, name = "Stealth I", category = 'mixed', minEnergy=0, maxEnergy=5, energy=0,
+                     maxCooldown = 27000, integrity = 300, maxIntegrity = 300, cooldown = 0, mass = 50, cost = 200, cooling = 2):
+        super(stealth1,self).__init__(id,name,category,minEnergy,maxEnergy,energy, maxCooldown, integrity, maxIntegrity, cooldown, mass, cost, cooling)
+        self.description = ("Stealth Generator I: \nMakes incoming missles loose their target and renders the ship completely invisible for a brief ammount of time\n\
+integrity: {} \nmin energy: {} \nmax energy: {}\ncooling: {} \nmass: {}\ncost: {}\
+").format(self.integrity,self.minEnergy,self.maxEnergy,self.cooling,self.mass,self.cost)
+
+    def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
+        if(self.cooldown <= 0):
+            for missle in var.currentMissles:
+                minDist = 9999999
+                if(not missle.owner == ship1.owner and not missle.sort == "laser"):
+                    xDist = missle.xPos - ship1.xPos
+                    yDist = missle.yPos - ship1.yPos
+                    dist = xDist * xDist + yDist * yDist
+                    if(minDist > dist and missle.damage > 100 ):
+                        minDist = dist
+                        ship1.stealth = 1000
+                        for missle in var.currentMissles:
+                            if(missle.target == ship1.id):
+                                missle.looseTarget()
+                        self.cooldown = self.maxCooldown
+        return
+    def activate(self,ship,var,gameRules,uiMetrics):
         pass
     def onAdding(self,ship):
         ship.mass += self.mass
@@ -154,7 +210,7 @@ class antiMissleSystem1(system):
         self.description = ("Anti Missle System I: \nShoots down incoming enemy missles \n\
 integrity: {} \nmin energy: {} \nmax energy: {}\ncooling: {} \nmass: {}\ncost: {}").format(self.integrity,self.minEnergy,self.maxEnergy,self.cooling,self.mass,self.cost)
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
-        if(self.cooldown <= 0):
+        if(self.cooldown <= 0 and not ship1.stealth):
             minDist = 9999999
             range = ship1.detectionRange
             closestEnemyMissle = 0
@@ -164,7 +220,7 @@ integrity: {} \nmin energy: {} \nmax energy: {}\ncooling: {} \nmass: {}\ncost: {
                     xDist = missle.xPos - ship1.xPos
                     yDist = missle.yPos - ship1.yPos
                     dist = xDist * xDist + yDist * yDist
-                    if(minDist > dist ):
+                    if(minDist > dist and missle.damage > 100):
                         minDist = dist
                         closestEnemyMissle = missle
             if(closestEnemyMissle and minDist < range):
@@ -194,7 +250,7 @@ class antiMissleSystem2(system):
 integrity: {} \nmin energy: {} \nmax energy: {}\ncooling: {} \nmass: {}\ncost: {}\
         ").format(self.integrity,self.minEnergy,self.maxEnergy,self.cooling,self.mass,self.cost)
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
-        if(self.cooldown <= 0):
+        if(self.cooldown <= 0 and not ship1.stealth):
             minDist = 9999999
             range = ship1.detectionRange
             closestEnemyMissle = 0
@@ -204,7 +260,7 @@ integrity: {} \nmin energy: {} \nmax energy: {}\ncooling: {} \nmass: {}\ncost: {
                     xDist = missle.xPos - ship1.xPos
                     yDist = missle.yPos - ship1.yPos
                     dist = xDist * xDist + yDist * yDist
-                    if(minDist > dist ):
+                    if(minDist > dist and missle.damage > 100 ):
                         minDist = dist
                         closestEnemyMissle = missle
 
@@ -239,7 +295,7 @@ missle heat damage: 7.5 \
         ").format(self.integrity,self.minEnergy,self.maxEnergy,self.cooling,self.mass,self.cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
-        if(self.cooldown <= 0):
+        if(self.cooldown <= 0 and not ship1.stealth):
             if(shoot(var,self,ship1,ammunition_type.bolter,ships,uiMetrics,shipLookup)):
                 self.cooldown = self.maxCooldown
                 self.heat += 5
@@ -275,7 +331,7 @@ missle heat damage: 10 \
         ").format(self.integrity,self.minEnergy,self.maxEnergy,self.cooling,self.mass,self.cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
-        if(self.cooldown <= 0):
+        if(self.cooldown <= 0 and not ship1.stealth):
             if(shoot(var,self,ship1,ammunition_type.missle,ships,uiMetrics,shipLookup)):
                 self.cooldown = self.maxCooldown
                 self.heat += 10
@@ -300,7 +356,7 @@ missle heat damage: 50\
 
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
-        if(self.cooldown <= 0):
+        if(self.cooldown <= 0 and not ship1.stealth):
             if(shoot(var,self,ship1,ammunition_type.nuke,ships,uiMetrics,shipLookup)):
                 self.cooldown = self.maxCooldown
                 self.heat += 100
@@ -325,7 +381,7 @@ missle heat damage: 400\
 
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
-        if(self.cooldown <= 0):
+        if(self.cooldown <= 0 and not ship1.stealth):
             if(shoot(var,self,ship1,ammunition_type.incirination1adefault,ships,uiMetrics,shipLookup)):
                 self.cooldown = self.maxCooldown
                 self.heat += 120
@@ -362,7 +418,7 @@ mass: {}\ncost: {}\
 
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics): 
-        if(self.cooldown <= 0.0):
+        if(self.cooldown <= 0.0 and not ship1.stealth):
             if(shoot(var,self,ship1,ammunition_type.laser1adefault,ships,uiMetrics,shipLookup)):
                 self.cooldown = self.maxCooldown
                 self.heat += 20
@@ -398,7 +454,7 @@ mass: {}\ncost: {}\
 ").format(self.integrity,self.minEnergy,self.maxEnergy,self.cooling,self.mass,self.cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
-        if(self.cooldown <= 0):
+        if(self.cooldown <= 0 and not ship1.stealth):
             if(shoot(var,self,ship1,ammunition_type.laser1adefault,ships,uiMetrics,shipLookup)):
                 self.cooldown = self.maxCooldown
                 self.heat += 18
@@ -424,7 +480,7 @@ mass: {}\ncost: {}\
 ").format(self.integrity,self.minEnergy,self.maxEnergy,self.cooling,self.mass,self.cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
-        if(self.cooldown <= 0):
+        if(self.cooldown <= 0 and not ship1.stealth):
             if (shoot(var,self,ship1,ammunition_type.highEnergyLaser1,ships,uiMetrics,shipLookup)):
                 self.cooldown = self.maxCooldown
                 self.heat += 120
@@ -448,7 +504,7 @@ mass: {}\ncost: {}\
 ").format(self.integrity,self.minEnergy,self.maxEnergy,self.cooling,self.mass,self.cost)
 
     def trigger(self,var,ship1,ships,shipLookup,uiMetrics):
-        if(self.cooldown <= 0):
+        if(self.cooldown <= 0 and not ship1.stealth):
             if(shoot(var,self,ship1,ammunition_type.kinetic1,ships,uiMetrics,shipLookup)):
                 self.cooldown = self.maxCooldown
                 self.heat += 5
@@ -553,6 +609,7 @@ def shoot(var,system,ship,ammunitionType,ships,uiMetrics,shipLookup,offsetX=0,of
 def declareGlobalSystems():
     naglowek.systemLookup = {           #for system creation
     "throttleBrake1": throttleBrake1,
+    "stealth1": stealth1,
     "bolter1": bolter1,
     "bolter1C": bolter1C,
     "missleLauncher1": missleLauncher1,
@@ -574,6 +631,7 @@ def declareGlobalSystems():
     naglowek.allSystemsList = [           #for dropdown menus
         'none',
         "throttleBrake1",
+        "stealth1",
         "bolter1",
         "missleLauncher1",
         "atomicCannon1",

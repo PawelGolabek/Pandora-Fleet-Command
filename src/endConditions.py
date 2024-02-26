@@ -1,11 +1,13 @@
-from tkinter import *
+from tkinter import Toplevel
 import tkinter.ttk as ttk
 from functools import partial
 
-import time
 import src.loadGame as loadGame
 import src.naglowek as naglowek
+from src.rootCommands import hideBattleUi
 
+def finishSetTrue(var):
+    var.finished = True
 def killedShips(var,events):
     noEnemies = True
     noPlayers = True
@@ -178,16 +180,20 @@ def showWin(var,events,config,root,menuUiElements):
         window.minsize(300,300)
         events.showedWin = True
 
-def buttonCommand(label,config,root,menuUiElements,window):
+def buttonCommand(label,config,root,menuUiElements,window,var,uiElements):
     label.config(text= "Loading ...")
     window.minsize(300,300)
     root.update()
     window.config(bg="#202020")
     window.minsize(300,300)
+    naglowek.loadingCombat = True
+    naglowek.combatUiReady = True
+    hideBattleUi(uiElements.staticUi,uiElements)
+    finishSetTrue(var)
     loadGame.run(config,root,menuUiElements)
     window.destroy()
 
-def showLoose(var,events,config,root,menuUiElements):
+def showLoose(var,events,config,root,menuUiElements,uiElements):
     gameEnded = ((events.showedLoose) or events.showedWin)
 
     arr = [var.looseByEliminatingPlayer, var.looseByEliminatingEnemy \
@@ -242,7 +248,7 @@ def showLoose(var,events,config,root,menuUiElements):
         label = ttk.Label(window, style = "Grey.TLabel", text='You Lost\n\n'+ var.looseMessage+'\n\n')
         label.config(justify='center')
         label.pack()
-        buttonCommand1 = partial(buttonCommand,label,config,root,menuUiElements,window)
+        buttonCommand1 = partial(buttonCommand,label,config,root,menuUiElements,window,var,uiElements)
         button = ttk.Button(window, style = "Grey.TButton", text='Replay',command = lambda:[buttonCommand1()])
         button.pack()
         events.showedLoose = True

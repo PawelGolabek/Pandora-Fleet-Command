@@ -1,8 +1,18 @@
 import os
 from pathlib import Path
 import sys,os
+import re
 
 import src.naglowek as naglowek
+
+
+def atoi(text):
+    return int(text) if text.isdigit() else text
+
+def natural_keys(text):
+    return [ atoi(c) for c in re.split(r'(\d+)', text) ]
+
+
 
 def declareGlobalMaps():
     naglowek.mapOptions = [
@@ -19,6 +29,7 @@ def declareGlobalMaps():
     filePath = os.path.join(cwd, "campaignMissions\\")
     os.walk(filePath)
     naglowek.campaignOptions = os.listdir(filePath)
+    (naglowek.campaignOptions).sort(key=natural_keys)
 
     filePath = os.path.join(cwd, "maps\\")
     os.walk(filePath)

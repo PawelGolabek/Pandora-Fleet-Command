@@ -69,7 +69,15 @@ def distToClosestEnemy(ships,aiShip):
 
 
 class aiController():
-    def systemChoice(ship,ships):
+    def systemChoice(ship,ships,shipLookup):
+        minDist = 999999999
+        for ship1 in ships:
+            if(ship1.owner == 'player1'):
+                xDist = ship.xPos - ship1.xPos
+                yDist = ship.yPos - ship1.yPos
+                dist = xDist * xDist + yDist * yDist
+                if(dist < minDist):
+                    ship.target = ship1.id
         basicEnergy = 0
         for system in ship.systemSlots:
             system.energy = system.minEnergy
@@ -77,8 +85,10 @@ class aiController():
         systemPool = []
         energy = ship.energyLimit - basicEnergy
         systemChecked = 0
-        for system in ship.systemSlots:         # create system pool
-            systemMaxPoints = system.maxEnergy
+        for system in ship.systemSlots:         # create system pool   
+            if(system.category == 'weapon'):
+                system.target = random.randint(0,len(shipLookup[ship.target].systemSlots))
+            systemMaxPoints = system.maxEnergy            # targets
             while(systemMaxPoints > 0):
                 systemPool.append(systemChecked)
                 systemMaxPoints -= 1
@@ -89,6 +99,8 @@ class aiController():
             choiceNumber = systemPool.pop(choiceRand)
             (ship.systemSlots[choiceNumber]).energy += 1
             energy-=1
+                
+        
        
     def dijstraFill(maskMap,uiMetrics,var):
         prec = var.PFprecision
@@ -115,7 +127,7 @@ class aiController():
             if(ship.owner == "player1" and ship.visible):
                 newMaskMap[round(ship.yPos / prec)][round(ship.xPos / prec)] = prec
             if(ship.owner == "ai1"):
-                newMaskMap[round(ship.moveOrderY / prec)][round(ship.moveOrderX / prec)] =  - prec      # so they don't group on 'best' routes 
+                newMaskMap[math.floor(ship.moveOrderY / prec)%ySpan ][math.floor(ship.moveOrderX / prec)%xSpan ] =  - prec      # so they don't group on 'best' routes 
         i = math.floor(prec/2)                                                                          # and spread out  
         while(i > -prec):           #spread player markers
             idElem = 0
@@ -153,8 +165,6 @@ class aiController():
         bestOrderY = 100    #default if everything else fails
         bestOrderValue = float('-inf')
         maskMap = aiController.dijstraFill(var.mask,uiMetrics,var) # change for dijkstra filled map
-     #   for line in maskMap:
-     #       print(line)
         while(checksLeft):
             currentOrderValue = random.randint(19000, 21000)
             currentOrderX = ship.xPos + random.randint(-200, 200)
@@ -169,7 +179,7 @@ class aiController():
             currentTracer.speed = ship.speed
             currentTracer.moveOrderX = currentOrderX
             currentTracer.moveOrderY = currentOrderY
-            currentTracer.ttl = var.turnLength + 800 # +200 to avoid unavoidable collisions next turn
+            currentTracer.ttl = var.turnLength + 800 # +800 to avoid unavoidable collisions next turn
             
             while(True):
                 # check for terrain

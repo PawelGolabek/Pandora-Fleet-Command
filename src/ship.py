@@ -81,6 +81,7 @@ class ship():
         self.id = id
         self.signatureCounter = 0
         self.killed = False
+        self.stealth = 0
         self.color = color
         self.targetOnly = False
         self.CBVar = tk.IntVar()

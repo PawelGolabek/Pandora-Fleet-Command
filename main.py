@@ -56,7 +56,7 @@ if __name__ == '__main__':
     
     uiMenuElements = dynamic_object()
     uiMenuElementsList = []
-    resumeButtonCommand = partial(resume,config,root,uiMenuElements,root)
+    resumeButtonCommand = partial(resume,config,root,uiMenuElements)
     quickBattleCommand1 = partial(run,config,root,uiMenuElements)
     shipEditorCommand = partial(shipEditor,root,config,uiMenuElements,uiMetrics,uiMenuElements)
     hideUiCommand = partial(hideMenuUi,uiMenuElementsList)

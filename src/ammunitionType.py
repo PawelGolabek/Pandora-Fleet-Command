@@ -1,6 +1,13 @@
 from src.colorCommands import rgbtohex
+import random
 
 class ammunition():
+    def looseTarget(self):
+        self.target = 999
+        self.ttl = 500
+        self.xDir = random.randint(-200, 200)
+        self.yDir = random.randint(-200, 200)
+        self.owner = 'none'
     def __init__(self, name='', typeName='', sort = '', owner='', target='', xDir=0, yDir=0, turnRate=2, speed=100, \
          shotsPerTurn=5, damage=10, damageFalloffStart=200, damageFalloffStop=400, defaultAccuracy=90, ttl = 10000, color = (rgbtohex(20,255,255)), special=None, heat = 0):
         self.owner = owner

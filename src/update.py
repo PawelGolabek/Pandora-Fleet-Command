@@ -11,10 +11,11 @@ from tkinter.filedialog import askopenfilename
 import PIL.Image
 from PIL import Image, ImageTk
 
-from src.canvasCalls import *
+import src.canvasCalls as canvasCalls
 from src.shipCombat import *
-from src.aiControllers import *
-from src.inputs import *
+from src.aiControllers import aiController
+from src.inputs import mouseOnCanvas,trackMouse
+from src.rootCommands import hidePausedText,showPausedText
 
 def stop_drag(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root,config,menuUiElements):
     var.drag = ''
@@ -43,7 +44,7 @@ def getOrders(ship,var,gameRules,uiMetrics,forced=False):
     if(not tracered and ship.owner == "player1" and forced ):
             putTracer(ship,var,gameRules,uiMetrics)
 
-def radioBox(shipLookup,uiElements,var,uiMetrics,root,canvas):
+def radioBox(shipLookup,uiElements,var,uiMetrics,root,canvas,uiElementsList):
     var.selection = int((var.radio).get())
     if(var.selection == 0):
         var.shipChoice = shipLookup[0].id
@@ -51,7 +52,7 @@ def radioBox(shipLookup,uiElements,var,uiMetrics,root,canvas):
         var.shipChoice = shipLookup[1].id
     if(var.selection == 2):
         var.shipChoice = shipLookup[2].id
-    updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas)
+    updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas,uiElementsList)
     updateLabels(uiElements,shipLookup,var,root)
 
 
@@ -178,95 +179,20 @@ def endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons,shi
         if(ship1.owner == "ai1"):
             aiController.moveOrderChoice(ship1,var.ships,var,gameRules,uiMetrics)
 
-            aiController.systemChoice(ship1,var.ships)
+            aiController.systemChoice(ship1,var.ships,shipLookup)
         getOrders(ship1,var,gameRules,uiMetrics,True)
     var.updateTimer = 3
     newWindow(uiMetrics,var,canvas,root)
     detectionCheck(var,uiMetrics)
-    drawShips(canvas,var,uiMetrics)
-    drawGhostPoints(canvas,var)
-    drawSignatures(canvas,var)
-    drawLandmarks(var,canvas,uiIcons,uiMetrics)
-    drawLasers(var,canvas,uiMetrics)
-    drawRockets(var,ammunitionType,canvas)
+    canvasCalls.drawShips(canvas,var,uiMetrics)
+    canvasCalls.drawGhostPoints(canvas,var)
+    canvasCalls.drawSignatures(canvas,var)
+    canvasCalls.drawLandmarks(var,canvas,uiIcons,uiMetrics)
+    canvasCalls.drawLasers(var,canvas,uiMetrics)
+    canvasCalls.drawRockets(var,ammunitionType,canvas)
     updateShields(var.ships,var)
     updateLabels(uiElements,shipLookup,var,root)
 
-def drawLasers(var,canvas,uiMetrics):
-    for laser in var.lasers:
-        if laser.ttl>0:
-            drawX = (laser.xPos - var.left) * var.zoom
-            drawY = (laser.yPos - var.top) * var.zoom
-            aroundFlagX = False
-            aroundFlagY = False
-            if(laser.xPos == max(laser.xPos,laser.targetXPos)):
-                aroundDistance = uiMetrics.canvasWidth - laser.xPos + laser.targetXPos
-                laserCloserToRight = True
-                straightDistance = laser.xPos - laser.targetXPos
-            else:
-                aroundDistance = uiMetrics.canvasWidth + laser.xPos - laser.targetXPos
-                laserCloserToRight = False
-                straightDistance = laser.targetXPos - laser.xPos
-
-            if (straightDistance < aroundDistance):
-                x2 = laser.targetXPos
-                x3 = laser.xPos
-                x4 = laser.targetXPos
-            else:
-                aroundFlagX = True
-                if(laserCloserToRight):
-                    x2 = laser.targetXPos + uiMetrics.canvasWidth
-                    x3 = laser.xPos - uiMetrics.canvasWidth
-                    x4 = laser.targetXPos
-                else: 
-                    x2 = laser.targetXPos - uiMetrics.canvasWidth
-                    x3 = laser.xPos + uiMetrics.canvasWidth
-                    x4 = laser.targetXPos
-            ##
-            if(laser.yPos == max(laser.yPos,laser.targetYPos)):
-                aroundDistance = uiMetrics.canvasHeight - laser.yPos + laser.targetYPos
-                laserCloserToDown = True
-                straightDistance = laser.yPos - laser.targetYPos
-            else:
-                aroundDistance = uiMetrics.canvasHeight + laser.yPos - laser.targetYPos
-                laserCloserToDown = False
-                straightDistance = laser.targetYPos - laser.yPos
-
-            if (straightDistance < aroundDistance):
-                y2 = laser.targetYPos 
-                y3 = laser.yPos
-                y4 = laser.targetYPos
-            else:
-                aroundFlagY = True
-                if(laserCloserToDown):
-                    y2 = laser.targetYPos + uiMetrics.canvasHeight
-                    y3 = laser.yPos - uiMetrics.canvasHeight
-                    y4 = laser.targetYPos
-                else: 
-                    y2 = laser.targetYPos - uiMetrics.canvasHeight
-                    y3 = laser.yPos + uiMetrics.canvasHeight
-                    y4 = laser.targetYPos
-
-            drawX2 = (x2- var.left) * var.zoom
-            drawX3 = (x3- var.left) * var.zoom
-            drawX4 = (x4- var.left) * var.zoom
-
-            drawY2 = (y2- var.top) * var.zoom
-            drawY3 = (y3- var.top) * var.zoom
-            drawY4 = (y4- var.top) * var.zoom
-
-            line = canvas.create_line(drawX,drawY,drawX2,drawY2, fill = laser.color, #stipple="gray75"
-                                      )
-            canvas.elements.append(line)
-            
-
-            if(aroundFlagX or aroundFlagY):
-                line = canvas.create_line(drawX3,drawY3,drawX4,drawY4, fill = laser.color, #stipple="gray75"
-                                          )
-                canvas.elements.append(line)
-        else:
-            (var.lasers).remove(laser)
-            del laser
 
 def updateScales(uiElements,var,shipLookup):
     var.tmpCounter += 1
@@ -407,6 +333,9 @@ def getBonus(ship, boost):
 
 def manageRockets(missles,shipLookup,var,events,uiElements,uiMetrics,root,canvas):    # manage mid-air munitions
     for missle in missles:
+        if(missle.ttl <= 0):
+            missles.remove(missle)
+            continue
         if(missle.sort == 'laser'):
             putLaser(missle,var,shipLookup)
             dealDamage(shipLookup[missle.target], missle.damage,var,missle.targetSystem, missle.heat,uiElements,shipLookup,root,events)
@@ -420,9 +349,13 @@ def manageRockets(missles,shipLookup,var,events,uiElements,uiMetrics,root,canvas
             if(colorWeight <= 200):
                 missles.remove(missle)
                 continue
+        
+        targetShipX = missle.xPos + missle.xDir
+        targetShipY = missle.yPos + missle.yDir
 
-        targetShipX = shipLookup[missle.target].xPos
-        targetShipY = shipLookup[missle.target].yPos
+        if(not missle.owner == 'none'):
+            targetShipX = shipLookup[missle.target].xPos
+            targetShipY = shipLookup[missle.target].yPos
 
         if(missle.xPos == max(missle.xPos,targetShipX)):
             aroundDistance = uiMetrics.canvasWidth - missle.xPos + targetShipX
@@ -432,9 +365,9 @@ def manageRockets(missles,shipLookup,var,events,uiElements,uiMetrics,root,canvas
             straightDistance = targetShipX - missle.xPos
 
         if (straightDistance < aroundDistance):
-            minDistX = (targetShipX - missle.xPos)            
+            minDistX = targetShipX - missle.xPos        
         else:
-            minDistX = (missle.xPos - targetShipX)
+            minDistX = missle.xPos - targetShipX
         ##
         if(missle.yPos == max(missle.yPos,targetShipY)):
             aroundDistance = uiMetrics.canvasHeight - missle.yPos + targetShipY
@@ -447,7 +380,6 @@ def manageRockets(missles,shipLookup,var,events,uiElements,uiMetrics,root,canvas
             minDistY = targetShipY - missle.yPos          
         else:
             minDistY = missle.yPos - targetShipY  
-
         scale = math.sqrt((minDistX) * (minDistX) + minDistY * minDistY)
         if scale == 0:
             scale = 0.01
@@ -455,15 +387,18 @@ def manageRockets(missles,shipLookup,var,events,uiElements,uiMetrics,root,canvas
         minDistY /= scale
         degree = missle.turnRate
         rotateVector(degree, missle, minDistX, minDistY)
-        missle.xPos += missle.xDir*missle.speed/360
+        
+        missle.xPos += missle.xDir*missle.speed/360         ### normalise
         missle.yPos += missle.yDir*missle.speed/360
-        if((abs(missle.xPos - targetShipX) *
-            abs(missle.xPos - targetShipX) +
-            abs(missle.yPos - targetShipY) *
-            abs(missle.yPos - targetShipY)) < 25):
-            dealDamage(shipLookup[missle.target], missle.damage,var,missle.targetSystem,missle.heat,uiElements,shipLookup,root,events)
-            missles.remove(missle)
-            continue
+        
+        if(not missle.owner == 'none'):
+            if((abs(missle.xPos - targetShipX) *
+                abs(missle.xPos - targetShipX) +
+                abs(missle.yPos - targetShipY) *
+                abs(missle.yPos - targetShipY)) < 25):
+                dealDamage(shipLookup[missle.target], missle.damage,var,missle.targetSystem,missle.heat,uiElements,shipLookup,root,events)
+                missles.remove(missle)
+                continue
         if(0 > missle.xPos):
             missle.xPos += uiMetrics.canvasWidth
         if(missle.xPos > uiMetrics.canvasWidth):
@@ -515,7 +450,7 @@ def updateHeat(ships):
     for ship in ships:
         for system in ship.systemSlots:
             system.coolUnits += system.cooling
-            system.coolTicks = floor(system.coolUnits/100)
+            system.coolTicks = math.floor(system.coolUnits/100)
             if(system.coolTicks):
                 system.coolUnits -= system.coolTicks * 100
                 while(system.heat > 0 and system.coolTicks):
@@ -544,7 +479,7 @@ def dealHeatDamage(ships):
             else:
                 heatDamage = 1
             system.heatUnits += heatDamage
-            system.heatDamageTicks = floor(system.heatUnits/100)
+            system.heatDamageTicks = math.floor(system.heatUnits/100)
             if(system.heatDamageTicks):
                 system.heatUnits -= system.heatDamageTicks*100
                 while(system.integrity > 0 and system.heatDamageTicks):
@@ -554,73 +489,75 @@ def dealHeatDamage(ships):
 def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root,config,menuUiElements):
     #for ship in var.ships:
     #    print(str(ship.name) + " " + str(ship.killed))
-    if(var.drag=='' and not var.paused):
-        canvas.delete('all')
-        if(var.frameTime % 10 == 0):
-            updateLabels(uiElements,shipLookup,var,root)
-        hidePausedText(var,uiElements)
-        updateScales(uiElements,var,shipLookup)
-        updateEnergy(var,uiElements,shipLookup)
-        var.gameSpeed = float((uiElements.gameSpeedScale).get())
-        if(not var.turnInProgress):
-            manageSystemActivations(var.ships,var,gameRules,uiMetrics,shipLookup)
-            for ship in var.ships:
-                getOrders(ship,var,gameRules,uiMetrics)
-        ticksToEndFrame = 0
-        root.title(uiElements.rootTitle)
-        if(var.turnInProgress):
-            root.title("TURN IN PROGRESS")
-            var.systemTime = time.time()
-            while(ticksToEndFrame < var.gameSpeed):
-                checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas)
-                detectionCheck(var,uiMetrics)
-                updateShips(var,uiMetrics,gameRules,shipLookup,events,uiElements,root,canvas)
-                manageLandmarks(var.landmarks,var.ships,uiMetrics)
-                manageSystemTriggers(var.ships,var,shipLookup,uiMetrics)
-                manageRockets(var.currentMissles,shipLookup,var,events,uiElements,uiMetrics,root,canvas) 
-                updateShields(var.ships,var)
-                updateCooldowns(var.ships,var,shipLookup,uiMetrics)
-                updateHeat(var.ships)
-                dealHeatDamage(var.ships)
-                updateSignatures(var.ships)
-                for laser in var.lasers:
-                    if var.turnInProgress:
-                        laser.ttl -= 1
-                ticksToEndFrame += 1
-                uiElements.timeElapsedProgressBar['value'] += 1
-                if(uiElements.timeElapsedProgressBar['value'] > var.turnLength):
-                    root.title("AI IS THINKING")
-                    endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons,shipLookup,root)
-                    break
-        var.input = (var.mouseWheelUp or var.mouseWheelDown or (var.mouseButton3 and var.zoom != 1 and mouseOnCanvas(var,uiMetrics)) or var.mouseButton1 )
-        endConditions.killedShips(var,events)
-        endConditions.disabledShips(var,events)
-        endConditions.foundLandmarks(var,events)
-        endConditions.dominatedLandmarks(var,events)
-        endConditions.showWin(var,events,config,root,menuUiElements)
-        endConditions.showLoose(var,events,config,root,menuUiElements)
-        newWindow(uiMetrics,var,canvas,root)
-        drawGhostPoints(canvas,var)
-        drawSignatures(canvas,var)
-        drawLandmarks(var,canvas,uiIcons,uiMetrics)
-        drawLasers(var,canvas,uiMetrics)
-        drawRockets(var,ammunitionType,canvas)
-        var.mouseOnUI = False
-        var.mouseWheelUp = False
-        var.mouseWheelDown = False
-        var.mouseButton1 = False
-        var.mouseButton2 = False
-        var.zoomChange = False
-        drawShips(canvas,var,uiMetrics)
-        trackMouse(var)
-        var.frameTime+=1
-        if(var.finished):
-            return
-        if(var.updateTimer>0):
-            var.updateTimer -= 1
-        if(var.turnInProgress or var.mouseButton3):
-            root.after(10, partial(update,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root,config,menuUiElements))
+    if(not naglowek.loadingCombat):
+        if(var.drag=='' and not var.paused):
+            canvas.delete('all')
+            if(var.frameTime % 10 == 0):
+                updateLabels(uiElements,shipLookup,var,root)
+            hidePausedText(var,uiElements)
+            updateScales(uiElements,var,shipLookup)
+            updateEnergy(var,uiElements,shipLookup)
+            var.gameSpeed = float((uiElements.gameSpeedScale).get())
+            if(not var.turnInProgress):
+                manageSystemActivations(var.ships,var,gameRules,uiMetrics,shipLookup)
+                for ship in var.ships:
+                    getOrders(ship,var,gameRules,uiMetrics)
+            ticksToEndFrame = 0
+            root.title(uiElements.rootTitle)
+            if(var.turnInProgress):
+                root.title("TURN IN PROGRESS")
+                var.systemTime = time.time()
+                while(ticksToEndFrame < var.gameSpeed):
+                    detectionCheck(var,uiMetrics)
+                    updateShipsLocation(var,uiMetrics,gameRules,shipLookup,events,uiElements,root,canvas)
+                    updateShipsStatus(var,uiMetrics,gameRules,shipLookup,events,uiElements,root,canvas)
+                    manageLandmarks(var.landmarks,var.ships,uiMetrics)
+                    manageSystemTriggers(var.ships,var,shipLookup,uiMetrics)
+                    manageRockets(var.currentMissles,shipLookup,var,events,uiElements,uiMetrics,root,canvas) 
+                    updateShields(var.ships,var)
+                    updateCooldowns(var.ships,var,shipLookup,uiMetrics)
+                    updateHeat(var.ships)
+                    dealHeatDamage(var.ships)
+                    checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas)
+                    updateSignatures(var.ships)
+                    for laser in var.lasers:
+                        if var.turnInProgress:
+                            laser.ttl -= 1
+                    ticksToEndFrame += 1
+                    uiElements.timeElapsedProgressBar['value'] += 1
+                    if(uiElements.timeElapsedProgressBar['value'] > var.turnLength):
+                        root.title("AI IS THINKING")
+                        endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons,shipLookup,root)
+                        break
+            var.input = (var.mouseWheelUp or var.mouseWheelDown or (var.mouseButton3 and var.zoom != 1 and mouseOnCanvas(var,uiMetrics)) or var.mouseButton1 )
+            endConditions.killedShips(var,events)
+            endConditions.disabledShips(var,events)
+            endConditions.foundLandmarks(var,events)
+            endConditions.dominatedLandmarks(var,events)
+            endConditions.showWin(var,events,config,root,menuUiElements)
+            endConditions.showLoose(var,events,config,root,menuUiElements,uiElements)
+            newWindow(uiMetrics,var,canvas,root)
+            canvasCalls.drawGhostPoints(canvas,var)
+            canvasCalls.drawSignatures(canvas,var)
+            canvasCalls.drawLandmarks(var,canvas,uiIcons,uiMetrics)
+            canvasCalls.drawLasers(var,canvas,uiMetrics)
+            canvasCalls.drawRockets(var,ammunitionType,canvas)
+            var.mouseOnUI = False
+            var.mouseWheelUp = False
+            var.mouseWheelDown = False
+            var.mouseButton1 = False
+            var.mouseButton2 = False
+            var.zoomChange = False
+            canvasCalls.drawShips(canvas,var,uiMetrics)
+            trackMouse(var)
+            var.frameTime+=1
+            if(var.finished):
+                return
+            if(var.updateTimer>0):
+                var.updateTimer -= 1
+            if(var.turnInProgress or var.mouseButton3):
+                root.after(10, partial(update,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root,config,menuUiElements))
+            else:
+                root.after(100, partial(update,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root,config,menuUiElements))
         else:
-            root.after(100, partial(update,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root,config,menuUiElements))
-    else:
-        showPausedText(var,uiElements,uiMetrics)
+            showPausedText(var,uiElements,uiMetrics)

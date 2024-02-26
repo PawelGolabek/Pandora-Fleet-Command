@@ -50,30 +50,30 @@ def drawShips(canvas,var,uiMetrics):  # draw ship on the map with all of its acc
                                     drawY+(ship.yDir*20*var.zoom), fill="green")
                     canvas.elements.append(line)
                 if(ship.owner == "player1"):
+                    _fill = 'white'
+                    if(ship.stealth):
+                        _fill = 'blue'
                     if(drawX < uiMetrics.canvasWidth - 50 * var.zoom):
                         line = canvas.create_text(drawX + 12 * var.zoom, drawY + 10, anchor=W,
-                                    font=("Purisa", 8 + floor(var.zoom)), text=ship.name, fill = fillColor)
+                                    font=("Purisa", 8 + floor(var.zoom)), text=ship.name, fill = _fill)
                         canvas.elements.append(line)
                     else:
                         line = canvas.create_text(drawX - (20 + 12 * var.zoom), drawY + 10, anchor=W,
-                                    font=("Purisa", 8 + floor(var.zoom)), text=ship.name, fill = fillColor)
+                                    font=("Purisa", 8 + floor(var.zoom)), text=ship.name, fill = _fill)
                         canvas.elements.append(line)
 
                 else:
+                    _fill = 'white'
+                    if(ship.stealth):
+                        _fill = 'navyblue'
                     if(drawX < uiMetrics.canvasWidth - 50 * var.zoom):
                         line = canvas.create_text(drawX + 12 * var.zoom, drawY + 10, anchor=W,
-                                    font=("Purisa", 8 + floor(var.zoom)), text=ship.name, fill = "white")
+                                    font=("Purisa", 8 + floor(var.zoom)), text=ship.name, fill = _fill)
                         canvas.elements.append(line)
                     else:
                         line = canvas.create_text(drawX - (20 + 12 * var.zoom), drawY + 10, anchor=W,
-                                    font=("Purisa", 8 + floor(var.zoom)), text=ship.name, fill = "white")
+                                    font=("Purisa", 8 + floor(var.zoom)), text=ship.name, fill = _fill)
                         canvas.elements.append(line)
-                
-                if(ship.owner == "player1"):
-                    fillColor = "white"
-                
-                if(ship.owner == "ai1"):
-                    fillColor = "red"
                 
                 list = []
                 ghostShip = naglowek.dynamic_object()
@@ -209,6 +209,9 @@ def drawRockets(globalVar,ammunitionType,canvas):
                 _fill = "red"
             elif(missle.owner == "player1"):
                 _fill = "green"
+            else:
+                _fill = "yellow"
+
             line = canvas.create_line(drawX,drawY,drawX+dirLineX*20,drawY+dirLineY*20,fill = _fill)
             canvas.elements.append(line)
         
@@ -326,18 +329,18 @@ def drawLandmarks(var,canvas,uiIcons,uiMetrics):
             list.append(ghostlandmark)
             
             if(landmark.owner == 'player1'):
-                outln = '#012E04'
+                outln = '#02640a'
             elif(landmark.owner == 'ai1'):
-                outln = '#4D1400'
+                outln = '#802200'
             else:
-                outln = '#412801'
+                outln = '#646402'
             
             for element in list:
                 x1 = element.x-landmark.radius*var.zoom
                 x2 = element.x + landmark.radius*var.zoom
                 y1 = element.y - landmark.radius*var.zoom
                 y2 = element.y+landmark.radius*var.zoom
-                canvas.create_oval(x1, y1, x2, y2, outline = outln, dash=(4,2))   
+                canvas.create_oval(x1, y1, x2, y2, outline = outln, dash=(7,2))   
     
             iconX = drawX
             iconY = drawY
@@ -355,3 +358,79 @@ def drawLandmarks(var,canvas,uiIcons,uiMetrics):
                 elif(landmark.owner == 'none'):
                     image = canvas.create_image(iconX, iconY, image=uiIcons.controlIconN)
                 canvas.elements.append(image)
+
+def drawLasers(var,canvas,uiMetrics):
+    for laser in var.lasers:
+        if laser.ttl>0:
+            drawX = (laser.xPos - var.left) * var.zoom
+            drawY = (laser.yPos - var.top) * var.zoom
+            aroundFlagX = False
+            aroundFlagY = False
+            if(laser.xPos == max(laser.xPos,laser.targetXPos)):
+                aroundDistance = uiMetrics.canvasWidth - laser.xPos + laser.targetXPos
+                laserCloserToRight = True
+                straightDistance = laser.xPos - laser.targetXPos
+            else:
+                aroundDistance = uiMetrics.canvasWidth + laser.xPos - laser.targetXPos
+                laserCloserToRight = False
+                straightDistance = laser.targetXPos - laser.xPos
+
+            if (straightDistance < aroundDistance):
+                x2 = laser.targetXPos
+                x3 = laser.xPos
+                x4 = laser.targetXPos
+            else:
+                aroundFlagX = True
+                if(laserCloserToRight):
+                    x2 = laser.targetXPos + uiMetrics.canvasWidth
+                    x3 = laser.xPos - uiMetrics.canvasWidth
+                    x4 = laser.targetXPos
+                else: 
+                    x2 = laser.targetXPos - uiMetrics.canvasWidth
+                    x3 = laser.xPos + uiMetrics.canvasWidth
+                    x4 = laser.targetXPos
+            ##
+            if(laser.yPos == max(laser.yPos,laser.targetYPos)):
+                aroundDistance = uiMetrics.canvasHeight - laser.yPos + laser.targetYPos
+                laserCloserToDown = True
+                straightDistance = laser.yPos - laser.targetYPos
+            else:
+                aroundDistance = uiMetrics.canvasHeight + laser.yPos - laser.targetYPos
+                laserCloserToDown = False
+                straightDistance = laser.targetYPos - laser.yPos
+
+            if (straightDistance < aroundDistance):
+                y2 = laser.targetYPos 
+                y3 = laser.yPos
+                y4 = laser.targetYPos
+            else:
+                aroundFlagY = True
+                if(laserCloserToDown):
+                    y2 = laser.targetYPos + uiMetrics.canvasHeight
+                    y3 = laser.yPos - uiMetrics.canvasHeight
+                    y4 = laser.targetYPos
+                else: 
+                    y2 = laser.targetYPos - uiMetrics.canvasHeight
+                    y3 = laser.yPos + uiMetrics.canvasHeight
+                    y4 = laser.targetYPos
+
+            drawX2 = (x2- var.left) * var.zoom
+            drawX3 = (x3- var.left) * var.zoom
+            drawX4 = (x4- var.left) * var.zoom
+
+            drawY2 = (y2- var.top) * var.zoom
+            drawY3 = (y3- var.top) * var.zoom
+            drawY4 = (y4- var.top) * var.zoom
+
+            line = canvas.create_line(drawX,drawY,drawX2,drawY2, fill = laser.color, #stipple="gray75"
+                                      )
+            canvas.elements.append(line)
+            
+
+            if(aroundFlagX or aroundFlagY):
+                line = canvas.create_line(drawX3,drawY3,drawX4,drawY4, fill = laser.color, #stipple="gray75"
+                                          )
+                canvas.elements.append(line)
+        else:
+            (var.lasers).remove(laser)
+            del laser
