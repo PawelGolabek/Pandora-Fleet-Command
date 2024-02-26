@@ -3,7 +3,7 @@ import tkinter.ttk as ttk
 from functools import partial
 
 import src.loadGame as loadGame
-import src.naglowek as naglowek
+import src.settings as settings
 from src.rootCommands import hideBattleUi
 
 def finishSetTrue(var):
@@ -104,7 +104,7 @@ def foundLandmarks(var,events):
 
 def dominatedLandmarks(var,events):
     gameEnded = ((events.showedLoose) or events.showedWin)
-    if(var.winByDomination):
+    if(var.winByDomination or var.looseByDomination):
         noOwnedLandmarks = True
         allOwnedLandmarks = True
         for landmark in var.landmarks:
@@ -176,7 +176,7 @@ def showWin(var,events,config,root,menuUiElements):
         label = ttk.Label(window, style = "Grey.TLabel", text='You Won\n\n'+ var.winMessage+'\n\nPress "Exit to Menu" to continue')
         label.config(justify='center')
         label.pack()
-        window.config(bg="#202020")
+        window.config(bg="#1e1e1e")
         window.minsize(300,300)
         events.showedWin = True
 
@@ -184,10 +184,10 @@ def buttonCommand(label,config,root,menuUiElements,window,var,uiElements):
     label.config(text= "Loading ...")
     window.minsize(300,300)
     root.update()
-    window.config(bg="#202020")
+    window.config(bg="#1e1e1e")
     window.minsize(300,300)
-    naglowek.loadingCombat = True
-    naglowek.combatUiReady = True
+    settings.loadingCombat = True
+    settings.combatUiReady = True
     hideBattleUi(uiElements.staticUi,uiElements)
     finishSetTrue(var)
     loadGame.run(config,root,menuUiElements)
@@ -240,10 +240,11 @@ def showLoose(var,events,config,root,menuUiElements,uiElements):
             disLoose = True
             break
 
-    if((disLoose or elimLoose) and not gameEnded):
-        naglowek.combatUiReady = False
+    landmarkLoose = (var.lostByDomination and var.looseByDomination)
+    if((disLoose or elimLoose or landmarkLoose) and not gameEnded):
+        settings.combatUiReady = False
         window = Toplevel()
-        window.config(bg="#202020")
+        window.config(bg="#1e1e1e")
         window.minsize(300,300)
         label = ttk.Label(window, style = "Grey.TLabel", text='You Lost\n\n'+ var.looseMessage+'\n\n')
         label.config(justify='center')

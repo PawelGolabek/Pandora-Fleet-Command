@@ -3,15 +3,15 @@ from tkinter import W
 from array import *
 import math
 
-import src.naglowek as naglowek
+import src.settings as settings
 
 
 def drawShips(canvas,var,uiMetrics):  # draw ship on the map with all of its accesories
     for ship in var.ships:
+        drawX = (ship.xPos - var.left) * var.zoom   # get coords relative to window
+        drawY = (ship.yPos - var.top) * var.zoom
         if(ship.killed == False):
             if(ship.visible or not var.fogOfWar or ship.owner == "player1"):
-                drawX = (ship.xPos - var.left) * var.zoom   # get coords relative to window
-                drawY = (ship.yPos - var.top) * var.zoom
 
                 fillColor = "red"
                 if(ship.owner == "player1"):
@@ -63,7 +63,7 @@ def drawShips(canvas,var,uiMetrics):  # draw ship on the map with all of its acc
                         canvas.elements.append(line)
 
                 else:
-                    _fill = 'white'
+                    _fill = 'Grey75'
                     if(ship.stealth):
                         _fill = 'deepSkyBlue4'
                     if(drawX < uiMetrics.canvasWidth - 50 * var.zoom):
@@ -76,39 +76,39 @@ def drawShips(canvas,var,uiMetrics):  # draw ship on the map with all of its acc
                         canvas.elements.append(line)
                 
                 list = []
-                ghostShip = naglowek.dynamic_object()
+                ghostShip = settings.dynamic_object()
                 ghostShip.x = (ship.xPos - var.left) * var.zoom
                 ghostShip.y = (ship.yPos - var.top) * var.zoom
                 list.append(ghostShip)
-                ghostShip = naglowek.dynamic_object()
+                ghostShip = settings.dynamic_object()
                 ghostShip.x = (ship.xPos + uiMetrics.canvasWidth - var.left) * var.zoom
                 ghostShip.y = (ship.yPos - var.top) * var.zoom
                 list.append(ghostShip)
-                ghostShip = naglowek.dynamic_object()
+                ghostShip = settings.dynamic_object()
                 ghostShip.x = (ship.xPos - uiMetrics.canvasWidth - var.left) * var.zoom
                 ghostShip.y = (ship.yPos + var.top) * var.zoom
                 list.append(ghostShip)
-                ghostShip = naglowek.dynamic_object()
+                ghostShip = settings.dynamic_object()
                 ghostShip.x = (ship.xPos - var.left) * var.zoom  
                 ghostShip.y = (ship.yPos + uiMetrics.canvasHeight - var.top) * var.zoom
                 list.append(ghostShip)
-                ghostShip = naglowek.dynamic_object()
+                ghostShip = settings.dynamic_object()
                 ghostShip.x = (ship.xPos - var.left) * var.zoom 
                 ghostShip.y = (ship.yPos - uiMetrics.canvasHeight - var.top) * var.zoom
                 list.append(ghostShip)
-                ghostShip = naglowek.dynamic_object()
+                ghostShip = settings.dynamic_object()
                 ghostShip.x = (ship.xPos - uiMetrics.canvasWidth  - var.left) * var.zoom 
                 ghostShip.y = (ship.yPos - uiMetrics.canvasHeight - var.top) * var.zoom
                 list.append(ghostShip)
-                ghostShip = naglowek.dynamic_object()
+                ghostShip = settings.dynamic_object()
                 ghostShip.x = (ship.xPos + uiMetrics.canvasWidth  - var.left) * var.zoom 
                 ghostShip.y = (ship.yPos - uiMetrics.canvasHeight - var.top) * var.zoom
                 list.append(ghostShip)
-                ghostShip = naglowek.dynamic_object()
+                ghostShip = settings.dynamic_object()
                 ghostShip.x = (ship.xPos - uiMetrics.canvasWidth  - var.left) * var.zoom 
                 ghostShip.y = (ship.yPos + uiMetrics.canvasHeight - var.top) * var.zoom
                 list.append(ghostShip)
-                ghostShip = naglowek.dynamic_object()
+                ghostShip = settings.dynamic_object()
                 ghostShip.x = (ship.xPos + uiMetrics.canvasWidth  - var.left) * var.zoom 
                 ghostShip.y = (ship.yPos + uiMetrics.canvasHeight - var.top) * var.zoom
                 list.append(ghostShip)
@@ -119,6 +119,27 @@ def drawShips(canvas,var,uiMetrics):  # draw ship on the map with all of its acc
                     y1 = element.y - ship.detectionRange*var.zoom
                     y2 = element.y+ship.detectionRange*var.zoom
                     canvas.create_oval(x1, y1, x2, y2, outline=ship.outlineColor, dash = (1,3))
+    _fill = "gray45"
+    for ship1 in var.destroyedShips:  
+        drawX = (ship1.xPos - var.left) * var.zoom   # get coords relative to window
+        drawY = (ship1.yPos - var.top) * var.zoom 
+        line = canvas.create_line(int(drawX-5*var.zoom),
+                                    int(drawY-5*var.zoom),
+                                    int(drawX +5*var.zoom),
+                                    int(drawY+5*var.zoom),
+                                    width=int(1+1*var.zoom),
+                                    fill=_fill)
+        line2 = canvas.create_line(int(drawX+5*var.zoom),
+                                    int(drawY-5*var.zoom),
+                                    int(drawX -5*var.zoom),
+                                    int(drawY+5*var.zoom),
+                                    width=int(1+1*var.zoom),
+                                    fill=_fill)
+        text = canvas.create_text(drawX - (20 + 12 * var.zoom), drawY + 10, anchor=W,
+                    font=("Purisa", 8 + floor(var.zoom)), text=ship1.name, fill = _fill)
+        canvas.elements.append(line)
+        canvas.elements.append(line2)
+        canvas.elements.append(text)
 
  
 def drawGhostPoints(canvas,var):
@@ -126,7 +147,7 @@ def drawGhostPoints(canvas,var):
         for ghost in ship.ghostPoints:
             drawX = int((ghost.xPos - var.left) * var.zoom)
             drawY = int((ghost.yPos - var.top) * var.zoom )
-            line = canvas.create_line(int(drawX-1*var.zoom), drawY, drawX, drawY, width=int(var.zoom),  fill='orange')    # draw name
+            line = canvas.create_line(int(drawX-1*var.zoom), drawY, drawX, drawY, width=int(var.zoom),  fill='#fff200')    # draw name
             canvas.elements.append(line)
 
 def drawSignatures(canvas,var):
@@ -215,7 +236,20 @@ def drawRockets(var,ammunitionType,canvas):
             line = canvas.create_line(drawX,drawY,drawX+dirLineX*20,drawY+dirLineY*20,fill = _fill)
             canvas.elements.append(line)
         
-        if(missle.typeName == ammunitionType.bolter):
+        if(missle.typeName == ammunitionType.flare):
+            line = canvas.create_line(drawX*var.zoom, drawY+1*var.zoom,
+                            drawX+1*var.zoom, drawY*var.zoom, fill = color, width=int(var.zoom))
+            canvas.elements.append(line)
+            line = canvas.create_line(drawX*var.zoom, drawY-1*var.zoom,
+                            drawX+1*var.zoom, drawY*var.zoom, fill = color, width=int(var.zoom))
+            canvas.elements.append(line)
+            line = canvas.create_line(drawX*var.zoom, drawY-1*var.zoom,
+                            drawX-1*var.zoom, drawY*var.zoom, fill = color, width=int(var.zoom))
+            canvas.elements.append(line)
+            line = canvas.create_line(drawX*var.zoom, drawY+1*var.zoom,
+                            drawX-1*var.zoom, drawY*var.zoom, fill = color, width=int(var.zoom))
+            canvas.elements.append(line)
+        elif(missle.typeName == ammunitionType.bolter):
             line = canvas.create_line(drawX-2*var.zoom, drawY-2*var.zoom,
                             drawX+2*var.zoom, drawY+2*var.zoom, fill = color, width=int(var.zoom))
             canvas.elements.append(line)
@@ -291,39 +325,39 @@ def drawLandmarks(var,canvas,uiIcons,uiMetrics):
                 canvas.elements.append(text)
 
             list = []
-            ghostlandmark = naglowek.dynamic_object()
+            ghostlandmark = settings.dynamic_object()
             ghostlandmark.x = (landmark.xPos - var.left) * var.zoom
             ghostlandmark.y = (landmark.yPos - var.top) * var.zoom
             list.append(ghostlandmark)
-            ghostlandmark = naglowek.dynamic_object()
+            ghostlandmark = settings.dynamic_object()
             ghostlandmark.x = (landmark.xPos + uiMetrics.canvasWidth - var.left) * var.zoom
             ghostlandmark.y = (landmark.yPos - var.top) * var.zoom
             list.append(ghostlandmark)
-            ghostlandmark = naglowek.dynamic_object()
+            ghostlandmark = settings.dynamic_object()
             ghostlandmark.x = (landmark.xPos - uiMetrics.canvasWidth - var.left) * var.zoom
             ghostlandmark.y = (landmark.yPos + var.top) * var.zoom
             list.append(ghostlandmark)
-            ghostlandmark = naglowek.dynamic_object()
+            ghostlandmark = settings.dynamic_object()
             ghostlandmark.x = (landmark.xPos - var.left) * var.zoom  
             ghostlandmark.y = (landmark.yPos + uiMetrics.canvasHeight - var.top) * var.zoom
             list.append(ghostlandmark)
-            ghostlandmark = naglowek.dynamic_object()
+            ghostlandmark = settings.dynamic_object()
             ghostlandmark.x = (landmark.xPos - var.left) * var.zoom 
             ghostlandmark.y = (landmark.yPos - uiMetrics.canvasHeight - var.top) * var.zoom
             list.append(ghostlandmark)
-            ghostlandmark = naglowek.dynamic_object()
+            ghostlandmark = settings.dynamic_object()
             ghostlandmark.x = (landmark.xPos - uiMetrics.canvasWidth  - var.left) * var.zoom 
             ghostlandmark.y = (landmark.yPos - uiMetrics.canvasHeight - var.top) * var.zoom
             list.append(ghostlandmark)
-            ghostlandmark = naglowek.dynamic_object()
+            ghostlandmark = settings.dynamic_object()
             ghostlandmark.x = (landmark.xPos + uiMetrics.canvasWidth  - var.left) * var.zoom 
             ghostlandmark.y = (landmark.yPos - uiMetrics.canvasHeight - var.top) * var.zoom
             list.append(ghostlandmark)
-            ghostlandmark = naglowek.dynamic_object()
+            ghostlandmark = settings.dynamic_object()
             ghostlandmark.x = (landmark.xPos - uiMetrics.canvasWidth  - var.left) * var.zoom 
             ghostlandmark.y = (landmark.yPos + uiMetrics.canvasHeight - var.top) * var.zoom
             list.append(ghostlandmark)
-            ghostlandmark = naglowek.dynamic_object()
+            ghostlandmark = settings.dynamic_object()
             ghostlandmark.x = (landmark.xPos + uiMetrics.canvasWidth  - var.left) * var.zoom 
             ghostlandmark.y = (landmark.yPos + uiMetrics.canvasHeight - var.top) * var.zoom
             list.append(ghostlandmark)
@@ -333,7 +367,7 @@ def drawLandmarks(var,canvas,uiIcons,uiMetrics):
             elif(landmark.owner == 'ai1'):
                 outln = '#802200'
             else:
-                outln = '#646402'
+                outln = '#505050'
             
             for element in list:
                 x1 = element.x-landmark.radius*var.zoom

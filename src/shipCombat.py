@@ -2,38 +2,195 @@ import math
 from tkinter import DISABLED
 import threading
 import time
+import PIL.Image
+from PIL import ImageTk
 
-import src.naglowek as naglowek
-from src.ammunitionType import ammunition
+import src.settings as settings
+from src.editor.ammunitionType import ammunition
 from src.colorCommands import rgbtohex
 from src.rootCommands import updateBattleUi
+from src.inputs import mouseOnCanvas,trackMouse
 import src.endConditions as endConditions
-import src.tracer as tracer
+import src.objects.tracer as tracer
+from src.objects.ship import ship,destroyedShip
 
+
+def updateShields(ship1,var):
+    for ship1 in var.ships:
+        for tmp, progressBar in enumerate(ship1.shieldsLabel):
+            if(var.turnInProgress):
+                tmpShieldRegen = var.shieldRegen
+                while(ship1.shieldsState[tmp] < var.shieldMaxState and tmpShieldRegen > 0):
+                    ship1.shieldsState[tmp] += 1
+                    tmpShieldRegen -= 1
+                    if(ship1.shieldsState[tmp] == var.shieldMaxState):
+                        ship1.shields += 1
+            if(ship1.shieldsState[tmp] > var.shieldMaxState-var.turnLength):
+                progressBar.config(bootstyle = 'primary')
+            else:
+                progressBar.config(bootstyle = 'danger')
+
+            progressBar['value'] = ship1.shieldsState[tmp] * 100 \
+                / var.shieldMaxState
+            
+def newWindow(uiMetrics,var,canvas,root):
+    canvas.delete(canvas.imageID)
+    canPoiX = var.pointerX - uiMetrics.canvasX
+    canPoiY = var.pointerY - uiMetrics.canvasY
+    var.imgg = ImageTk.PhotoImage(var.resizedImage)
+    if(not var.mouseWheelUp and not var.mouseWheelDown and var.mouseButton3 and var.zoom != 1 and mouseOnCanvas(var,uiMetrics)):
+        if(var.zoom == 1):
+            var.mouseX = ((canPoiX + var.pointerDeltaX) + var.left)
+            var.mouseY = ((canPoiY + var.pointerDeltaY) + var.top)
+        else:
+            var.mouseX = ((canPoiX + var.pointerDeltaX) / (var.zoom-1) + var.left)
+            var.mouseY = ((canPoiY + var.pointerDeltaY) / (var.zoom-1) + var.top)
+        var.yellowX = (uiMetrics.canvasWidth/var.zoom)/2
+        var.yellowY = (uiMetrics.canvasHeight/var.zoom)/2
+
+        if(var.mouseX > uiMetrics.canvasWidth - var.yellowX):  # bumpers on sides
+            var.mouseX = var.right - var.yellowX
+        if(var.mouseX < var.yellowX):
+            var.mouseX = var.left + var.yellowX
+        if(var.mouseY > uiMetrics.canvasHeight - var.yellowY):
+            var.mouseY = var.bottom - var.yellowY
+        if(var.mouseY < var.yellowY):
+            var.mouseY = var.top + var.yellowY
+
+        var.left = var.mouseX - var.yellowX
+        var.right = var.mouseX + var.yellowX
+        var.top = var.mouseY - var.yellowY
+        var.bottom = var.mouseY + var.yellowY
+        var.mouseX = var.right - var.left
+        var.mouseY = var.bottom - var.top
+
+        var.resizedImage = (var.image).crop((var.left, var.top, var.right, var.bottom))
+        var.resizedImage = (var.resizedImage).resize((uiMetrics.canvasWidth, uiMetrics.canvasHeight), PIL.Image.ANTIALIAS)
+
+        var.imgg = ImageTk.PhotoImage(var.resizedImage)
+        canvas.imageID = canvas.create_image(0, 0, image=var.imgg, anchor='nw')
+
+
+    if((var.mouseWheelUp or var.mouseWheelDown) and mouseOnCanvas(var,uiMetrics) and var.zoomChange):
+        var.imgg = var.image
+        if(var.mouseWheelUp and var.zoomChange):
+            if(var.zoom == 1):
+                var.mouseX = (canPoiX)
+                var.mouseY = (canPoiY)
+            else:
+                var.mouseX = ((canPoiX) / (var.zoom) + var.left)
+                var.mouseY = ((canPoiY) / (var.zoom) + var.top)
+
+        elif(var.mouseWheelDown):
+            var.zoom = 1
+            var.left = 0
+            var.top = 0
+            var.right = uiMetrics.canvasWidth
+            var.bottom = uiMetrics.canvasHeight
+            var.resizedImage = var.image
+            var.imgg = ImageTk.PhotoImage(var.resizedImage)
+    
+        var.yellowX = (uiMetrics.canvasWidth/var.zoom)/2
+        var.yellowY = (uiMetrics.canvasHeight/var.zoom)/2
+
+        if(var.mouseX > uiMetrics.canvasWidth - var.yellowX):  # bumpers on sides
+            var.mouseX = var.right - var.yellowX
+        if(var.mouseX < var.yellowX):
+            var.mouseX = var.left + var.yellowX
+        if(var.mouseY > uiMetrics.canvasHeight - var.yellowY):
+            var.mouseY = var.bottom - var.yellowY
+        if(var.mouseY < var.yellowY):
+            var.mouseY = var.top + var.yellowY
+
+        var.left = var.mouseX - var.yellowX
+        var.right = var.mouseX + var.yellowX
+        var.top = var.mouseY - var.yellowY
+        var.bottom = var.mouseY + var.yellowY
+        var.resizedImage = (var.image).crop((var.left, var.top, var.right, var.bottom))
+        var.resizedImage = (var.resizedImage).resize((uiMetrics.canvasWidth, uiMetrics.canvasHeight), PIL.Image.ANTIALIAS)
+
+        var.imgg = ImageTk.PhotoImage(var.resizedImage)
+        canvas.imageID = canvas.create_image(0, 0, image=var.imgg, anchor='nw')
+    else:
+        var.imgg = ImageTk.PhotoImage(var.resizedImage)
+        canvas.imageID = canvas.create_image(0, 0, image=var.imgg, anchor='nw')
+
+
+def getOrders(ship,var,gameRules,uiMetrics,forced=False):
+    tracered = False
+    if(ship.owner == "player1"):
+        if(var.mouseButton1 and mouseOnCanvas(var,uiMetrics) and var.selection == ship.id):
+            ship.moveOrderX = var.left + \
+                ((var.pointerX-uiMetrics.canvasX)/var.zoom)
+            ship.moveOrderY = var.top + \
+                ((var.pointerY-uiMetrics.canvasY)/var.zoom)
+            tracered = True
+            putTracer(ship,var,gameRules,uiMetrics)
+    if(not tracered and ship.owner == "player1" and forced ):
+            putTracer(ship,var,gameRules,uiMetrics)
 
 
 def updateLabel(uiElements,shipLookup,var,shipId):
     t0 = time.time()
     i = 0
     shipCounter = shipId
+    ship = shipLookup[shipCounter]
     targetLabels = [uiElements.playerLabels,uiElements.playerLabels2,uiElements.playerLabels3, 
                     uiElements.enemyLabels,uiElements.enemyLabels2,uiElements.enemyLabels3]
     targetLabel = targetLabels[shipId]
-    if(shipCounter == var.shipChoice):
-        uiElements.systemLFs[shipCounter].config(style = 'Green.TLabelframe')
+
+  #  if(ship.owner == 'player1'):
+  #      uiElements.systemLFs[shipCounter].config(style = 'Grey.TLabelframe')
+  #  else:
+  #      uiElements.systemLFs[shipCounter].config(style = 'Red.TLabelframe')
+    styleToSet = 0
+    if(ship.color == 'DarkOrchid1'):
+        styleToSet = 'DarkOrchid1.TLabelframe'
+    elif(ship.outlineColor == 'DarkOrchid2'):
+        styleToSet = 'DarkOrchid2.TLabelframe'
+    elif(ship.outlineColor == 'dark slate gray'):
+        styleToSet = 'DarkSlateGrey.TLabelframe'
+    elif(ship.outlineColor == 'indian red'):
+        styleToSet = 'IndianRed.TLabelframe'
+    elif(ship.outlineColor == 'Orchid4'):
+        styleToSet = 'Orchid4.TLabelframe'
+    elif(ship.outlineColor == 'Grey60'):
+        styleToSet = 'Grey60.TLabelframe'
+    elif(ship.outlineColor == 'white'):
+        styleToSet = 'White.TLabelframe'
+    elif(ship.outlineColor == 'brown2'):
+        styleToSet = 'Brown2.TLabelframe'
+    elif(ship.outlineColor == 'brown4'):
+        styleToSet = 'Brown4.TLabelframe'
+    elif(ship.outlineColor == 'Gold'):
+        styleToSet = 'Gold.TLabelframe'
+    elif(ship.outlineColor == 'goldenrod3'):
+        styleToSet = 'Goldenrod3.TLabelframe'
+    elif(ship.outlineColor == 'Yellow'):
+        styleToSet = 'Yellow.TLabelframe'
+    elif(ship.outlineColor == 'purple'):
+        styleToSet = 'Purple.TLabelframe'
+    elif(ship.outlineColor == 'purple2'):
+        styleToSet = 'Purple2.TLabelframe'
+    elif(ship.outlineColor == 'red'):
+        styleToSet = 'Red.TLabelframe'
     else:
-        uiElements.systemLFs[shipCounter].config(style = 'Grey.TLabelframe')
-    if(not shipLookup[shipCounter].owner == 'player1'):
-        uiElements.systemLFs[shipCounter].config(style = 'DarkRed.TLabelframe')
+        styleToSet = 'Goldenrod3.TLabelframe'           #### 
 
-    targetLabel[1].config(text = str(shipLookup[shipCounter].hp))
-    targetLabel[3].config(text = str(shipLookup[shipCounter].ap)) 
 
-    j = 10
-    for i, system in enumerate(shipLookup[shipCounter].systemSlots):
+    if(shipCounter == var.shipChoice and ship.owner == 'player1'):
+        styleToSet = 'Green.TLabelframe'
+        
+    uiElements.systemLFs[shipCounter].config(style = styleToSet)
+
+    targetLabel[1].config(text = str(ship.hp))
+    targetLabel[3].config(text = str(ship.ap) + "           Max Energy: " + str(ship.energyLimit))
+
+    j = 11
+    for i, system in enumerate(ship.systemSlots):
         if(time.time() - t0 > 1):
             return 0
-        system = shipLookup[shipCounter].systemSlots[i]
+        system = ship.systemSlots[i]
         readiness = round((abs(system.maxCooldown-system.cooldown)/float(system.maxCooldown))*100.0)
         currentStyle = targetLabel[j+1].cget("style")
         styleToSet = 0
@@ -78,9 +235,9 @@ def updateLabel(uiElements,shipLookup,var,shipId):
         targetLabel[j+1].config(text = str(readiness))
         targetLabel[j+2].config(text = str(integrity))
         targetLabel[j+3].config(text = str(heat))
-        targetLabel[j+4].config(text = str(system.energy))
+        targetLabel[j+4].config(text = str(system.energy) + "/" + str(system.maxEnergy))
         i += 1
-        j += 5
+        j += 6
     return 0
 
 class laser():
@@ -113,39 +270,39 @@ def detectionCheck(globalVar,uiMetrics):
         for ship2 in globalVar.ships:
             if(not ship2.owner == ship.owner):
                 list = []
-                ghostShip = naglowek.dynamic_object()
+                ghostShip = settings.dynamic_object()
                 ghostShip.x = ship2.xPos
                 ghostShip.y = ship2.yPos
                 list.append(ghostShip)
-                ghostShip = naglowek.dynamic_object()
+                ghostShip = settings.dynamic_object()
                 ghostShip.x = ship2.xPos + uiMetrics.canvasWidth
                 ghostShip.y = ship2.yPos
                 list.append(ghostShip)
-                ghostShip = naglowek.dynamic_object()
+                ghostShip = settings.dynamic_object()
                 ghostShip.x = ship2.xPos - uiMetrics.canvasWidth
                 ghostShip.y = ship2.yPos
                 list.append(ghostShip)
-                ghostShip = naglowek.dynamic_object()
+                ghostShip = settings.dynamic_object()
                 ghostShip.x = ship2.xPos
                 ghostShip.y = ship2.yPos + uiMetrics.canvasHeight
                 list.append(ghostShip)
-                ghostShip = naglowek.dynamic_object()
+                ghostShip = settings.dynamic_object()
                 ghostShip.x = ship2.xPos
                 ghostShip.y = ship2.yPos - uiMetrics.canvasHeight
                 list.append(ghostShip)
-                ghostShip = naglowek.dynamic_object()
+                ghostShip = settings.dynamic_object()
                 ghostShip.x = ship2.xPos - uiMetrics.canvasWidth
                 ghostShip.y = ship2.yPos - uiMetrics.canvasHeight 
                 list.append(ghostShip)
-                ghostShip = naglowek.dynamic_object()
+                ghostShip = settings.dynamic_object()
                 ghostShip.x = ship2.xPos + uiMetrics.canvasWidth
                 ghostShip.y = ship2.yPos - uiMetrics.canvasHeight
                 list.append(ghostShip)
-                ghostShip = naglowek.dynamic_object()
+                ghostShip = settings.dynamic_object()
                 ghostShip.x = ship2.xPos - uiMetrics.canvasWidth 
                 ghostShip.y = ship2.yPos + uiMetrics.canvasHeight 
                 list.append(ghostShip)
-                ghostShip = naglowek.dynamic_object()
+                ghostShip = settings.dynamic_object()
                 ghostShip.x = ship2.xPos + uiMetrics.canvasWidth
                 ghostShip.y = ship2.yPos + uiMetrics.canvasHeight
                 list.append(ghostShip)
@@ -157,14 +314,14 @@ def detectionCheck(globalVar,uiMetrics):
                         break
        
 def createGhostPoint(ship, xPos, yPos,number = 0):
-    ghost = naglowek.ghost_point()
+    ghost = settings.ghost_point()
     ship.ghostPoints.append(ghost)
     setattr(ship.ghostPoints[-1],'xPos',xPos)
     setattr(ship.ghostPoints[-1],'yPos',yPos)
     setattr(ship.ghostPoints[-1],'number',number)
 
 def createSignature(ship, xPos, yPos,ttl = 1200,number = 0):
-    signature = naglowek.ghost_point()
+    signature = settings.ghost_point()
     ship.signatures.append(signature)
     setattr(ship.signatures[-1],'xPos',xPos)
     setattr(ship.signatures[-1],'yPos',yPos)
@@ -238,12 +395,12 @@ def updateLabels(uiElements,shipLookup,var,root):
     updateLabel(uiElements,shipLookup,var,0)
     i = 0
     n = 6
-    t1 = []
+    var.t1 = []
     while(i<n):
-        t1.append(threading.Thread(target=updateLabel, args=(uiElements,shipLookup,var,i,)))
+        var.t1.append(threading.Thread(target=updateLabel, args=(uiElements,shipLookup,var,i,)))
         i+=1
 
-    for t in t1:
+    for t in var.t1:
         t.start()
     i = 0
 
@@ -274,7 +431,7 @@ def dealDamage(ship, dmg, var, targetSystem, heatDamage,uiElements,shipLookup,ro
     if(ship.uiHeatBuildup > 30):
         toUpdate = True
         ship.uiHeatBuildup = 0
-    if(ship.shields > 0 and dmg > 0):
+    if(ship.shields > 0 and dmg > 0):               ## hit shield
         tmp = 0
         while (tmp < len(ship.shieldsState)):
             if(ship.shieldsState[tmp] == var.shieldMaxState):
@@ -284,7 +441,7 @@ def dealDamage(ship, dmg, var, targetSystem, heatDamage,uiElements,shipLookup,ro
         ship.shields -= 1
     else:
         armorEffect = math.ceil(ship.ap/10) + 3
-        if(dmg <= armorEffect):
+        if(dmg <= armorEffect):                     # all armor
             if(ship.ap <= dmg):
                 dmg -= ship.ap
                 ship.ap = 0
@@ -292,7 +449,7 @@ def dealDamage(ship, dmg, var, targetSystem, heatDamage,uiElements,shipLookup,ro
                 ship.ap -= dmg
                 dmg = 0
         else:
-            if(dmg <= ship.ap):
+            if(dmg <= ship.ap):                     # some hit armor and pass
                 if(ship.ap >= armorEffect):
                     ship.ap -= armorEffect
                     dmg -= armorEffect
@@ -302,13 +459,13 @@ def dealDamage(ship, dmg, var, targetSystem, heatDamage,uiElements,shipLookup,ro
             else:
                 dmg -= ship.ap
                 ship.ap = 0
-        system = ship.systemSlots[targetSystem]
-        numOfSystems = len(ship.systemSlots)
         totalMaxIntegrity = 0
         totalIntegrity = 0
-        damageParts = 2 + numOfSystems
-        damagePerSystem = math.floor(dmg/damageParts)
-        if(targetSystem>=0):
+        numOfSystems = len(ship.systemSlots)
+        if(targetSystem >= 0 and not targetSystem == 'no target'):
+            system = ship.systemSlots[targetSystem]
+            damageParts = 2 + numOfSystems
+            damagePerSystem = math.floor(dmg/damageParts)
             system.heat += heatDamage
             system.heat += heatDamage
             system.heat += heatDamage
@@ -323,11 +480,11 @@ def dealDamage(ship, dmg, var, targetSystem, heatDamage,uiElements,shipLookup,ro
             numOfSystems += 1
             totalMaxIntegrity += system1.maxIntegrity
             totalIntegrity += system1.integrity
-        if(totalIntegrity == 0):
+        if(totalIntegrity == 0):                                # deal damage to hull if no systems
             ship.hp -= dmg
             return
         damageBeforeSystems = dmg
-        for system3 in ship.systemSlots:                        # deal damage according to values
+        for system3 in ship.systemSlots:                        # deal damage according to standard values
             system3.heat += heatDamage
             system3.heat = round(system3.heat*100)/100
             dmgToSystem = (system3.maxIntegrity)/(totalMaxIntegrity)  * damageBeforeSystems
@@ -383,30 +540,37 @@ def createRocket(var,ship,target,targetSystem,_type,offsetX=0,offsetY=0):
 
 
 
-def checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas):
+def checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas,multiplayerOptions):
     shipsToKill = []
     for ship1 in var.ships:
         if(ship1.hp < 1 and not ship1.killed): 
             shipsToKill.append(ship1)
     for ship2 in shipsToKill:
-        killShip(ship2.id,var,events,shipLookup,uiElements,uiMetrics,root,canvas)
+        killShip(ship2.id,var,events,shipLookup,uiElements,uiMetrics,root,canvas,multiplayerOptions)
 
 
-def killShip(shipId,var,events,shipLookup,uiElements,uiMetrics,root,canvas):
+def killShip(shipId,var,events,shipLookup,uiElements,uiMetrics,root,canvas,multiplayerOptions):
     ship1 = shipLookup[shipId]
     respawned = False
+    x = int(ship1.xPos)
+    y = int(ship1.yPos)
+    name = str(ship1.name)
+    var.destroyedShips.append(destroyedShip(x,y,name))
     if(ship1.owner == 'player1'):
-        if(var.respawns):
+        if(var.respawns and not ship1.name.startswith('>Not Available')):
             ship1.respawn(var,var.respawns,uiMetrics)
             respawned = True
+            var.respawns-=1
     else:
-        if(var.enemyRespawns):
+        if(var.enemyRespawns and not ship1.name.startswith('>Not Available')):
             ship1.respawn(var,var.enemyRespawns,uiMetrics)
             respawned = True
+            var.enemyRespawns-=1
     if(respawned):
         return
-    shipLookup[shipId].visible = False
-    shipLookup[shipId].killed = True
+    ship1.visible = False
+    ship1.killed = True
+    ship1.optionMenus = []
     for missle in var.currentMissles:
         if missle.target == ship1.id:
             missle.looseTarget()
@@ -457,20 +621,20 @@ def killShip(shipId,var,events,shipLookup,uiElements,uiMetrics,root,canvas):
         if element.id == shipId:
             (var.ships).remove(element)
             break
-
     setattr(var, f"wonByEliminating{ship1.id}", 1)
     setattr(var, f"lostByEliminating{ship1.id}", 1)
-    updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas,uiElements.UIElementsList)
+    updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas,uiElements.UIElementsList,multiplayerOptions)
+
 
 
 def updateShipsStatus(var,uiMetrics,gameRules,shipLookup,events,uiElements,root,canvas):
     for ship in var.ships:
         if(ship.stealth):
-            ship.visible = False
+         #   ship.visible = False
             ship.stealth -= 1
 
 
-def updateShipsLocation(var,uiMetrics,gameRules,shipLookup,events,uiElements,root,canvas):  # rotate and move the chosen ship
+def updateShipsLocation(var,uiMetrics,gameRules,shipLookup,events,uiElements,root,canvas,multiplayerOptions):  # rotate and move the chosen ship
     for ship in var.ships:
         # check for terrain
         if(0 > ship.xPos):
@@ -494,11 +658,11 @@ def updateShipsLocation(var,uiMetrics,gameRules,shipLookup,events,uiElements,roo
 
         if(colorWeight < 600 and colorWeight > 200):
             movementPenality = gameRules.movementPenalityMedium
-            dealDamage(shipLookup[ship.id], 0, var,-1, 0.05,uiElements,shipLookup,root,events)
+            dealDamage(shipLookup[ship.id], 0, var,-1, 0.035,uiElements,shipLookup,root,events)
         elif(colorWeight < 200):
             movementPenality = gameRules.movementPenalityHard
             dealDamage(shipLookup[ship.id], 1, var,-1, 1,uiElements,shipLookup,root,events)
-            checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas)
+            checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas,multiplayerOptions)
         else:
             movementPenality = 0.000001  # avoid division by 0. Minimal friction in vacuum 
 

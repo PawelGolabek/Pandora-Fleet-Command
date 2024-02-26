@@ -4,7 +4,7 @@ import math
 from threading import Thread
 
 from src.shipCombat import rotateVector
-from src.tracer import tracer
+from src.objects.tracer import tracer
 
 
 def checkForCollision(currentTracer,gameRules,var,uiMetrics,colorWeight,currentOrderValue):
@@ -85,20 +85,28 @@ class aiController():
         systemPool = []
         energy = ship.energyLimit - basicEnergy
         systemChecked = 0
+        allSystemsMaxEnergy = 0
         for system in ship.systemSlots:         # create system pool   
             if(system.category == 'weapon'):
                 system.target = random.randint(0,len(shipLookup[ship.target].systemSlots))
+                system.delay = round(random.randint(0,1))
             systemMaxPoints = system.maxEnergy            # targets
+            allSystemsMaxEnergy += system.maxEnergy
             while(systemMaxPoints > 0):
                 systemPool.append(systemChecked)
                 systemMaxPoints -= 1
             systemChecked += 1
+            system.energy = system.minEnergy
+            energy -= system.minEnergy
+            allSystemsMaxEnergy -= system.minEnergy
                                                 # add modifiers to pool if neeeded
-        while(energy > 0 and len(systemPool)):
+        ticks = 0
+        while(energy > 0 and len(systemPool) and ticks < allSystemsMaxEnergy):
             choiceRand = random.randrange(0,len(systemPool))
             choiceNumber = systemPool.pop(choiceRand)
             (ship.systemSlots[choiceNumber]).energy += 1
             energy-=1
+            ticks+=1
                 
         
        
@@ -242,80 +250,3 @@ class aiController():
 
 class aiRush(aiController):
     x = 29
-
-
-def oldOrderChoice(ship,ships,var,gameRules,uiMetrics):
-    checksLeft = 40
-    bestOrderX = 100    #default if everything else fails
-    bestOrderY = 100    #default if everything else fails
-    bestOrderValue = float('-inf')
-    maskMap = aiController.dijstraFill(var.mask,uiMetrics,var) # change for dijkstra filled map
-    while(checksLeft):
-        currentOrderValue = random.randint(19000, 21000)
-        currentOrderX = ship.xPos + random.randint(-200, 200)
-        currentOrderY = ship.yPos + random.randint(-200, 200)
-        ship.ghostPoints = []
-        currentTracer = tracer()
-        currentTracer.xPos = ship.xPos
-        currentTracer.yPos = ship.yPos
-        currentTracer.xDir = ship.xDir
-        currentTracer.yDir = ship.yDir
-        currentTracer.turnRate = ship.turnRate
-        currentTracer.speed = ship.speed
-        currentTracer.moveOrderX = currentOrderX
-        currentTracer.moveOrderY = currentOrderY
-        currentTracer.ttl = var.turnLength + 800 # 800 to avoid unavoidable collisions next turn
-        
-        while(True):
-            # check for terrain
-            if(currentTracer.ttl % 5 == 0):
-                colorWeight = maskMap[int(math.floor(currentTracer.yPos/var.PFprecision))][int(math.floor(currentTracer.xPos/var.PFprecision))]
-            # vector normalisation
-            scale = math.sqrt((currentTracer.moveOrderX-currentTracer.xPos)*(currentTracer.moveOrderX-currentTracer.xPos) +
-                                (currentTracer.moveOrderY-currentTracer.yPos)*(currentTracer.moveOrderY-currentTracer.yPos))
-            if(scale == 0):
-                scale = 0.01
-            # move order into normalised vector
-            moveDirX = -(currentTracer.xPos-currentTracer.moveOrderX) / scale
-            moveDirY = -(currentTracer.yPos-currentTracer.moveOrderY) / scale
-
-            degree = currentTracer.turnRate
-            rotateVector(degree, currentTracer, moveDirX, moveDirY)
-
-            if(colorWeight < 600 and colorWeight > 400):
-                movementPenality = gameRules.movementPenalityMedium
-            elif(colorWeight < 400 and colorWeight > 200):
-                movementPenality = gameRules.movementPenalityMedium
-                currentOrderValue -= 400
-            elif(colorWeight <= 200):
-                movementPenality = gameRules.movementPenalityHard
-                currentOrderValue -= 4000
-            else:
-                movementPenality = 0.000001  # change
-
-            xVector = currentTracer.xDir*currentTracer.speed/360
-            yVector = currentTracer.yDir*currentTracer.speed/360
-
-            currentTracer.xPos += xVector - xVector * movementPenality
-            currentTracer.yPos += yVector - yVector * movementPenality
-            if(0 > currentTracer.xPos):
-                currentTracer.xPos += uiMetrics.canvasWidth
-            if(currentTracer.xPos >= uiMetrics.canvasWidth):
-                currentTracer.xPos -= uiMetrics.canvasWidth
-            if(0 > currentTracer.yPos):
-                currentTracer.yPos += uiMetrics.canvasHeight
-            if(currentTracer.yPos >= uiMetrics.canvasHeight):
-                currentTracer.yPos -= uiMetrics.canvasHeight
-            currentTracer.ttl -= 1
-            if(not currentTracer.ttl):
-                break
-        if(currentOrderValue > bestOrderValue):
-            bestOrderX = currentOrderX
-            bestOrderY = currentOrderY
-            bestOrderValue = currentOrderValue
-        del currentTracer
-        checksLeft -= 1
-        if(checksLeft < 360 and bestOrderValue > 0 or not checksLeft):
-            break
-    ship.moveOrderX = bestOrderX
-    ship.moveOrderY = bestOrderY

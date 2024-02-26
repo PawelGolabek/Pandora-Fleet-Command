@@ -18,57 +18,60 @@ from tkinter.filedialog import askopenfilename
 import PIL.Image
 from tkinter import PhotoImage,HORIZONTAL
 import gc
+import atexit
 
-
-import src.naglowek as naglowek
-from src.ship import ship
-from src.update import dragging,checkForKilledShips,update,newWindow,putTracer,updateLabels,radioBox,endTurn,updateBattleUi,detectionCheck
+import src.settings as settings
+from src.objects.ship import ship
+from src.update import dragging,checkForKilledShips,update,newWindow,putTracer,updateLabels,radioBox,endTurn,updateBattleUi,detectionCheck,manageLandmarks,pauseGame
 from src.shipCombat import getZoomMetrics
 from src.aiControllers import aiController
-from src.turnManagers import startTurn,pauseGame
+from src.turnManagers import startTurn
 from src.inputs import mouseButton3,mouseWheel,motion,mouseButton1,mouseButton3up
 from src.canvasCalls import createMask,createPFMask
 from src.endConditions import finishSetTrue
 from src.winConditionsLoader import loadWinConditions
-from src.ammunitionType import ammunition_type
+from src.editor.ammunitionType import ammunition_type
 from src.rootCommands import placeMenuUi,hideBattleUi
+from src.editor.systems import loadSounds
 
 def declareTargets(var):
     list1 = {}
     list2 = {}
-    i = 2
     for ship in var.ships:
         if(not ship.owner == 'player1'):
             if(not ship.name in list1):
                 list1.update({ship.name : ship.id})
             else:
+                i = 2
                 while((ship.name + ' (' + str(i) + ')') in list1):
                     i+=1
-                ship.name = (ship.name + '(' + str(i) + ')')
-                list1.update({ship.name : ship.id})
-    i = 2
-    for ship in var.ships:
-        if(ship.owner == 'player1'):
-            if(not ship.name in list2):
-                list2.update({ship.name : ship.id})
-            else:
-                while((ship.name + ' (' + str(i) + ')') in list2):
-                    i+=1
                 ship.name = (ship.name + ' (' + str(i) + ')')
-                list2.update({ship.name : ship.id})
-
+                list1.update({ship.name : ship.id})
+    for ship1 in var.ships:
+        if(ship1.owner == 'player1'):
+            if(not ship1.name in list2):
+                list2.update({ship1.name : ship1.id})
+            else:
+                i = 2
+                while((ship1.name + ' (' + str(i) + ')') in list2):
+                    i+=1
+                ship1.name = (ship1.name + ' (' + str(i) + ')')
+                list2.update({ship1.name : ship1.id})
     return list1,list2
 
-def bindInputs(root,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,config,menuUiElements):
+def bindInputs(root,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,config,menuUiElements, multiplayerOptions):
     root.bind('<Motion>', lambda e: motion(e, var,root))
     root.bind('<Button-1>', lambda e: mouseButton1(e, var))
-    root.bind('<space>', lambda e: startTurn(uiElements,var,var.ships,gameRules,uiMetrics))
-    root.bind('p', lambda e: pauseGame(e,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root))
+    root.bind('<space>', lambda e: startTurn(uiElements,var,var.ships,gameRules,uiMetrics,multiplayerOptions,root))
+    root.bind('p', lambda e: pauseGame(e,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root,config,menuUiElements, multiplayerOptions))
     root.bind('<Button-2>', lambda e: mouseButton3(e, var))
     root.bind('<ButtonRelease-2>', lambda e: mouseButton3up(e, var))
     root.bind('<MouseWheel>', lambda e: mouseWheel(e, var,uiMetrics))
-    root.bind('<Configure>', lambda e: dragging(e,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root,config,menuUiElements))
+    root.bind('<Configure>', lambda e: dragging(e,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root,config,menuUiElements, multiplayerOptions))
 
+def onExit(var):
+    for t in var.t1:
+        t._stop()
 ######################################################### MAIN ####################################
 
 def declareSystemTargets(var,shipLookup):
@@ -84,7 +87,7 @@ def declareSystemTargets(var,shipLookup):
                 system.name = (system.name + ' (' + str(i) + ')')
                 list1.update({system.name : system.id})
             if(system.category == 'weapon'):
-                system.setTargetStr(0)
+                system.setTargetStr(-1)
                     #shipLookup[var.enemies[list(var.enemies.keys())[0]]].systemSlots[0])
 
 
@@ -97,7 +100,7 @@ def declareShipsTargets(var):
             ship.setTargetStr(list(var.players.keys())[0])
 
 
-def declareShips(var,config,events,shipLookup,uiElements,uiMetrics,root,canvas):
+def declareShips(var,config,events,shipLookup,uiElements,uiMetrics,root,canvas,multiplayerOptions):
 
         var.player = 0
         var.player2 = 0
@@ -152,10 +155,11 @@ def declareShips(var,config,events,shipLookup,uiElements,uiMetrics,root,canvas):
                 creationList[i].hp = int((config.get(configList[i], "hp")))
                 creationList[i].maxHp = int((config.get(configList[i], "hp")))
                 creationList[i].ap = int((config.get(configList[i], "ap")))
+                creationList[i].maxAp = int((config.get(configList[i], "ap")))
                 creationList[i].stance = ((config.get(configList[i], "stance")))
                 creationList[i].killed = False
             i+=1
-        checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas)
+        checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas,multiplayerOptions)
         
         var.player = creationList[0]
         var.ships.append(var.player)
@@ -181,7 +185,7 @@ def declareLandmarks(var,config):
                 else:
                     _visible = False
 
-                var.landmarks.append(naglowek.landmark( xPos = float(config.get(configList[i], "xPos")),
+                var.landmarks.append(settings.landmark( xPos = float(config.get(configList[i], "xPos")),
                 yPos = float(config.get(configList[i], "yPos")),
                 cooldown = float(config.get(configList[i], "cooldown")),
                 defaultCooldown = float(config.get(configList[i], "cooldown")),
@@ -238,17 +242,17 @@ def saveCurrentGame(var):
     config.write(hd)
     hd.close()
         #### wip
-def run(config,root,menuUiElements):
+def run(config,root,menuUiElements, multiplayerOptions):
  #   tracemalloc.start()
    # print(naglowek.combatUiReady)
-    if(naglowek.combatUiReady):
-        cinfo = naglowek.combatSystemInfo
-        naglowek.combatUiReady = False
-        for element in ((naglowek.combatSystemInfo).canvas).imageList :
+    if(settings.combatUiReady):
+        cinfo = settings.combatSystemInfo
+        settings.combatUiReady = False
+        for element in ((settings.combatSystemInfo).canvas).imageList :
             del element
-        del (naglowek.combatSystemInfo).canvas           
-        del (naglowek.combatSystemInfo).uiMetrics        
-        for element in ((naglowek.combatSystemInfo).uiElements).staticUi:
+        del (settings.combatSystemInfo).canvas           
+        del (settings.combatSystemInfo).uiMetrics        
+        for element in ((settings.combatSystemInfo).uiElements).staticUi:
             element.destroy()
         for element in (cinfo.var).playerShields:
             element.destroy()
@@ -327,10 +331,10 @@ def run(config,root,menuUiElements):
   #          except:
   #              break
     root.after_cancel("all")
-    resume(config,root,menuUiElements)
+    resume(config,root,menuUiElements, multiplayerOptions)
 # main
-def resume(config,root,menuUiElements):
-    if(not naglowek.combatUiReady):
+def resume(config,root,menuUiElements, multiplayerOptions):
+    if(not settings.combatUiReady):
         cwd = Path(sys.argv[0])
         cwd = str(cwd.parent)
         """
@@ -339,15 +343,16 @@ def resume(config,root,menuUiElements):
         root.attributes('-fullscreen', True)
         """
         #root.deiconify()
-        uiMetrics = naglowek.uiMetrics
-        var = naglowek.global_var(config,root)
-        gameRules = naglowek.game_rules()
+        uiMetrics = settings.uiMetrics
+        var = settings.global_var(config,root)
+        loadSounds(var)
+        gameRules = settings.game_rules()
         ammunitionType = ammunition_type()
-        uiIcons = naglowek.ui_icons()
+        uiIcons = settings.ui_icons()
         shipLookup = dict
-        events = naglowek._events()
-        uiElements = naglowek.dynamic_object()
-        uiElements.systemsLF = ttk.Labelframe(root,style = 'Grey.TLabelframe', text= "" + " systems",borderwidth=2, width=uiMetrics.canvasWidth)
+        events = settings._events()
+        uiElements = settings.dynamic_object()
+        uiElements.systemsLF = ttk.Labelframe(root,style = 'Green.TLabelframe', text= "" + " systems",borderwidth=2, width=uiMetrics.canvasWidth, height = uiMetrics.systemScalesLFHeight)
         uiElements.objectivesLF = ttk.Labelframe(root,style = 'Grey.TLabelframe', text= "Current objectives",borderwidth=2, width=uiMetrics.objectivesLFWidth,height = uiMetrics.objectivesLFHeight)
         uiElements.objectivesL = ttk.Label(uiElements.objectivesLF,style = 'Grey.TLabel',justify = "left", text= "")
         uiElements.objectivesL.config(text = config.get("Meta", "objectives", fallback = "Objective 1\nObjective 2\nObjective 3"))
@@ -377,14 +382,14 @@ def resume(config,root,menuUiElements):
             var.image = var.image.resize((uiMetrics.canvasWidth, uiMetrics.canvasHeight))
             var.imageMask = var.imageMask.resize((uiMetrics.canvasWidth, uiMetrics.canvasHeight))
       #  var.img = var.img.resize((uiMetrics.canvasWidth, uiMetrics.canvasHeight))
-        canvas = Canvas(root, width=uiMetrics.canvasWidth, height=uiMetrics.canvasHeight)
+        canvas = tk.Canvas(root, width=uiMetrics.canvasWidth, height=uiMetrics.canvasHeight,relief="raised")
         canvas.ovalList = []
         canvas.availableOvalList = []
         tmp = uiIcons.armorIcon 
         canvas.imageID = canvas.create_image(0,0,image = tmp)
         getZoomMetrics(var,uiMetrics)
         (uiElements.staticUi).append(canvas)
-        declareShips(var,config,events,shipLookup,uiElements,uiMetrics,root,canvas)
+        declareShips(var,config,events,shipLookup,uiElements,uiMetrics,root,canvas,multiplayerOptions)
         uiElements.rootTitle = (config.get("Root", "title"))
         fog = (config.get("Options", "fogOfWar"))
         if(fog == '0'):
@@ -392,7 +397,6 @@ def resume(config,root,menuUiElements):
         else:
             var.fogOfWar = True
 
-        root.title(uiElements.rootTitle)
 
         # Ships
         shipLookup = {
@@ -438,31 +442,41 @@ def resume(config,root,menuUiElements):
         uiElements.timeElapsedProgressBar = ttk.Progressbar(root, maximum=var.turnLength, variable=1,  orient='horizontal',
                                                 mode='determinate', length=uiMetrics.shipDataWidth)
 
-        uiElements.startTurnButton = tk.Button(root, text="Start turn", command=lambda:[startTurn(uiElements,var,var.ships,gameRules,uiMetrics)], width = 20, height= 7)
-        uiElements.exitButton = tk.Button(root, text="Exit", command=exit)
-        uiElements.exitToMenuButton = tk.Button(root, text="Exit to menu", command=lambda:[placeMenuUi(root,menuUiElements,uiMetrics), hideBattleUi(uiElements.staticUi,uiElements), finishSetTrue(var),saveCurrentGame(var)], width = 20, height= 7)
+        uiElements.startTurnBFrame = tk.Frame(root)
+        uiElements.exitToMenuBFrame = tk.Frame(root)
+        uiElements.startTurnBFrame.config(bg="#4582ec", width=200, height=200,padx=1)
+        uiElements.exitToMenuBFrame.config(bg="#4582ec", width=200, height=200,padx=1)
 
-        (uiElements.staticUi).append(uiElements.pausedL)
-        (uiElements.staticUi).append(uiElements.gameSpeedScale)
-        (uiElements.staticUi).append(uiElements.gameSpeedL)
-        (uiElements.staticUi).append(uiElements.timeElapsedLabel)
-        (uiElements.staticUi).append(uiElements.timeElapsedProgressBar)
-        (uiElements.staticUi).append(uiElements.startTurnButton)
-        (uiElements.staticUi).append(uiElements.exitButton)
-        (uiElements.staticUi).append(uiElements.exitToMenuButton)
-        (uiElements.staticUi).append(uiElements.objectivesLF)
+        uiElements.startTurnButton = tk.Button(uiElements.startTurnBFrame, text="Start turn", width = 20, height= 7, command=lambda:[startTurn(uiElements,var,var.ships,gameRules,uiMetrics,multiplayerOptions,root)])
+        uiElements.exitToMenuButton = tk.Button(uiElements.exitToMenuBFrame, text="Exit to menu", width = 20, height= 7, command=lambda:[placeMenuUi(root,menuUiElements,uiMetrics), hideBattleUi(uiElements.staticUi,uiElements), finishSetTrue(var),saveCurrentGame(var)])
+
+        uiElements.startTurnButton.config(background='#1a1a1a',fg="white",relief="ridge", font=('Calibri 10 normal'), highlightbackground="#4582ec")
+        uiElements.exitToMenuButton.config(background='#1a1a1a',fg="white",relief="ridge", font=('Calibri 10 normal'), highlightbackground="#4582ec")
+
+        uiElements.staticUi.append(uiElements.pausedL)
+        uiElements.staticUi.append(uiElements.gameSpeedScale)
+        uiElements.staticUi.append(uiElements.gameSpeedL)
+        uiElements.staticUi.append(uiElements.timeElapsedLabel)
+        uiElements.staticUi.append(uiElements.timeElapsedProgressBar)
+        uiElements.staticUi.append(uiElements.startTurnButton)
+        uiElements.staticUi.append(uiElements.exitToMenuButton)
+        uiElements.staticUi.append(uiElements.objectivesLF)
+
+        uiElements.staticUi.append(uiElements.startTurnBFrame)
+        uiElements.staticUi.append(uiElements.exitToMenuBFrame)
 
         for ship1 in var.ships:
             if(ship1.owner == "player1"):
                 putTracer(ship1,var,gameRules,uiMetrics)
 
-        uiElements.playerLF = ttk.Labelframe(root, style = 'Grey.TLabelframe',text = shipLookup[0].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
-        uiElements.playerLF2 = ttk.Labelframe(root, style = 'Grey.TLabelframe',text = shipLookup[1].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
-        uiElements.playerLF3 = ttk.Labelframe(root, style = 'Grey.TLabelframe',text = shipLookup[2].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
-        uiElements.enemyLF = ttk.Labelframe(root, style = 'Grey.TLabelframe',text = shipLookup[3].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
-        uiElements.enemyLF2 = ttk.Labelframe(root, style = 'Grey.TLabelframe',text = shipLookup[4].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
-        uiElements.enemyLF3 = ttk.Labelframe(root, style = 'Grey.TLabelframe',text = shipLookup[5].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
+        uiElements.playerLF = ttk.Labelframe(root,  text = shipLookup[0].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
+        uiElements.playerLF2 = ttk.Labelframe(root, text = shipLookup[1].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
+        uiElements.playerLF3 = ttk.Labelframe(root, text = shipLookup[2].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
+        uiElements.enemyLF = ttk.Labelframe(root,   text = shipLookup[3].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
+        uiElements.enemyLF2 = ttk.Labelframe(root,  text = shipLookup[4].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
+        uiElements.enemyLF3 = ttk.Labelframe(root,  text = shipLookup[5].name, height = uiMetrics.canvasHeight/5*2, width = uiMetrics.systemsLFWidth)
     
+
         var.playerShields = []
         var.playerShields2 = []
         var.playerShields3 = []
@@ -471,20 +485,21 @@ def resume(config,root,menuUiElements):
         var.enemyShields3 = []
 
         targets = [var.playerShields,var.playerShields2,var.playerShields3,var.enemyShields,var.enemyShields2,var.enemyShields3]
-        elements = [var.player,var.player2,var.player3,var.enemy,var.enemy2,var.enemy3]
+        ships = [var.player,var.player2,var.player3,var.enemy,var.enemy2,var.enemy3]
         labelframes = [uiElements.playerLF, uiElements.playerLF2, uiElements.playerLF3, uiElements.enemyLF,uiElements.enemyLF2, uiElements.enemyLF3]
-        for target,element,labelframe in zip(targets,elements,labelframes):
-            x = (element).maxShields
+        for target,ship1,labelframe in zip(targets,ships,labelframes):
+            
+            x = (ship1).maxShields
             n = 0
-            if(element.maxShields == 1):
+            if(ship1.maxShields == 1):
                 lenGap = 0
                 lenPro = 5
             else:
-                lenGap = (element.maxShields-1)
-                lenPro = (element.maxShields)*4
+                lenGap = (ship1.maxShields-1)
+                lenPro = (ship1.maxShields)*4
             lenTotal = lenGap + lenPro
             while(n < x):
-                target.append(ttk.Progressbar(labelframe, maximum=100, length = (((lenPro/lenTotal)/element.maxShields)*(uiMetrics.systemsLFWidth - 15)),variable=100))
+                target.append(ttk.Progressbar(labelframe, maximum=100, length = (((lenPro/lenTotal)/ship1.maxShields)*(uiMetrics.systemsLFWidth - 15)),variable=100))
                 n += 1
 
         for ship1 in var.ships:
@@ -500,16 +515,16 @@ def resume(config,root,menuUiElements):
         (var.enemy2).shieldsLabel = var.enemyShields2
         (var.enemy3).shieldsLabel = var.enemyShields3
 
-        (uiElements.tmpShieldsLabel) = []
-        (uiElements.tmpShieldsLabel).append(var.playerShields)
-        (uiElements.tmpShieldsLabel).append(var.playerShields2)
-        (uiElements.tmpShieldsLabel).append(var.playerShields3)
-        (uiElements.tmpShieldsLabel).append(var.enemyShields)
-        (uiElements.tmpShieldsLabel).append(var.enemyShields2)
-        (uiElements.tmpShieldsLabel).append(var.enemyShields3)        # create list of elements to disable if round is in progress
-        (uiElements.UIElementsList).append(uiElements.gameSpeedScale)
-        (uiElements.UIElementsList).append(uiElements.startTurnButton)
-        (uiElements.UIElementsList).append(uiElements.exitToMenuButton)
+        uiElements.tmpShieldsLabel = []
+        uiElements.tmpShieldsLabel.append(var.playerShields)
+        uiElements.tmpShieldsLabel.append(var.playerShields2)
+        uiElements.tmpShieldsLabel.append(var.playerShields3)
+        uiElements.tmpShieldsLabel.append(var.enemyShields)
+        uiElements.tmpShieldsLabel.append(var.enemyShields2)
+        uiElements.tmpShieldsLabel.append(var.enemyShields3)        # create list of elements to disable if round is in progress
+        uiElements.UIElementsList.append(uiElements.gameSpeedScale)
+      #  (uiElements.UIElementsList).append(uiElements.startTurnButton)
+       # (uiElements.UIElementsList).append(uiElements.exitToMenuButton)
 
       #  (uiElements.staticUi).append(uiElements.systemsLabelFrame)
 
@@ -546,11 +561,12 @@ def resume(config,root,menuUiElements):
             target.append(ttk.Label(targetLF, style='Grey.TLabel', text = str(shipLookup[shipID].ap)))
             target.append(ttk.Label(targetLF, style='Grey.TLabel', text = ""))
 
-            target.append(ttk.Label(targetLF, style='Grey.TLabel', text = "System: "))
-            target.append(ttk.Label(targetLF, style='Grey.TLabel', text = "Readiness: "))
-            target.append(ttk.Label(targetLF, style='Grey.TLabel', text = "Integrity: "))
-            target.append(ttk.Label(targetLF, style='Grey.TLabel', text = "Heat: "))
-            target.append(ttk.Label(targetLF, style='Grey.TLabel', text = "Energy: "))
+            target.append(ttk.Label(targetLF, style='Grey.TLabel', text = "System"))
+            target.append(ttk.Label(targetLF, style='Grey.TLabel', text = "Reload"))
+            target.append(ttk.Label(targetLF, style='Grey.TLabel', text = "Integrity"))
+            target.append(ttk.Label(targetLF, style='Grey.TLabel', text = "Heat"))
+            target.append(ttk.Label(targetLF, style='Grey.TLabel', text = "Energy"))
+            target.append(ttk.Label(targetLF, style='Grey.TLabel', text = ""))
             for element in shipLookup[shipID].systemSlots:
                 system = shipLookup[shipID].systemSlots[i]
                 target.append(ttk.Label(targetLF, style='Grey.TLabel', text = system.name))
@@ -558,6 +574,13 @@ def resume(config,root,menuUiElements):
                 target.append(ttk.Label(targetLF, style='Grey.TLabel', text = str(system.integrity)))
                 target.append(ttk.Label(targetLF, style='Grey.TLabel', text = str(system.heat)))
                 target.append(ttk.Label(targetLF, style='Grey.TLabel', text = str(system.energy)))
+                af = tk.Frame(targetLF)
+                af.config(bg="#4582ec", width=1, height=1,padx=1)
+                a = tk.Button(af, text = '?')
+                a.config(background='#1a1a1a',fg="white",relief="ridge", font=('Calibri 9 normal'), width = 2, height = 1)
+                a.bind("<Button-1>", system.showInfo)
+                a.pack()
+                target.append(af)
                 (uiElements.staticUi).append(target[i])
                 i+=1
             shipID += 1
@@ -571,7 +594,7 @@ def resume(config,root,menuUiElements):
 
         # ships choice
         var.shipChoiceRadioButtons = []
-        radioCommand = partial(radioBox,shipLookup , uiElements,var,uiMetrics,root,canvas,uiElements.UIElementsList)
+        radioCommand = partial(radioBox,shipLookup , uiElements,var,uiMetrics,root,canvas,uiElements.UIElementsList,multiplayerOptions)
         var.shipChoice = (var.player).name
 
         (uiElements.RadioElementsList).append(ttk.Radiobutton(root, style = "Grey.TRadiobutton", text=(shipLookup[0]).name, variable=var.radio, value=0, command=radioCommand))
@@ -590,32 +613,51 @@ def resume(config,root,menuUiElements):
         (uiElements.staticUi).append(uiElements.RadioElementsList[1])
         (uiElements.staticUi).append(uiElements.RadioElementsList[2])
 
-        radioBox(shipLookup,uiElements,var,uiMetrics,root,canvas,uiElements.UIElementsList)
-        bindInputs(root,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,config,menuUiElements)
+        radioBox(shipLookup,uiElements,var,uiMetrics,root,canvas,uiElements.UIElementsList,multiplayerOptions)
+        bindInputs(root,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,config,menuUiElements, multiplayerOptions)
         
+        atexit.register(onExit,var)
+        
+        uiElements.playerLF.bind("<Button-1>", lambda e: (var.radio.set(0), radioCommand()))
+        uiElements.playerLF2.bind("<Button-1>", lambda e: (var.radio.set(1), radioCommand()))
+        uiElements.playerLF3.bind("<Button-1>", lambda e: (var.radio.set(2), radioCommand()))
+
+        for child in uiElements.playerLF.winfo_children():
+            if(not isinstance(child, ttk.Button) and not isinstance(child, ttk.Frame) and not isinstance(child, tk.Button) and not isinstance(child, tk.Frame)):
+                child.bind("<Button-1>", lambda e: (var.radio.set(0), radioCommand()))
+        for child in uiElements.playerLF2.winfo_children():
+            if(not isinstance(child, ttk.Button) and not isinstance(child, ttk.Frame) and not isinstance(child, tk.Button) and not isinstance(child, tk.Frame)):
+                child.bind("<Button-1>", lambda e: (var.radio.set(1), radioCommand()))
+        for child in uiElements.playerLF3.winfo_children():
+            if(not isinstance(child, ttk.Button) and not isinstance(child, ttk.Frame) and not isinstance(child, tk.Button) and not isinstance(child, tk.Frame)):
+                child.bind("<Button-1>", lambda e: (var.radio.set(2), radioCommand()))
+            
         # first update 
 
-        checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas)
+        checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas,multiplayerOptions)
         detectionCheck(var,uiMetrics)
-        endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons,shipLookup,root)
+        endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons,shipLookup,root,multiplayerOptions)
+        manageLandmarks(var.landmarks, var.ships,uiMetrics,events)
         newWindow(uiMetrics,var,canvas,root)
         updateLabels(uiElements,shipLookup,var,root)
 
-        (naglowek.combatSystemInfo).canvas = canvas
-        (naglowek.combatSystemInfo).uiMetrics = uiMetrics
-        (naglowek.combatSystemInfo).var = var
-        (naglowek.combatSystemInfo).gameRules = gameRules
-        (naglowek.combatSystemInfo).ammunitionType = ammunitionType
-        (naglowek.combatSystemInfo).uiIcons = uiIcons
-        (naglowek.combatSystemInfo).shipLookup = shipLookup
-        (naglowek.combatSystemInfo).events = events
-        (naglowek.combatSystemInfo).uiElements = uiElements
-        (naglowek.combatSystemInfo).canvas = canvas
-        (naglowek.combatSystemInfo).uiElementsToPlace = uiElementsToPlace
-        naglowek.combatUiReady = True
-        naglowek.loadingCombat = False
+        (settings.combatSystemInfo).canvas = canvas
+        (settings.combatSystemInfo).uiMetrics = uiMetrics
+        (settings.combatSystemInfo).var = var
+        (settings.combatSystemInfo).gameRules = gameRules
+        (settings.combatSystemInfo).ammunitionType = ammunitionType
+        (settings.combatSystemInfo).uiIcons = uiIcons
+        (settings.combatSystemInfo).shipLookup = shipLookup
+        (settings.combatSystemInfo).events = events
+        (settings.combatSystemInfo).uiElements = uiElements
+        (settings.combatSystemInfo).canvas = canvas
+        (settings.combatSystemInfo).uiElementsToPlace = uiElementsToPlace
+        settings.combatUiReady = True
+        settings.loadingCombat = False
+        root.title((settings.combatSystemInfo).uiElements.rootTitle)
     else:
-        ((naglowek.combatSystemInfo).var).finished = False
-        ((naglowek.combatSystemInfo).uiElements).systemsLF = ttk.Labelframe(root,text= "" + " systems",borderwidth=2,style='Grey.TLabelframe.Label')
-        updateBattleUi((naglowek.combatSystemInfo).shipLookup,(naglowek.combatSystemInfo).uiMetrics,(naglowek.combatSystemInfo).var,root,(naglowek.combatSystemInfo).uiElements,(naglowek.combatSystemInfo).canvas,(naglowek.combatSystemInfo).uiElements.UIElementsList)
-    update((naglowek.combatSystemInfo).var,(naglowek.combatSystemInfo).uiElements,(naglowek.combatSystemInfo).uiMetrics,(naglowek.combatSystemInfo).uiIcons,(naglowek.combatSystemInfo).canvas,(naglowek.combatSystemInfo).events,(naglowek.combatSystemInfo).shipLookup,(naglowek.combatSystemInfo).gameRules,(naglowek.combatSystemInfo).ammunitionType,root,config,menuUiElements)
+        ((settings.combatSystemInfo).var).finished = False
+        ((settings.combatSystemInfo).uiElements).systemsLF = ttk.Labelframe(root,text= "" + " systems",borderwidth=2,style='Grey.TLabelframe.Label')
+        root.title((settings.combatSystemInfo).uiElements.rootTitle)
+        updateBattleUi((settings.combatSystemInfo).shipLookup,(settings.combatSystemInfo).uiMetrics,(settings.combatSystemInfo).var,root,(settings.combatSystemInfo).uiElements,(settings.combatSystemInfo).canvas,(settings.combatSystemInfo).uiElements.UIElementsList, multiplayerOptions)
+    update((settings.combatSystemInfo).var,(settings.combatSystemInfo).uiElements,(settings.combatSystemInfo).uiMetrics,(settings.combatSystemInfo).uiIcons,(settings.combatSystemInfo).canvas,(settings.combatSystemInfo).events,(settings.combatSystemInfo).shipLookup,(settings.combatSystemInfo).gameRules,(settings.combatSystemInfo).ammunitionType,root,config,menuUiElements, multiplayerOptions)
