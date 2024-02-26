@@ -56,19 +56,19 @@ if __name__ == '__main__':
     
     uiMenuElements = dynamic_object()
     uiMenuElementsList = []
-    resumeButtonCommand = partial(resume,config,root,uiMenuElements)
+    resumeButtonCommand = partial(resume,config,root,uiMenuElements,root)
     quickBattleCommand1 = partial(run,config,root,uiMenuElements)
     shipEditorCommand = partial(shipEditor,root,config,uiMenuElements,uiMetrics,uiMenuElements)
     hideUiCommand = partial(hideMenuUi,uiMenuElementsList)
     missionSelect1 =  partial(missionSelectScreen,root,config,uiMenuElements,uiMetrics)
     customGameCommand =  partial(customGame,root,config,uiMenuElements,uiMetrics)
 
-    resumeButton = tk.Button(text = "Resume", width = 17, height = 2,   font=('Optima',11), state = DISABLED, command = lambda:[resumeButtonCommand(),hideUiCommand()])
-    quickBattleButton = tk.Button(text = "Quick battle", width = 17, height = 2, font=('Optima',11),   command = lambda:[hideUiCommand(),quickBattleCommand1()])
+    resumeButton =        tk.Button(text = "Resume", width = 17, height = 2,   font=('Optima',11), state = DISABLED, command = lambda:[resumeButtonCommand(),hideUiCommand()])
+    quickBattleButton =   tk.Button(text = "Quick battle", width = 17, height = 2, font=('Optima',11),   command = lambda:[hideUiCommand(),quickBattleCommand1()])
     missionSelectButton = tk.Button(text = "Mission select", width = 17, height = 2, font=('Optima',11),   command = lambda:[hideUiCommand(),missionSelect1()])
-    shipEditorButton = tk.Button(text = "Ships Editor", width = 17, height = 2,  font=('Optima',11),  command = lambda:[hideUiCommand(),shipEditorCommand()])
-    customGameButton = tk.Button(text = "Custom Game", width = 17, height = 2,  font=('Optima',11),  command = lambda:[hideUiCommand(),customGameCommand()])
-    exitButton = tk.Button(text = "Exit", width = 17, height = 2,  font=('Optima',11),  command = exit)
+    shipEditorButton =    tk.Button(text = "Ships Editor", width = 17, height = 2,  font=('Optima',11),  command = lambda:[hideUiCommand(),shipEditorCommand()])
+    customGameButton =    tk.Button(text = "Custom Game", width = 17, height = 2,  font=('Optima',11),  command = lambda:[hideUiCommand(),customGameCommand()])
+    exitButton =          tk.Button(text = "Exit", width = 17, height = 2,  font=('Optima',11),  command = exit)
 
     uiMenuElements.resumeButton = resumeButton
     uiMenuElements.quickBattleButton = quickBattleButton

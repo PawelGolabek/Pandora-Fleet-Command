@@ -3,7 +3,8 @@ import time
 import math
 from threading import Thread
 
-from src.shipCombat import tracer, rotateVector
+from src.shipCombat import rotateVector
+from src.tracer import tracer
 
 
 def checkForCollision(currentTracer,gameRules,var,uiMetrics,colorWeight,currentOrderValue):
@@ -89,8 +90,6 @@ class aiController():
             (ship.systemSlots[choiceNumber]).energy += 1
             energy-=1
        
-
-       
     def dijstraFill(maskMap,uiMetrics,var):
         prec = var.PFprecision
         ySpan = math.ceil(uiMetrics.canvasHeight/prec)
@@ -103,21 +102,26 @@ class aiController():
                     # precise point of interest on player
                     newMaskMap[round(signature.yPos / prec)][round(signature.xPos / prec)] = int(prec*2/3) 
                     # imprecise points of interest to make it more interesting
-                    newMaskMap[round(signature.yPos + 50 / prec)%(ySpan)][round(signature.xPos + 50 / prec)%(xSpan+1)] = int(prec*2/3) 
-                    newMaskMap[round(signature.yPos / prec)%(ySpan)][round(signature.xPos / prec)%(xSpan+1)] = int(prec*2/3)
-                    newMaskMap[round(signature.yPos - 50 / prec)%(ySpan)][round(signature.xPos - 50 / prec)%(xSpan+1)] = int(prec*2/3)
-                    newMaskMap[round(signature.yPos / prec)%(ySpan)][round(signature.xPos / prec)%(xSpan+1)] = int(prec*2/3)
+              #      newMaskMap[round(signature.yPos + 50 / prec)%(ySpan)][round(signature.xPos + 50 / prec)%(xSpan+1)] = int(prec*1/3) 
+              #      newMaskMap[round(signature.yPos / prec)%(ySpan)][round(signature.xPos / prec)%(xSpan+1)] = int(prec*1/3)
+              #      newMaskMap[round(signature.yPos - 50 / prec)%(ySpan)][round(signature.xPos - 50 / prec)%(xSpan+1)] = int(prec*1/3)
+              #      newMaskMap[round(signature.yPos / prec)%(ySpan)][round(signature.xPos / prec)%(xSpan+1)] = int(prec*1/3)
+              # is it worth it? ai becomes a bit too stupid on big planet maps
+        for landmark in var.landmarks:
+            if(landmark.owner == 'player1'):
+                newMaskMap[round(landmark.yPos / prec)][round(landmark.xPos / prec)] = math.floor(prec/5)
 
         for ship in var.ships:          #place player markers
-            if(ship.owner == "player1" and ship.visible
-            ):
+            if(ship.owner == "player1" and ship.visible):
                 newMaskMap[round(ship.yPos / prec)][round(ship.xPos / prec)] = prec
-        i = math.floor(prec/2)
-        while(i):           #spread player markers
+            if(ship.owner == "ai1"):
+                newMaskMap[round(ship.moveOrderY / prec)][round(ship.moveOrderX / prec)] =  - prec      # so they don't group on 'best' routes 
+        i = math.floor(prec/2)                                                                          # and spread out  
+        while(i > -prec):           #spread player markers
             idElem = 0
             for element in newMaskMap:
                 idElemX = 0
-                for elementX in element:
+                for elementX in element:        # spread around edges
                     adj1Y = 0
                     adj2X = 0
                     adj3Y = 0
@@ -130,38 +134,17 @@ class aiController():
                         adj3Y = idElem+1
                     if(idElemX-1 > 0):
                         adj4X = idElemX-1
-                  #  print(str(adj1Y) + " "  + str(idElemX))
-                  #  print((adj3Y))
                     if(newMaskMap[adj1Y][idElemX] < elementX):
                         newMaskMap[adj1Y][idElemX] = elementX - 1
-#
                     if(newMaskMap[idElem][adj2X] < elementX):
                         newMaskMap[idElem][adj2X] = elementX - 1
-#
                     if(newMaskMap[adj3Y][idElemX] < elementX):
                         newMaskMap[adj3Y][idElemX] = elementX - 1
-
                     if(newMaskMap[idElem][adj4X] < elementX):
                         newMaskMap[idElem][adj4X] = elementX - 1
                     idElemX += 1
                 idElem += 1
-           # print("next")
             i -= 1
-        
-                    
-
-    #   if(colorWeight < 600 and colorWeight > 400):
-    #       movementPenality = gameRules.movementPenalityMedium
-    #   elif(colorWeight < 400 and colorWeight > 200):
-    #       movementPenality = gameRules.movementPenalityMedium
-    #       currentOrderValue -= 400
-    #   elif(colorWeight <= 200):
-    #       movementPenality = gameRules.movementPenalityHard
-    #       currentOrderValue -= 4000
-    #   maskMap
-
-        # make it for players ( prec - )
-        # make it for obstacles 9-8 (2 fase)
         return newMaskMap
 
     def moveOrderChoice(ship,ships,var,gameRules,uiMetrics):
@@ -257,7 +240,6 @@ def oldOrderChoice(ship,ships,var,gameRules,uiMetrics):
     bestOrderY = 100    #default if everything else fails
     bestOrderValue = float('-inf')
     maskMap = aiController.dijstraFill(var.mask,uiMetrics,var) # change for dijkstra filled map
-    #   print(var.PFMask)
     while(checksLeft):
         currentOrderValue = random.randint(19000, 21000)
         currentOrderX = ship.xPos + random.randint(-200, 200)
@@ -272,13 +254,11 @@ def oldOrderChoice(ship,ships,var,gameRules,uiMetrics):
         currentTracer.speed = ship.speed
         currentTracer.moveOrderX = currentOrderX
         currentTracer.moveOrderY = currentOrderY
-        currentTracer.ttl = var.turnLength + 800 # +200 to avoid unavoidable collisions next turn
+        currentTracer.ttl = var.turnLength + 800 # 800 to avoid unavoidable collisions next turn
         
         while(True):
             # check for terrain
             if(currentTracer.ttl % 5 == 0):
-            #    print("mask" + str(len(maskMap)))
-            #    print(str(int(math.floor(currentTracer.xPos/var.PFprecision))) + " " + str(int(math.floor(currentTracer.yPos/var.PFprecision))))
                 colorWeight = maskMap[int(math.floor(currentTracer.yPos/var.PFprecision))][int(math.floor(currentTracer.xPos/var.PFprecision))]
             # vector normalisation
             scale = math.sqrt((currentTracer.moveOrderX-currentTracer.xPos)*(currentTracer.moveOrderX-currentTracer.xPos) +

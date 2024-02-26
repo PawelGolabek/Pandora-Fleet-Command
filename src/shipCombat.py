@@ -8,18 +8,8 @@ from src.ammunitionType import *
 from src.colorCommands import rgbtohex
 from src.rootCommands import *
 import src.endConditions as endConditions
+import src.tracer as tracer
 
-
-class tracer():
-    def __init__(self, xPos=300, yPos=300, xDir=0.0, yDir=1.0, turnRate=0.5, speed=40): 
-        self.xPos = xPos
-        self.yPos = yPos
-        self.xDir = xDir
-        self.yDir = yDir
-        self.turnRate = turnRate
-        self.speed = speed
-        self.moveOrderX = None
-        self.moveOrderY = None
 
 
 def updateLabel(uiElements,shipLookup,var,shipId):
@@ -35,19 +25,10 @@ def updateLabel(uiElements,shipLookup,var,shipId):
         uiElements.systemLFs[shipCounter].config(style = 'Grey.TLabelframe')
     if(not shipLookup[shipCounter].owner == 'player1'):
         uiElements.systemLFs[shipCounter].config(style = 'DarkRed.TLabelframe')
-        
-  #  targetLabel[0].config(text = "Hull: " )
+
     targetLabel[1].config(text = str(shipLookup[shipCounter].hp))
-  #  targetLabel[2].config(text = "Armor: " )
     targetLabel[3].config(text = str(shipLookup[shipCounter].ap)) 
-  #  targetLabel[4].config(text = "") 
-#
-  #  targetLabel[5].config(text = "System: ")
-  #  targetLabel[6].config(text = "Readiness: ")
-  #  targetLabel[7].config(text = "Integrity: ")
-  #  targetLabel[8].config(text = "Heat: ")
-  #  targetLabel[9].config(text = "Energy: ")
-#
+
     j = 10
     for i, system in enumerate(shipLookup[shipCounter].systemSlots):
         if(time.time() - t0 > 1):
@@ -98,9 +79,6 @@ def updateLabel(uiElements,shipLookup,var,shipId):
         targetLabel[j+2].config(text = str(integrity))
         targetLabel[j+3].config(text = str(heat))
         targetLabel[j+4].config(text = str(system.energy))
-     #   targetLabel[j+2].config(anchor = E)
-     #   targetLabel[j+3].config(anchor = E)
-     #   targetLabel[j+4].config(anchor = E)
         i += 1
         j += 5
     return 0
@@ -177,7 +155,6 @@ def detectionCheck(globalVar,uiMetrics):
                     distance = abs((ship.xPos-element.x)*(ship.xPos-element.x) +
                                     (ship.yPos-element.y)*(ship.yPos-element.y))
                     if(distance < ship2.detectionRange * ship2.detectionRange):
-                   #     print(str(element.x) + " " + str(element.y) + " " + str(ship.id) + " " + str(ship2.id) + " " + str(distance))
                         ship.visible = True
                         break
        
@@ -210,7 +187,7 @@ def updateSignatures(ships):
 def putTracer(ship,var,gameRules,uiMetrics): # rotate and move the chosen ship
     if(ship.owner == 'player1' and ship.killed == False):
         ship.ghostPoints = []
-        currentTracer = naglowek.tracer()
+        currentTracer = tracer.tracer()
         currentTracer.xPos = ship.xPos
         currentTracer.yPos = ship.yPos
         currentTracer.xDir = ship.xDir
@@ -238,7 +215,7 @@ def putTracer(ship,var,gameRules,uiMetrics): # rotate and move the chosen ship
             elif(colorWeight < 200):
                 movementPenality = gameRules.movementPenalityHard
             else:
-                movementPenality = 0.000001  # change
+                movementPenality = 0.000001  # so no division by 0. Minimal friction in vacuum
 
             xVector = currentTracer.xDir*currentTracer.speed/360
             yVector = currentTracer.yDir*currentTracer.speed/360
@@ -259,8 +236,7 @@ def putTracer(ship,var,gameRules,uiMetrics): # rotate and move the chosen ship
             currentTracer.ttl -= 1
         del currentTracer
          
-def updateLabels(uiElements,shipLookup,var):
-# Create two threads as follows
+def updateLabels(uiElements,shipLookup,var,root):
     updateLabel(uiElements,shipLookup,var,0)
     i = 0
     n = 6
@@ -272,11 +248,6 @@ def updateLabels(uiElements,shipLookup,var):
     for t in t1:
         t.start()
     i = 0
-  # for t in t1:
-  #     print("done")
-  #     t.join()
-  #     i+=1
-
 
 
 def rotateVector(degree, object, moveDirX, moveDirY):
@@ -293,7 +264,6 @@ def rotateVector(degree, object, moveDirX, moveDirY):
         object.yDir = math.sin((degree/360)*math.pi)*object.xDir + \
             math.cos((degree/360)*math.pi)*object.yDir
     scale = math.sqrt(abs(object.xDir*object.xDir+object.yDir*object.yDir))
-    # move direction into normalised vector
     if(scale != 0):
         object.xDir = object.xDir / scale
         object.yDir = object.yDir / scale
@@ -425,7 +395,6 @@ def checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas):
 
 
 def killShip(shipId,var,events,shipLookup,uiElements,uiMetrics,root,canvas):
-    #print(shipId)
     ship1 = shipLookup[shipId]
     shipLookup[shipId].visible = False
     shipLookup[shipId].killed = True
@@ -473,7 +442,7 @@ def killShip(shipId,var,events,shipLookup,uiElements,uiMetrics,root,canvas):
         if(not choiceMade):
             var.shipChosen = 10
 
-        ### elimination win condition to put in another file later
+        ### elimination win condition to put in another file later if needed
     endConditions.killedShips(var,events)
     for element in var.ships:
         if element.id == shipId:
@@ -497,11 +466,9 @@ def updateShips(var,uiMetrics,gameRules,shipLookup,events,uiElements,root,canvas
         if(ship.yPos > uiMetrics.canvasHeight):
             ship.yPos -= uiMetrics.canvasHeight
         colorWeight = var.mask[int(ship.xPos)][int(ship.yPos)]
-        #canvas.create_text(ship.xPos, ship.yPos + 10, anchor=W,font=("Purisa", 8+globalVar.zoom), text=colorWeight, fill="white")  # draw name
         # vector normalisation
         scale = math.sqrt((ship.moveOrderX-ship.xPos)*(ship.moveOrderX-ship.xPos) +
                             (ship.moveOrderY-ship.yPos)*(ship.moveOrderY-ship.yPos))
-
         # move order into normalised vector
         moveDirX = -(ship.xPos-ship.moveOrderX) / scale
         moveDirY = -(ship.yPos-ship.moveOrderY) / scale
@@ -517,7 +484,7 @@ def updateShips(var,uiMetrics,gameRules,shipLookup,events,uiElements,root,canvas
             dealDamage(shipLookup[ship.id], 1, var,-1, 1,uiElements,shipLookup,root,events)
             checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas)
         else:
-            movementPenality = 0.000001  # change
+            movementPenality = 0.000001  # avoid division by 0. Minimal friction in vacuum 
 
         xVector = ship.xDir*ship.speed/360
         yVector = ship.yDir*ship.speed/360

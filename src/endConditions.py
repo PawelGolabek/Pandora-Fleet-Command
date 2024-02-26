@@ -1,6 +1,10 @@
 from tkinter import *
 import tkinter.ttk as ttk
+from functools import partial
+
+import time
 import src.loadGame as loadGame
+import src.naglowek as naglowek
 
 def killedShips(var,events):
     noEnemies = True
@@ -93,10 +97,27 @@ def foundLandmarks(var,events):
                 noInvisibleLandmarks = False
                 break
         if (noInvisibleLandmarks and not gameEnded):
-            var.wonBySeeingLandmarks = True 
+            var.wonBySeeingLandmarks = True
 
 
-def showWin(var,events):
+def dominatedLandmarks(var,events):
+    gameEnded = ((events.showedLoose) or events.showedWin)
+    if(var.winByDomination):
+        noOwnedLandmarks = True
+        allOwnedLandmarks = True
+        for landmark in var.landmarks:
+            if(landmark.boost == 'control'):
+                if(landmark.owner == 'player1' or landmark.owner == 'none'):
+                    noOwnedLandmarks = False
+                if(landmark.owner == 'ai1' or landmark.owner == 'none'):
+                    allOwnedLandmarks = False
+        if (noOwnedLandmarks and not gameEnded):
+            var.lostByDomination = True
+        if (allOwnedLandmarks and not gameEnded):
+            var.wonByDomination = True
+
+
+def showWin(var,events,config,root,menuUiElements):
     gameEnded = ((events.showedLoose) or events.showedWin)
 
     arr = [var.winByEliminatingPlayer, var.winByEliminatingEnemy \
@@ -147,19 +168,27 @@ def showWin(var,events):
             disWin = False
             break
 
-    landmarkWin = var.wonBySeeingLandmarks or not var.winBySeeingLandmarks
+    landmarkWin = (var.wonBySeeingLandmarks or not var.winBySeeingLandmarks) and (var.wonByDomination or not var.winByDomination)
     if((disWin and elimWin and landmarkWin) and not gameEnded):
         window = Toplevel()
-        window.config(bg="#202020", width = 600, height = 600)
         label = ttk.Label(window, style = "Grey.TLabel", text='You Won\n\n'+ var.winMessage+'\n\nPress "Exit to Menu" to continue')
         label.config(justify='center')
         label.pack()
+        window.config(bg="#202020")
+        window.minsize(300,300)
         events.showedWin = True
 
+def buttonCommand(label,config,root,menuUiElements,window):
+    label.config(text= "Loading ...")
+    window.minsize(300,300)
+    root.update()
+    window.config(bg="#202020")
+    window.minsize(300,300)
+    loadGame.run(config,root,menuUiElements)
+    window.destroy()
 
-def showLoose(var,events):
+def showLoose(var,events,config,root,menuUiElements):
     gameEnded = ((events.showedLoose) or events.showedWin)
-
 
     arr = [var.looseByEliminatingPlayer, var.looseByEliminatingEnemy \
     ,var.looseByEliminating0
@@ -206,11 +235,14 @@ def showLoose(var,events):
             break
 
     if((disLoose or elimLoose) and not gameEnded):
+        naglowek.combatUiReady = False
         window = Toplevel()
-        window.config(bg="#202020", width = 600, height = 600)
-        label = ttk.Label(window, style = "Grey.TLabel", text='You Lost\n\n'+ var.looseMessage+'\n\nPress "Exit to Menu" to continue')
+        window.config(bg="#202020")
+        window.minsize(300,300)
+        label = ttk.Label(window, style = "Grey.TLabel", text='You Lost\n\n'+ var.looseMessage+'\n\n')
         label.config(justify='center')
         label.pack()
-        button = ttk.Button(window, style = "Grey.TButton", text='Replay',command = loadGame.run())
+        buttonCommand1 = partial(buttonCommand,label,config,root,menuUiElements,window)
+        button = ttk.Button(window, style = "Grey.TButton", text='Replay',command = lambda:[buttonCommand1()])
+        button.pack()
         events.showedLoose = True
-

@@ -18,14 +18,15 @@ def pauseGame(e,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRu
 
 def startTurn(uiElements,var,ships,gameRules,uiMetrics):
     if(not var.turnInProgress):
-        print("New Round")
+        if(var.debugging):
+            print("New Round")
         var.turnInProgress = True
         uiElements.timeElapsedProgressBar['value'] = 0
         for object in uiElements.UIElementsList:
-            object.config(state=ttk.DISABLED, background="#D0D0D0")
+            object.config(state=tk.DISABLED, background="#D0D0D0")
         for object in uiElements.RadioElementsList:
-            object.config(state=ttk.DISABLED)
+            object.config(state=tk.DISABLED)
         for object in uiElements.uiSystems:
-            object.config(state = ttk.DISABLED, background="#D0D0D0")
+            object.config(state = tk.DISABLED, background="#D0D0D0")
         for object in var.uiSystemsAS:
-            object.config(state = ttk.DISABLED, style = 'Disabled.TCheckbutton')
+            object.config(state = tk.DISABLED, style = 'Disabled.TCheckbutton')

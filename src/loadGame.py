@@ -15,17 +15,35 @@ from tkinter.filedialog import askopenfilename
 
 from src.ship import ship
 from src.update import *
-from src.inputs import *
 from src.turnManagers import *
 
-def dragging(event,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root):
-    if event.widget is root:
-        if not var.drag == '':
-            root.after_cancel(var.drag)
-        var.drag = root.after(100, partial(stop_drag,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root))
+def declareTargets(var):
+    list1 = {}
+    list2 = {}
+    i = 2
+    for ship in var.ships:
+        if(not ship.owner == 'player1'):
+            if(not ship.name in list1):
+                list1.update({ship.name : ship.id})
+            else:
+                while((ship.name + ' (' + str(i) + ')') in list1):
+                    i+=1
+                ship.name = (ship.name + '(' + str(i) + ')')
+                list1.update({ship.name : ship.id})
+    i = 2
+    for ship in var.ships:
+        if(ship.owner == 'player1'):
+            if(not ship.name in list2):
+                list2.update({ship.name : ship.id})
+            else:
+                while((ship.name + ' (' + str(i) + ')') in list2):
+                    i+=1
+                ship.name = (ship.name + ' (' + str(i) + ')')
+                list2.update({ship.name : ship.id})
 
+    return list1,list2
 
-def bindInputs(root,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType):
+def bindInputs(root,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,config,menuUiElements):
     root.bind('<Motion>', lambda e: motion(e, var,root))
     root.bind('<Button-1>', lambda e: mouseButton1(e, var))
     root.bind('<space>', lambda e: startTurn(uiElements,var,var.ships,gameRules,uiMetrics))
@@ -33,7 +51,7 @@ def bindInputs(root,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,ga
     root.bind('<Button-2>', lambda e: mouseButton3(e, var))
     root.bind('<ButtonRelease-2>', lambda e: mouseButton3up(e, var))
     root.bind('<MouseWheel>', lambda e: mouseWheel(e, var,uiMetrics))
-    root.bind('<Configure>', lambda e: dragging(e,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root))
+    root.bind('<Configure>', lambda e: dragging(e,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root,config,menuUiElements))
 
 ######################################################### MAIN ####################################
 
@@ -141,8 +159,7 @@ def declareLandmarks(var,config):
         i=0
         while (i < 8):
             if(config.has_section(configList[i])):
-
-                if(config.get(configList[i], "visible") == 0):
+                if(config.get(configList[i], "visible") == '1'):
                     _visible = True
                 else:
                     _visible = False
@@ -269,6 +286,9 @@ def resume(config,root,menuUiElements):
         uiElements.staticUi = []
         uiIcons.armorIcon = PhotoImage(file=os.path.join(cwd, "icons","armor.png"))
         uiIcons.spotterIcon = PhotoImage(file=os.path.join(cwd, "icons","spotter.png"))
+        uiIcons.controlIconP = PhotoImage(file=os.path.join(cwd, "icons","controlP.png"))
+        uiIcons.controlIconE = PhotoImage(file=os.path.join(cwd, "icons","controlE.png"))
+        uiIcons.controlIconN = PhotoImage(file=os.path.join(cwd, "icons","controlN.png"))
 
         # canvas
         var.image = PIL.Image.open(os.path.join(cwd, config.get("Images", "img")))
@@ -324,7 +344,7 @@ def resume(config,root,menuUiElements):
         var.resizedImage = var.image
         canvas.imageList = []
         canvas.elements = []
-        newWindow(uiMetrics,var,canvas)
+        newWindow(uiMetrics,var,canvas,root)
         # item with background to avoid python bug people were mentioning about disappearing non-anchored images
 
         canvas.imageList.append(var.image)
@@ -491,6 +511,17 @@ def resume(config,root,menuUiElements):
             else:
                 var.winBySeeingLandmarks = True
 
+        if config.has_option('Meta', 'winByDomination'):
+            if config.get("Meta", "winByDomination") == "0":
+                var.winByDomination = False
+            else:
+                var.winByDomination = True
+        if config.has_option('Meta', 'looseByDomination'):
+            if config.get("Meta", "looseByDomination") == "0":
+                var.looseByDomination = False
+            else:
+                var.looseByDomination = True
+
         var.winMessage = config.get("Meta", "winMessage")
         
         (uiElements.gameSpeedScale).set(8)
@@ -652,15 +683,15 @@ def resume(config,root,menuUiElements):
         (uiElements.staticUi).append(uiElements.RadioElementsList[2])
 
         radioBox(shipLookup,uiElements,var,uiMetrics,root,canvas)
-        bindInputs(root,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType)
+        bindInputs(root,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,config,menuUiElements)
         
         # first update 
 
         checkForKilledShips(events,shipLookup,var,uiElements,uiMetrics,root,canvas)
         detectionCheck(var,uiMetrics)
         endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons,shipLookup,root)
-        newWindow(uiMetrics,var,canvas)
-        updateLabels(uiElements,shipLookup,var)
+        newWindow(uiMetrics,var,canvas,root)
+        updateLabels(uiElements,shipLookup,var,root)
 
         (naglowek.combatSystemInfo).canvas = canvas
         (naglowek.combatSystemInfo).uiMetrics = uiMetrics
@@ -678,4 +709,4 @@ def resume(config,root,menuUiElements):
         ((naglowek.combatSystemInfo).var).finished = False
         ((naglowek.combatSystemInfo).uiElements).systemsLF = ttk.Labelframe(root,text= "" + " systems",borderwidth=2,style='Grey.TLabelframe.Label')
         updateBattleUi((naglowek.combatSystemInfo).shipLookup,(naglowek.combatSystemInfo).uiMetrics,(naglowek.combatSystemInfo).var,root,(naglowek.combatSystemInfo).uiElements,(naglowek.combatSystemInfo).canvas)
-    update((naglowek.combatSystemInfo).var,(naglowek.combatSystemInfo).uiElements,(naglowek.combatSystemInfo).uiMetrics,(naglowek.combatSystemInfo).uiIcons,(naglowek.combatSystemInfo).canvas,(naglowek.combatSystemInfo).events,(naglowek.combatSystemInfo).shipLookup,(naglowek.combatSystemInfo).gameRules,(naglowek.combatSystemInfo).ammunitionType,root,config)
+    update((naglowek.combatSystemInfo).var,(naglowek.combatSystemInfo).uiElements,(naglowek.combatSystemInfo).uiMetrics,(naglowek.combatSystemInfo).uiIcons,(naglowek.combatSystemInfo).canvas,(naglowek.combatSystemInfo).events,(naglowek.combatSystemInfo).shipLookup,(naglowek.combatSystemInfo).gameRules,(naglowek.combatSystemInfo).ammunitionType,root,config,menuUiElements)

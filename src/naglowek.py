@@ -134,6 +134,10 @@ class global_var():
         self.lostByDisabling5 = False
         self.winBySeeingLandmarks = False
         self.wonBySeeingLandmarks = False
+        self.winByDomination = False
+        self.wonByDomination = False
+        self.looseByDomination = False
+        self.lostByDomination = False
         # DEFAULT WIN CONDITIONS
         self.winByDisablingEnemyCapital = False
         self.looseByDisablingEnemyCapital = False
@@ -153,6 +157,8 @@ class global_var():
         self.imageMask = PIL.Image.open(os.path.join(cwd, config.get("Images", "imageMask")))
         # Path finding data
         self.PFprecision = 30
+        #debugging
+        self.debugging = True
         pass
 
 
@@ -237,18 +243,8 @@ class landmark():
         self.boost = boost
         self.visible = visible
         self.id = id
-
-class tracer():
-    def __init__(self, xPos=300, yPos=300, xDir=0.0, yDir=1.0, turnRate=0.5, speed=40): 
-        self.xPos = xPos
-        self.yPos = yPos
-        self.xDir = xDir
-        self.yDir = yDir
-        self.turnRate = turnRate
-        self.speed = speed
-        self.moveOrderX = None
-        self.moveOrderY = None
-        self.ttl = 0
+        self.owner = 'none'
+        self.wasContested = False
 
 class ghost_point():
     def __init__(self, xPos=300, yPos=300,number = 0): 

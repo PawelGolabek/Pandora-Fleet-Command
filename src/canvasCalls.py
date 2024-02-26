@@ -37,11 +37,11 @@ def drawShips(canvas,var,uiMetrics):  # draw ship on the map with all of its acc
                 else:
                     fillColor = ship.color
                     
-                line = canvas.create_line(int(drawX-5*var.zoom), 
-                                    int(drawY-5*var.zoom), 
-                                    int(drawX +5*var.zoom), 
+                line = canvas.create_line(int(drawX-5*var.zoom),
+                                    int(drawY-5*var.zoom),
+                                    int(drawX +5*var.zoom),
                                     int(drawY+5*var.zoom),
-                                    width=int(1+2*var.zoom), 
+                                    width=int(1+2*var.zoom),
                                     fill=fillColor)
                 canvas.elements.append(line)
                                     
@@ -282,9 +282,9 @@ def drawLandmarks(var,canvas,uiIcons,uiMetrics):
             drawY = (landmark.yPos - var.top) * \
                 var.zoom    # change ###
             radius = landmark.radius * var.zoom
-            if(not landmark.boost == 'spotter'):
+            if(not landmark.boost == 'spotter' and not landmark.boost == 'control'):
                 text = canvas.create_text(drawX, drawY+20,
-                                text=math.ceil(landmark.cooldown/100), fill = "white")              
+                                text=math.ceil(landmark.cooldown/100), fill = "white")               
                 canvas.elements.append(text)
 
             list = []
@@ -325,12 +325,19 @@ def drawLandmarks(var,canvas,uiIcons,uiMetrics):
             ghostlandmark.y = (landmark.yPos + uiMetrics.canvasHeight - var.top) * var.zoom
             list.append(ghostlandmark)
             
+            if(landmark.owner == 'player1'):
+                outln = '#012E04'
+            elif(landmark.owner == 'ai1'):
+                outln = '#4D1400'
+            else:
+                outln = '#412801'
+            
             for element in list:
                 x1 = element.x-landmark.radius*var.zoom
                 x2 = element.x + landmark.radius*var.zoom
                 y1 = element.y - landmark.radius*var.zoom
                 y2 = element.y+landmark.radius*var.zoom
-                canvas.create_oval(x1, y1, x2, y2, outline = "yellow", dash=(2,3))   
+                canvas.create_oval(x1, y1, x2, y2, outline = outln, dash=(4,2))   
     
             iconX = drawX
             iconY = drawY
@@ -339,4 +346,12 @@ def drawLandmarks(var,canvas,uiIcons,uiMetrics):
                 canvas.elements.append(image)
             elif(landmark.boost == 'spotter'):
                 image = canvas.create_image(iconX, iconY, image=uiIcons.spotterIcon)
+                canvas.elements.append(image)
+            elif(landmark.boost == 'control'):
+                if(landmark.owner == 'player1'):
+                    image = canvas.create_image(iconX, iconY, image=uiIcons.controlIconP)
+                elif(landmark.owner == 'ai1'):
+                    image = canvas.create_image(iconX, iconY, image=uiIcons.controlIconE)
+                elif(landmark.owner == 'none'):
+                    image = canvas.create_image(iconX, iconY, image=uiIcons.controlIconN)
                 canvas.elements.append(image)

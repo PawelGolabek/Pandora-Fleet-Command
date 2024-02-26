@@ -13,13 +13,19 @@ from PIL import Image, ImageTk
 
 from src.canvasCalls import *
 from src.shipCombat import *
-from src.systems import *
 from src.aiControllers import *
 from src.inputs import *
 
-def stop_drag(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root):
+def stop_drag(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root,config,menuUiElements):
     var.drag = ''
-    root.after(1, partial(update,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root))
+    root.after(1, partial(update,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root,config,menuUiElements))
+
+
+def dragging(event,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root,config,menuUiElements):
+    if event.widget is root:
+        if not var.drag == '':
+            root.after_cancel(var.drag)
+        var.drag = root.after(100, partial(stop_drag,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root,config,menuUiElements))
 
 
 
@@ -46,11 +52,11 @@ def radioBox(shipLookup,uiElements,var,uiMetrics,root,canvas):
     if(var.selection == 2):
         var.shipChoice = shipLookup[2].id
     updateBattleUi(shipLookup,uiMetrics,var,root,uiElements,canvas)
-    updateLabels(uiElements,shipLookup,var)
+    updateLabels(uiElements,shipLookup,var,root)
 
 
 
-def newWindow(uiMetrics,var,canvas):
+def newWindow(uiMetrics,var,canvas,root):
     canvas.delete(canvas.imageID)
     canPoiX = var.pointerX - uiMetrics.canvasX
     canPoiY = var.pointerY - uiMetrics.canvasY
@@ -131,6 +137,7 @@ def newWindow(uiMetrics,var,canvas):
     else:
         var.imgg = ImageTk.PhotoImage(var.resizedImage)
         canvas.imageID = canvas.create_image(0, 0, image=var.imgg, anchor='nw')
+  #  root.update()
 
 def updateShields(ship1,var):
     for ship1 in var.ships:
@@ -174,7 +181,7 @@ def endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons,shi
             aiController.systemChoice(ship1,var.ships)
         getOrders(ship1,var,gameRules,uiMetrics,True)
     var.updateTimer = 3
-    newWindow(uiMetrics,var,canvas)
+    newWindow(uiMetrics,var,canvas,root)
     detectionCheck(var,uiMetrics)
     drawShips(canvas,var,uiMetrics)
     drawGhostPoints(canvas,var)
@@ -183,7 +190,7 @@ def endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons,shi
     drawLasers(var,canvas,uiMetrics)
     drawRockets(var,ammunitionType,canvas)
     updateShields(var.ships,var)
-    updateLabels(uiElements,shipLookup,var)
+    updateLabels(uiElements,shipLookup,var,root)
 
 def drawLasers(var,canvas,uiMetrics):
     for laser in var.lasers:
@@ -333,6 +340,8 @@ def manageSystemTriggers(ships,var,shipLookup,uiMetrics):
  
 def manageLandmarks(landmarks, ships,uiMetrics):
     for landmark in landmarks:
+        landmark.wasContested = False
+    for landmark in landmarks:
         if(landmark.cooldown > 0):
             landmark.cooldown -= 1
         for ship in ships:
@@ -376,11 +385,17 @@ def manageLandmarks(landmarks, ships,uiMetrics):
             for element in list:
                 dist = ((element.x - ship.xPos)*(element.x - ship.xPos) +
                         (element.y - ship.yPos)*(element.y - ship.yPos))
-                if(dist < landmark.radius*landmark.radius and landmark.cooldown == 0):
-                    if(ship.owner == 'player1'):
-                        landmark.visible = True
-                    getBonus(ship, landmark.boost)
-                    landmark.cooldown = landmark.defaultCooldown
+                if(dist < landmark.radius*landmark.radius):
+                    if(landmark.cooldown == 0):
+                        if(ship.owner == 'player1'):
+                            landmark.visible = True
+                        getBonus(ship, landmark.boost)
+                        landmark.cooldown = landmark.defaultCooldown
+                    if(not landmark.owner == ship.owner and landmark.boost == 'control'):
+                        landmark.owner = ship.owner
+                        if(landmark.wasContested):
+                            landmark.owner = 'none'
+                        landmark.wasContested = True
 
 
 def getBonus(ship, boost):
@@ -536,13 +551,13 @@ def dealHeatDamage(ships):
                     system.integrity -= 1
                     system.heatDamageTicks -= 1
 
-def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root,config):
+def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root,config,menuUiElements):
     #for ship in var.ships:
     #    print(str(ship.name) + " " + str(ship.killed))
     if(var.drag=='' and not var.paused):
         canvas.delete('all')
         if(var.frameTime % 10 == 0):
-            updateLabels(uiElements,shipLookup,var)
+            updateLabels(uiElements,shipLookup,var,root)
         hidePausedText(var,uiElements)
         updateScales(uiElements,var,shipLookup)
         updateEnergy(var,uiElements,shipLookup)
@@ -578,7 +593,13 @@ def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,a
                     endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons,shipLookup,root)
                     break
         var.input = (var.mouseWheelUp or var.mouseWheelDown or (var.mouseButton3 and var.zoom != 1 and mouseOnCanvas(var,uiMetrics)) or var.mouseButton1 )
-        newWindow(uiMetrics,var,canvas)
+        endConditions.killedShips(var,events)
+        endConditions.disabledShips(var,events)
+        endConditions.foundLandmarks(var,events)
+        endConditions.dominatedLandmarks(var,events)
+        endConditions.showWin(var,events,config,root,menuUiElements)
+        endConditions.showLoose(var,events,config,root,menuUiElements)
+        newWindow(uiMetrics,var,canvas,root)
         drawGhostPoints(canvas,var)
         drawSignatures(canvas,var)
         drawLandmarks(var,canvas,uiIcons,uiMetrics)
@@ -590,11 +611,6 @@ def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,a
         var.mouseButton1 = False
         var.mouseButton2 = False
         var.zoomChange = False
-        endConditions.killedShips(var,events)
-        endConditions.disabledShips(var,events)
-        endConditions.foundLandmarks(var,events)
-        endConditions.showWin(var,events)
-        endConditions.showLoose(var,events)
         drawShips(canvas,var,uiMetrics)
         trackMouse(var)
         var.frameTime+=1
@@ -603,34 +619,8 @@ def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,a
         if(var.updateTimer>0):
             var.updateTimer -= 1
         if(var.turnInProgress or var.mouseButton3):
-            root.after(10, partial(update,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root,config))
+            root.after(10, partial(update,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root,config,menuUiElements))
         else:
-            root.after(100, partial(update,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root,config))
+            root.after(100, partial(update,var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root,config,menuUiElements))
     else:
         showPausedText(var,uiElements,uiMetrics)
-
-def declareTargets(var):
-    list1 = {}
-    list2 = {}
-    i = 2
-    for ship in var.ships:
-        if(not ship.owner == 'player1'):
-            if(not ship.name in list1):
-                list1.update({ship.name : ship.id})
-            else:
-                while((ship.name + ' (' + str(i) + ')') in list1):
-                    i+=1
-                ship.name = (ship.name + '(' + str(i) + ')')
-                list1.update({ship.name : ship.id})
-    i = 2
-    for ship in var.ships:
-        if(ship.owner == 'player1'):
-            if(not ship.name in list2):
-                list2.update({ship.name : ship.id})
-            else:
-                while((ship.name + ' (' + str(i) + ')') in list2):
-                    i+=1
-                ship.name = (ship.name + ' (' + str(i) + ')')
-                list2.update({ship.name : ship.id})
-
-    return list1,list2
