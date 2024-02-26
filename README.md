@@ -1,7 +1,7 @@
 Setup:
 Requires Python 3.3 or newer
-Run setup.py which will pull necessary libraries.
-Run main.py to run the game.
+-Run setup.py which will pull necessary libraries.
+-Run main.py to run the game.
 Multiplayer requires LAN connection.
 
 
