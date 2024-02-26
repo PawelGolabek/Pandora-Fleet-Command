@@ -274,19 +274,64 @@ def drawRockets(globalVar,ammunitionType,canvas):
                             drawX, drawY-1, fill = color)
             canvas.elements.append(line)
 
-def drawLandmarks(var,canvas,uiIcons):
+def drawLandmarks(var,canvas,uiIcons,uiMetrics):
     for landmark in var.landmarks:
         if(landmark.visible):
             drawX = (landmark.xPos - var.left) * \
                 var.zoom   # change ###
             drawY = (landmark.yPos - var.top) * \
                 var.zoom    # change ###
-
             radius = landmark.radius * var.zoom
-            text = canvas.create_text(drawX, drawY+20,
-                            text=math.ceil(landmark.cooldown/100), fill = "white")              
-            canvas.elements.append(text)
-            canvas.create_oval(drawX-radius, drawY-radius, drawX+radius, drawY+radius, outline = "yellow", dash=(2,3))       
+            if(not landmark.boost == 'spotter'):
+                text = canvas.create_text(drawX, drawY+20,
+                                text=math.ceil(landmark.cooldown/100), fill = "white")              
+                canvas.elements.append(text)
+
+            list = []
+            ghostlandmark = naglowek.dynamic_object()
+            ghostlandmark.x = (landmark.xPos - var.left) * var.zoom
+            ghostlandmark.y = (landmark.yPos - var.top) * var.zoom
+            list.append(ghostlandmark)
+            ghostlandmark = naglowek.dynamic_object()
+            ghostlandmark.x = (landmark.xPos + uiMetrics.canvasWidth - var.left) * var.zoom
+            ghostlandmark.y = (landmark.yPos - var.top) * var.zoom
+            list.append(ghostlandmark)
+            ghostlandmark = naglowek.dynamic_object()
+            ghostlandmark.x = (landmark.xPos - uiMetrics.canvasWidth - var.left) * var.zoom
+            ghostlandmark.y = (landmark.yPos + var.top) * var.zoom
+            list.append(ghostlandmark)
+            ghostlandmark = naglowek.dynamic_object()
+            ghostlandmark.x = (landmark.xPos - var.left) * var.zoom  
+            ghostlandmark.y = (landmark.yPos + uiMetrics.canvasHeight - var.top) * var.zoom
+            list.append(ghostlandmark)
+            ghostlandmark = naglowek.dynamic_object()
+            ghostlandmark.x = (landmark.xPos - var.left) * var.zoom 
+            ghostlandmark.y = (landmark.yPos - uiMetrics.canvasHeight - var.top) * var.zoom
+            list.append(ghostlandmark)
+            ghostlandmark = naglowek.dynamic_object()
+            ghostlandmark.x = (landmark.xPos - uiMetrics.canvasWidth  - var.left) * var.zoom 
+            ghostlandmark.y = (landmark.yPos - uiMetrics.canvasHeight - var.top) * var.zoom
+            list.append(ghostlandmark)
+            ghostlandmark = naglowek.dynamic_object()
+            ghostlandmark.x = (landmark.xPos + uiMetrics.canvasWidth  - var.left) * var.zoom 
+            ghostlandmark.y = (landmark.yPos - uiMetrics.canvasHeight - var.top) * var.zoom
+            list.append(ghostlandmark)
+            ghostlandmark = naglowek.dynamic_object()
+            ghostlandmark.x = (landmark.xPos - uiMetrics.canvasWidth  - var.left) * var.zoom 
+            ghostlandmark.y = (landmark.yPos + uiMetrics.canvasHeight - var.top) * var.zoom
+            list.append(ghostlandmark)
+            ghostlandmark = naglowek.dynamic_object()
+            ghostlandmark.x = (landmark.xPos + uiMetrics.canvasWidth  - var.left) * var.zoom 
+            ghostlandmark.y = (landmark.yPos + uiMetrics.canvasHeight - var.top) * var.zoom
+            list.append(ghostlandmark)
+            
+            for element in list:
+                x1 = element.x-landmark.radius*var.zoom
+                x2 = element.x + landmark.radius*var.zoom
+                y1 = element.y - landmark.radius*var.zoom
+                y2 = element.y+landmark.radius*var.zoom
+                canvas.create_oval(x1, y1, x2, y2, outline = "yellow", dash=(2,3))   
+    
             iconX = drawX
             iconY = drawY
             if(landmark.boost == 'armor'):

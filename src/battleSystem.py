@@ -171,6 +171,7 @@ def getOrders(ship,var,gameRules,uiMetrics,forced=False):
                 ((var.pointerX-uiMetrics.canvasX)/var.zoom)
             ship.moveOrderY = var.top + \
                 ((var.pointerY-uiMetrics.canvasY)/var.zoom)
+            print(ship.moveOrderX,ship.moveOrderY)
             tracered = True
             putTracer(ship,var,gameRules,uiMetrics)
     if(not tracered and ship.owner == "player1" and forced ):
@@ -326,14 +327,6 @@ def drawLasers(var,canvas,uiMetrics):
         if laser.ttl>0:
             drawX = (laser.xPos - var.left) * var.zoom
             drawY = (laser.yPos - var.top) * var.zoom
-
-         #       
-         #   drawX2 = (laser.targetXPos - var.left) * \
-         #       var.zoom
-         #   drawY2 = (laser.targetYPos - var.top) * \
-         #       var.zoom
-
-##############
             aroundFlagX = False
             aroundFlagY = False
             if(laser.xPos == max(laser.xPos,laser.targetXPos)):
@@ -392,12 +385,14 @@ def drawLasers(var,canvas,uiMetrics):
             drawY3 = (y3- var.top) * var.zoom
             drawY4 = (y4- var.top) * var.zoom
 
-            line = canvas.create_line(drawX,drawY,drawX2,drawY2, fill = laser.color, stipple="gray75")
+            line = canvas.create_line(drawX,drawY,drawX2,drawY2, fill = laser.color, #stipple="gray75"
+                                      )
             canvas.elements.append(line)
             
 
             if(aroundFlagX or aroundFlagY):
-                line = canvas.create_line(drawX3,drawY3,drawX4,drawY4, fill = laser.color, stipple="gray75")
+                line = canvas.create_line(drawX3,drawY3,drawX4,drawY4, fill = laser.color, #stipple="gray75"
+                                          )
                 canvas.elements.append(line)
         else:
             (var.lasers).remove(laser)
@@ -449,7 +444,7 @@ def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,a
         newWindow(uiMetrics,var,canvas)
         drawGhostPoints(canvas,var)
         drawSignatures(canvas,var)
-        drawLandmarks(var,canvas,uiIcons)
+        drawLandmarks(var,canvas,uiIcons,uiMetrics)
         drawLasers(var,canvas,uiMetrics)
         drawRockets(var,ammunitionType,canvas)
         var.mouseOnUI = False
@@ -604,7 +599,7 @@ def endTurn(uiElements,var,gameRules,uiMetrics,canvas,ammunitionType,uiIcons,shi
     drawShips(canvas,var,uiMetrics)
     drawGhostPoints(canvas,var)
     drawSignatures(canvas,var)
-    drawLandmarks(var,canvas,uiIcons)
+    drawLandmarks(var,canvas,uiIcons,uiMetrics)
     drawLasers(var,canvas,uiMetrics)
     drawRockets(var,ammunitionType,canvas)
     updateShields(var.ships,var)
@@ -871,9 +866,14 @@ def declareLandmarks(var,config):
                 boost = config.get(configList[i], "boost"),
                 visible = _visible
                 ))
-                
-
             i+=1
+        if config.has_option('Meta', 'deleteRandomLandmarks'):
+            toDelete = int(config.get("Meta", "deleteRandomLandmarks"))
+            while toDelete:
+                id = random.randrange(len(var.landmarks))
+              #  randomLandmark = var.landmarks[id]
+                var.landmarks.pop(id)
+                toDelete -= 1
         
 ############################################ INPUTS #############################################
 

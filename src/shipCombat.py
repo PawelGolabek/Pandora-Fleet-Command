@@ -107,7 +107,6 @@ def updateLabel(uiElements,shipLookup,var,shipId):
         j += 5
     return 0
 
-    
 class laser():
     def __init__(self, xPos=300, yPos=300, targetXPos=300, targetYPos=300, color = rgbtohex(22,22,22), ttl = 10): 
         self.xPos = xPos
