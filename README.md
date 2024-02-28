@@ -27,3 +27,7 @@ Features:
 My goal was to make a game that feels like Aurora 4x or Command series look like without their complexity and realism. I wanted the complex look of the command centre UI, but with all of it feeling simple, natural and utilitarian.
 
 Treat it as a little passion project with small target audience.
+
+EXE release:
+
+https://github.com/PawelGolabek/Pandora-Fleet-Command-EXE
