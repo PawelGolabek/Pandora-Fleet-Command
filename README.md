@@ -28,6 +28,6 @@ My goal was to make a game that feels like Aurora 4x or Command series look like
 
 Treat it as a little passion project with small target audience.
 
-EXE release:
+.exe release:
 
 https://github.com/PawelGolabek/Pandora-Fleet-Command-EXE
