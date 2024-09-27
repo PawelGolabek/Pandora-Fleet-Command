@@ -95,8 +95,8 @@ if __name__ == '__main__':
     customGameCommand =  partial(customGame,root,config,uiMenuElements,uiMetrics,multiplayerOptions)
     multiplayerGameCommand =  partial(multiplayerMenu, root,config,uiMenuElements,uiMetrics, multiplayerOptions)
 
-    image = PIL.Image.open('maps\\mainMenu.png')
-    resizedImage = (image).resize((uiMetrics.rootX, uiMetrics.rootY))
+    _image = PIL.Image.open(os.path.join(cwd, "maps\\mainMenu.png"))
+    resizedImage = (_image).resize((uiMetrics.rootX, uiMetrics.rootY))
     uiMenuElements.menuCanvas = tk.Canvas(width = uiMetrics.rootX, height = uiMetrics.rootY)
     img = ImageTk.PhotoImage(resizedImage)
     uiMenuElements.menuCanvas.imageID = uiMenuElements.menuCanvas.create_image(0, 0, image=img, anchor='nw')
