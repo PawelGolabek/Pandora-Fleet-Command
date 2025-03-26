@@ -504,7 +504,7 @@ def newWindow(uiMetrics,var,canvas):
         var.mouseY = var.bottom - var.top
 
         var.resizedImage = (var.image).crop((var.left, var.top, var.right, var.bottom))
-        var.resizedImage = (var.resizedImage).resize((uiMetrics.canvasWidth, uiMetrics.canvasHeight), PIL.Image.ANTIALIAS)
+        var.resizedImage = (var.resizedImage).resize((uiMetrics.canvasWidth, uiMetrics.canvasHeight),)
 
         var.imgg = ImageTk.PhotoImage(var.resizedImage)
         canvas.imageID = canvas.create_image(0, 0, image=var.imgg, anchor='nw')
@@ -546,7 +546,7 @@ def newWindow(uiMetrics,var,canvas):
         var.top = var.mouseY - var.yellowY
         var.bottom = var.mouseY + var.yellowY
         var.resizedImage = (var.image).crop((var.left, var.top, var.right, var.bottom))
-        var.resizedImage = (var.resizedImage).resize((uiMetrics.canvasWidth, uiMetrics.canvasHeight), PIL.Image.ANTIALIAS)
+        var.resizedImage = (var.resizedImage).resize((uiMetrics.canvasWidth, uiMetrics.canvasHeight),)
 
         var.imgg = ImageTk.PhotoImage(var.resizedImage)
         canvas.imageID = canvas.create_image(0, 0, image=var.imgg, anchor='nw')

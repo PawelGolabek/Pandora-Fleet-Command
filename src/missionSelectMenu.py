@@ -53,7 +53,7 @@ def updateMissionCanvas(missionCanvas,variable,msmVar,uiMetrics):
     a1 = config1.get("Images","map")
     miniaturePath = os.path.join(cwd, "maps" + "\\" + a1 + "\\" + "mapMiniature.png")
     b = PIL.Image.open(miniaturePath)
-    b = b.resize((uiMetrics.msCanvasWidth, uiMetrics.msCanvasHeight), PIL.Image.ANTIALIAS)
+    b = b.resize((uiMetrics.msCanvasWidth, uiMetrics.msCanvasHeight), )
     msmVar.img = ImageTk.PhotoImage(b)
     missionCanvas.create_image(0,0,image=msmVar.img,anchor=NW)
     return msmVar.img

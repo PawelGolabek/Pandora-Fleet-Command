@@ -291,7 +291,7 @@ def updateMissionCanvas(missionCanvas,info,msmVar):
     cwd = str(cwd.parent)
     c = os.path.join(cwd, "maps\\" + (info.mapChoice).get() +"\\mapMiniature.png")
     b = PIL.Image.open(c)
-    b = b.resize((800, 500), PIL.Image.ANTIALIAS)
+    b = b.resize((800, 500),)
     msmVar.img = ImageTk.PhotoImage(b)
     missionCanvas.create_image(0,0,image=msmVar.img,anchor=NW)
     return msmVar.img
