@@ -399,7 +399,7 @@ def drawLasers(var,canvas,uiMetrics):
             del laser
 
 
-def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root):
+def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,ammunitionType,root,multiplayerOptions):
     #for ship in var.ships:
     #    print(str(ship.name) + " " + str(ship.killed))
     if(var.drag=='' and not var.paused):
@@ -457,7 +457,7 @@ def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,a
         endConditions.disabledShips(var,events)
         endConditions.foundLandmarks(var,events)
         endConditions.showWin(var,events)
-        endConditions.showLoose(var,events)
+        endConditions.showLoose(var,events,multiplayerOptions)
         drawShips(canvas,var,uiMetrics)
         trackMouse(var)
         var.frameTime+=1

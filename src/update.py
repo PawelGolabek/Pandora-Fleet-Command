@@ -405,7 +405,7 @@ def update(var,uiElements,uiMetrics,uiIcons,canvas,events,shipLookup,gameRules,a
             endConditions.foundLandmarks(var,events)
             endConditions.dominatedLandmarks(var,events)
             endConditions.showWin(var,events,config,root,menuUiElements)
-            endConditions.showLoose(var,events,config,root,menuUiElements,uiElements)
+            endConditions.showLoose(var,events,config,root,menuUiElements,uiElements,multiplayerOptions)
             newWindow(uiMetrics,var,canvas,root)
             canvasCalls.drawGhostPoints(canvas,var)
             canvasCalls.drawSignatures(canvas,var)

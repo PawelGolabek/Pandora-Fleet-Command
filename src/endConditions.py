@@ -180,7 +180,7 @@ def showWin(var,events,config,root,menuUiElements):
         window.minsize(300,300)
         events.showedWin = True
 
-def buttonCommand(label,config,root,menuUiElements,window,var,uiElements):
+def buttonCommand(label,config,root,menuUiElements,window,var,uiElements,multiplayerOptions):
     label.config(text= "Loading ...")
     window.minsize(300,300)
     root.update()
@@ -190,10 +190,10 @@ def buttonCommand(label,config,root,menuUiElements,window,var,uiElements):
     settings.combatUiReady = True
     hideBattleUi(uiElements.staticUi,uiElements)
     finishSetTrue(var)
-    loadGame.run(config,root,menuUiElements)
+    loadGame.run(config,root,menuUiElements,multiplayerOptions)
     window.destroy()
 
-def showLoose(var,events,config,root,menuUiElements,uiElements):
+def showLoose(var,events,config,root,menuUiElements,uiElements,multiplayerOptions):
     gameEnded = ((events.showedLoose) or events.showedWin)
 
     arr = [var.looseByEliminatingPlayer, var.looseByEliminatingEnemy \
@@ -249,7 +249,7 @@ def showLoose(var,events,config,root,menuUiElements,uiElements):
         label = ttk.Label(window, style = "Grey.TLabel", text='You Lost\n\n'+ var.looseMessage+'\n\n')
         label.config(justify='center')
         label.pack()
-        buttonCommand1 = partial(buttonCommand,label,config,root,menuUiElements,window,var,uiElements)
-        button = ttk.Button(window, style = "Grey.TButton", text='Replay',command = lambda:[buttonCommand1()])
+        buttonCommand1 = partial(buttonCommand,label,config,root,menuUiElements,window,var,uiElements,multiplayerOptions)
+        button = ttk.Button(window, style = "Grey.TButton", text='Restart',command = lambda:[buttonCommand1()])
         button.pack()
         events.showedLoose = True
